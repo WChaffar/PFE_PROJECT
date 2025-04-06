@@ -1,2 +1,8 @@
-./server/node_modules
-./client/node_modules
+# Ignore node_modules in server
+/server/node_modules/
+
+# Ignore node_modules in client
+/client/node_modules/
+
+# Or, to ignore all node_modules across your entire project (if you don't want to list both):
+node_modules/
