@@ -18,7 +18,7 @@ const AssignmentSchema = new mongoose.Schema({
       ref: 'Project',
       required: true
     },
-    taskName: {
+    taskId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Task',
         required: true

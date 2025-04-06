@@ -1,0 +1,106 @@
+/* Make the register page take the full screen and center the form */
+.register-form-page {
+    display: flex;
+    justify-content: center;   /* Center horizontally */
+    align-items: flex-start;   /* Center vertically */
+    height: 100vh;              /* Take full viewport height */
+    background-color: white;   /* Background color of the whole page */
+    margin: 0;                 /* Remove any default margin */
+  }
+  
+  /* Container for the register form */
+  .register-form-container {
+    background-color: white;  /* White background for the register form */
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 1px 1px 1px 2px rgba(0, 0, 0, 0.1); /* Light shadow for the box */
+    width: 350px;  /* Adjust width as needed */
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Space between the elements */
+    margin-top: 30px;
+  }
+  
+  /* Form styling */
+  .register-form {
+    gap: 15px;  /* Space between the elements */
+    width: 100%;
+  }
+  
+  /* Input field styling */
+  input {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    width: 100%;  /* Ensure inputs take full width */
+  }
+  
+  /* Button styling */
+  button {
+    padding: 10px;
+    background-color: black; /* Black background for the button */
+    border: none;
+    border-radius: 4px;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    width: 100%;
+  }
+  
+  /* Button hover effect */
+  button:hover {
+    background-color: white;
+    color: black;
+    border: 1px solid black;
+  }
+  
+  /* Heading style */
+  h2 {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  /* Logo container */
+  .logo-container {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  .logo {
+    width: 300px; /* Adjust logo size */
+    height: auto;
+  }
+  
+  /* Error messages styling */
+  .invalid-feedback {
+    color: red;
+  }
+  
+  /* Spinner for button */
+  .spinner-border {
+    margin-right: 5px;
+  }
+  
+  /* Mobile responsive layout adjustments */
+  @media (max-width: 768px) {
+    .register-form-container {
+      width: 80%; /* Use more width for smaller screens */
+      padding: 20px;
+    }
+  
+    .logo {
+      width: 150px; /* Adjust logo size for smaller screens */
+    }
+  
+    .register-form {
+      gap: 12px; /* Reduce space between elements */
+    }
+  
+    input, button {
+      padding: 12px;
+      font-size: 14px;
+    }
+  }
+  

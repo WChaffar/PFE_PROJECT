@@ -1,0 +1,26 @@
+/* Home.css */
+html, body {
+    height: 100%;
+    margin: 0; /* Remove any default margin */
+  }
+.home-container {
+    position: relative;
+    min-height: 100vh;
+    background-image: url('../img/0a221f09-dacb-425b-8a73-634cee490d4d.webp'); /* Replace with your image URL */
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+  }
+  
+  .content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;  /* Change text color to ensure it's readable */
+    text-align: center;
+    padding: 20px;
+    background-color: rgba(0, 0, 0, 0.5); /* Optional: Adds background to make text more readable */
+    border-radius: 10px;
+  }
+  

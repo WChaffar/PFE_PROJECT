@@ -1,13 +1,13 @@
 const Assignment = require('../models/AssignmentModel');
 const Team = require('../models/teamModel');
 const Project = require('../models/projectModel');
+const Task = require('../models/taskModel');
 
 // Create a new assignment
 exports.createAssignment = async (req, res) => {
   try {
-    const { employeeId, projectId, missionName, taskName, startDate, endDate, 
-            assignmentType, dayDetails } = req.body;
-
+    const { employeeId, projectId, taskId, startDate, endDate, 
+            assignmentType, dayDetails, totalDays } = req.body;
     // Validate employee exists
     const employee = await Team.findById(employeeId);
     if (!employee) {
@@ -20,21 +20,30 @@ exports.createAssignment = async (req, res) => {
       return res.status(404).json({ error: 'Project not found' });
     }
 
+    // Validate project exists
+    const task = await Task.findById(taskId);
+    if (!task) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
     // Calculate skill match score (simple implementation)
-    const employeeSkills = new Set(employee.skills.map(s => s.toLowerCase()));
-    const requiredSkills = new Set(project.requiredSkills.map(s => s.toLowerCase()));
+    const employeeSkills = new Set(employee.keySkills.map(s => s.toLowerCase()));
+    console.log(project);
+    const requiredSkills = new Set(task.requiredSkills.map(s => s.toLowerCase()));
+    console.log(requiredSkills);
     const intersection = new Set([...employeeSkills].filter(s => requiredSkills.has(s)));
     const skillMatchScore = intersection.size / requiredSkills.size;
 
     // Create assignment
     const assignment = new Assignment({
+      Owner: req.user._id,
       employee: employeeId,
       project: projectId,
-      missionName,
-      taskName,
+      taskId,
       startDate: new Date(startDate),
       endDate: new Date(endDate),
       assignmentType,
+      totalDays,
       dayDetails: dayDetails.map(detail => ({
         date: new Date(detail.date),
         period: detail.period
