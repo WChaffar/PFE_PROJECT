@@ -12,7 +12,7 @@ html, body {
     background-attachment: fixed;
   }
   
-  .content {
+  .login-home-content {
     position: absolute;
     top: 50%;
     left: 50%;

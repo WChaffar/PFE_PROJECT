@@ -103,7 +103,7 @@ const RegisterForm = () => {
                   </div>
                 </div>
               )}
-
+               <br/>
               <div className="form-group">
                 <button type="submit" className="button" disabled={isSubmitting}>
                   {isSubmitting ? (

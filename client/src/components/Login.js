@@ -10,14 +10,13 @@ const LoginForm = () => {
   const navigate = useNavigate();
 
   const initialValues = {
-    username: "",
+    email: "",
     password: "",
   };
 
   const validationSchema = Yup.object({
-    username: Yup.string()
-      .min(3, "Username must be between 3 and 20 characters.")
-      .max(20, "Username must be between 3 and 20 characters.")
+    email: Yup.string()
+      .email("Invalid email address.")
       .required("This field is required!"),
     password: Yup.string()
       .min(6, "Password must be at least 6 characters.")
@@ -34,7 +33,7 @@ const LoginForm = () => {
     setTimeout(() => {
       setMessage("Login successful!");
       setSubmitting(false);
-      navigate("/home"); // Redirect to home page after successful login
+      navigate("/Dashboard"); // Redirect to home page after successful login
     }, 1000); // Simulating a network request delay
   };
 
@@ -53,19 +52,19 @@ const LoginForm = () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="username">Username:</label>
-              <Field
-                type="text"
-                id="username"
-                name="username"
-                className="form-control"
-              />
-              <ErrorMessage
-                name="username"
-                component="div"
-                className="invalid-feedback d-block"
-              />
-            </div>
+                <label htmlFor="email">Email:</label>
+                <Field
+                  type="email"
+                  id="email"
+                  name="email"
+                  className="form-control"
+                />
+                <ErrorMessage
+                  name="email"
+                  component="div"
+                  className="invalid-feedback d-block"
+                />
+              </div>
 
             <div className="form-group">
               <label htmlFor="password">Password:</label>
@@ -92,7 +91,7 @@ const LoginForm = () => {
                 </div>
               </div>
             )}
-
+            <br/>
             <div className="form-group">
               <button type="submit" className="button" disabled={isSubmitting}>
                 {isSubmitting ? (

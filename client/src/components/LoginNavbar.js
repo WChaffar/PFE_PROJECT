@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Navbar, Nav, Button } from "react-bootstrap";
+import { Navbar, Nav, Button, Container } from "react-bootstrap";
 import logo from '../img/SopraHR_Noir.png';
 import "../css/Navbar.css";
 
@@ -10,82 +10,55 @@ const NavbarComponent = ({ showModeratorBoard, showAdminBoard, currentUser, logO
   const isActive = (path) => location.pathname === path;
 
   return (
-    <Navbar bg="light" expand="lg" className="navbar-light" style={{ boxShadow: "0 4px 8px rgba(0, 0, 0, 0.05)" }}>
-      <Link to={"/"} className="navbar-brand">
-        <img src={logo} alt="Logo" style={{ height: "50px" }} />
-      </Link>
+    <Navbar expand="lg" bg="light" className="shadow-sm">
+      <Container>
+        <Navbar.Brand as={Link} to="/">
+          <img src={logo} alt="Logo" height="50" />
+        </Navbar.Brand>
 
-      <Navbar.Toggle aria-controls="navbar-nav" />
-      <Navbar.Collapse id="navbar-nav">
-        <Nav className="mr-auto">
-          {showModeratorBoard && (
-            <Nav.Item>
-              <Link to={"/mod"} className={`nav-link ${isActive("/mod") ? "active-mobile" : ""}`}>
+        <Navbar.Toggle aria-controls="navbar-nav" />
+        <Navbar.Collapse id="navbar-nav">
+          <Nav className="me-auto">
+            {showModeratorBoard && (
+              <Nav.Link as={Link} to="/mod" active={isActive("/mod")}>
                 Moderator Board
-              </Link>
-            </Nav.Item>
-          )}
-
-          {showAdminBoard && (
-            <Nav.Item>
-              <Link to={"/admin"} className={`nav-link ${isActive("/admin") ? "active-mobile" : ""}`}>
+              </Nav.Link>
+            )}
+            {showAdminBoard && (
+              <Nav.Link as={Link} to="/admin" active={isActive("/admin")}>
                 Admin Board
-              </Link>
-            </Nav.Item>
-          )}
-
-          {currentUser && (
-            <Nav.Item>
-              <Link to={"/user"} className={`nav-link ${isActive("/user") ? "active-mobile" : ""}`}>
+              </Nav.Link>
+            )}
+            {currentUser && (
+              <Nav.Link as={Link} to="/user" active={isActive("/user")}>
                 User
-              </Link>
-            </Nav.Item>
-          )}
-        </Nav>
-
-        {currentUser ? (
-          <Nav className="ml-auto">
-            <Nav.Item>
-              <Link to={"/profile"} className={`nav-link ${isActive("/profile") ? "active-mobile" : ""}`}>
-                {currentUser.username}
-              </Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Button
-                variant="link"
-                className="nav-link logout-btn"
-                onClick={logOut}
-              >
-                LogOut
-              </Button>
-            </Nav.Item>
+              </Nav.Link>
+            )}
           </Nav>
-        ) : (
           <Nav className="ml-auto">
-            <Nav.Item>
-              <Link to={"/login"} className="nav-link">
-                <Button
-                  variant="dark"
-                  className={`btn-login ${isActive("/login") ? "active-mobile" : ""}`}
-                >
-                  Login
-                </Button>
-              </Link>
-            </Nav.Item>
+  <Nav.Item>
+    <Button
+      as={Link}
+      to="/login"
+      className={`btn-login ${isActive("/login") ? "active" : ""}`}
+    >
+      Login
+    </Button>
+  </Nav.Item>
 
-            <Nav.Item>
-              <Link to={"/register"} className="nav-link">
-                <Button
-                  variant="outline-dark"
-                  className={`btn-signup ${isActive("/register") ? "active-mobile" : ""}`}
-                >
-                  Sign Up
-                </Button>
-              </Link>
-            </Nav.Item>
-          </Nav>
-        )}
-      </Navbar.Collapse>
+  <Nav.Item>
+    <Button
+      as={Link}
+      to="/register"
+      className={`btn-signup ${isActive("/register") ? "active" : ""}`}
+    >
+      Sign Up
+    </Button>
+  </Nav.Item>
+</Nav>
+
+        </Navbar.Collapse>
+      </Container>
     </Navbar>
   );
 };
