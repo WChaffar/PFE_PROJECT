@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ProSidebar, Menu, MenuItem } from "react-pro-sidebar";
 import { Box, IconButton, Typography, useTheme } from "@mui/material";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom"; // Added useNavigate
 import "react-pro-sidebar/dist/css/styles.css";
 import { tokens } from "../../theme";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
@@ -16,6 +16,7 @@ import PieChartOutlineOutlinedIcon from "@mui/icons-material/PieChartOutlineOutl
 import TimelineOutlinedIcon from "@mui/icons-material/TimelineOutlined";
 import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
 import MapOutlinedIcon from "@mui/icons-material/MapOutlined";
+import ExitToAppIcon from "@mui/icons-material/ExitToApp"; // Icon for logout
 import logo from '../../img/SopraHR_Noir.png';
 
 const Item = ({ title, to, icon, selected, setSelected }) => {
@@ -41,6 +42,18 @@ const Sidebar = () => {
   const colors = tokens(theme.palette.mode);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [selected, setSelected] = useState("Dashboard");
+  const navigate = useNavigate(); // Navigate to other routes
+
+  const logOut = () => {
+    // Clear localStorage or session storage
+    localStorage.removeItem("reduxState"); 
+    localStorage.removeItem("token"); 
+    localStorage.removeItem("user");
+    // Refresh the page
+    window.location.reload();
+    // Redirect user to the login page after logging out
+    navigate("/login");
+  };
 
   return (
     <Box
@@ -214,6 +227,18 @@ const Sidebar = () => {
               selected={selected}
               setSelected={setSelected}
             />
+
+            {/* Logout */}
+            <MenuItem
+              onClick={logOut}
+              style={{
+                color: colors.grey[100],
+                marginTop: "20px",
+              }}
+              icon={<ExitToAppIcon />}
+            >
+              <Typography>Logout</Typography>
+            </MenuItem>
           </Box>
         </Menu>
       </ProSidebar>
