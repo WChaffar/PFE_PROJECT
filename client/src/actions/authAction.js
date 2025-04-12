@@ -27,6 +27,11 @@ export const logout = () => (dispatch) => {
   dispatch({ type: 'LOGOUT' });
 };
 
+// RESET
+export const resetState = () => (dispatch) => {
+  dispatch({ type: 'RESET' });
+};
+
 // REGISTER
 export const register = (userData) => async (dispatch) => {
   try {

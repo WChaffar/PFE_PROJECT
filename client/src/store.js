@@ -15,10 +15,10 @@ function saveToLocalStorage(state) {
 function loadFromLocalStorage() {
   try {
     const serializedState = localStorage.getItem('reduxState');
-    
+    const convertedState =  JSON.parse(serializedState);
     if (serializedState === null ) return undefined;
-
-    return JSON.parse(serializedState);
+    if(convertedState.auth.isAuthenticated === false) return undefined;
+    return convertedState
   } catch (e) {
     console.warn('Could not load state', e);
     return undefined;

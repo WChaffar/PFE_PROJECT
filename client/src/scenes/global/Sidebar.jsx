@@ -17,7 +17,14 @@ import TimelineOutlinedIcon from "@mui/icons-material/TimelineOutlined";
 import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
 import MapOutlinedIcon from "@mui/icons-material/MapOutlined";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp"; // Icon for logout
+import FolderIcon from '@mui/icons-material/Folder';
+import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
+import TaskIcon from '@mui/icons-material/Task';
+import WorkHistoryIcon from '@mui/icons-material/WorkHistory';
+import SummarizeIcon from '@mui/icons-material/Summarize';
 import logo from '../../img/SopraHR_Noir.png';
+import {useSelector,useDispatch} from "react-redux"
+import { logout } from "../../actions/authAction";
 
 const Item = ({ title, to, icon, selected, setSelected }) => {
   const theme = useTheme();
@@ -43,12 +50,15 @@ const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [selected, setSelected] = useState("Dashboard");
   const navigate = useNavigate(); // Navigate to other routes
+  const dispatch=useDispatch();
+  const user = useSelector((state) => state.auth.user); // optional for redirect
 
   const logOut = () => {
     // Clear localStorage or session storage
     localStorage.removeItem("reduxState"); 
     localStorage.removeItem("token"); 
     localStorage.removeItem("user");
+    //dispatch(logout());
     // Refresh the page
     window.location.reload();
     // Redirect user to the login page after logging out
@@ -103,7 +113,7 @@ const Sidebar = () => {
 
           {!isCollapsed && (
             <Box mb="25px">
-              <Box display="flex" justifyContent="center" alignItems="center">
+              {/* <Box display="flex" justifyContent="center" alignItems="center">
                 <img
                   alt="profile-user"
                   width="100px"
@@ -111,7 +121,7 @@ const Sidebar = () => {
                   src={`../../assets/user.png`}
                   style={{ cursor: "pointer", borderRadius: "50%" }}
                 />
-              </Box>
+              </Box> */}
               <Box textAlign="center">
                 <Typography
                   variant="h2"
@@ -119,7 +129,7 @@ const Sidebar = () => {
                   fontWeight="bold"
                   sx={{ m: "10px 0 0 0" }}
                 >
-                  Ed Roh
+                  {user?.firstname+" "+user?.lastname}
                 </Typography>
               </Box>
             </Box>
@@ -139,7 +149,21 @@ const Sidebar = () => {
               color={colors.grey[300]}
               sx={{ m: "15px 0 5px 20px" }}
             >
-              Data
+              Project
+            </Typography>
+            <Item
+              title="Projects"
+              to="/projects"
+              icon={<FolderIcon />}
+              selected={selected}
+              setSelected={setSelected}
+            />
+            <Typography
+              variant="h6"
+              color={colors.grey[300]}
+              sx={{ m: "15px 0 5px 20px" }}
+            >
+              Team
             </Typography>
             <Item
               title="Manage Team"
@@ -148,17 +172,31 @@ const Sidebar = () => {
               selected={selected}
               setSelected={setSelected}
             />
+                        <Item
+              title="Staffing"
+              to="/assignement"
+              icon={<AssignmentIndIcon />}
+              selected={selected}
+              setSelected={setSelected}
+            />
+            <Typography
+              variant="h6"
+              color={colors.grey[300]}
+              sx={{ m: "15px 0 5px 20px" }}
+            >
+              Tasks
+            </Typography>
             <Item
-              title="Contacts Information"
-              to="/contacts"
-              icon={<ContactsOutlinedIcon />}
+              title="Tasks"
+              to="/tasks"
+              icon={<TaskIcon />}
               selected={selected}
               setSelected={setSelected}
             />
             <Item
-              title="Invoices Balances"
-              to="/invoices"
-              icon={<ReceiptOutlinedIcon />}
+              title="Time Tracking"
+              to="/time"
+              icon={<WorkHistoryIcon />}
               selected={selected}
               setSelected={setSelected}
             />
@@ -168,68 +206,17 @@ const Sidebar = () => {
               color={colors.grey[300]}
               sx={{ m: "15px 0 5px 20px" }}
             >
-              Pages
+              Reports
             </Typography>
             <Item
-              title="Profile Form"
-              to="/form"
-              icon={<PersonOutlinedIcon />}
+              title="Reports"
+              to="/reports"
+              icon={<SummarizeIcon />}
               selected={selected}
               setSelected={setSelected}
             />
-            <Item
-              title="Calendar"
-              to="/calendar"
-              icon={<CalendarTodayOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
-            <Item
-              title="FAQ Page"
-              to="/faq"
-              icon={<HelpOutlineOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
-
-            <Typography
-              variant="h6"
-              color={colors.grey[300]}
-              sx={{ m: "15px 0 5px 20px" }}
-            >
-              Charts
-            </Typography>
-            <Item
-              title="Bar Chart"
-              to="/bar"
-              icon={<BarChartOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
-            <Item
-              title="Pie Chart"
-              to="/pie"
-              icon={<PieChartOutlineOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
-            <Item
-              title="Line Chart"
-              to="/line"
-              icon={<TimelineOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
-            <Item
-              title="Geography Chart"
-              to="/geography"
-              icon={<MapOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
-
-            {/* Logout */}
-            <MenuItem
+             {/* Logout */}
+             <MenuItem
               onClick={logOut}
               style={{
                 color: colors.grey[100],
@@ -238,7 +225,7 @@ const Sidebar = () => {
               icon={<ExitToAppIcon />}
             >
               <Typography>Logout</Typography>
-            </MenuItem>
+            </MenuItem> 
           </Box>
         </Menu>
       </ProSidebar>

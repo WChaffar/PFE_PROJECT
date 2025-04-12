@@ -1,28 +1,28 @@
 import { Box, Button, IconButton, Typography, useTheme } from "@mui/material";
 import { tokens } from "../../theme";
-import { mockTransactions } from "../../data/mockData";
+import { projectNotifications } from "../../data/NotificationsData"; // Replace with the new notification data
 import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
-import EmailIcon from "@mui/icons-material/Email";
-import PointOfSaleIcon from "@mui/icons-material/PointOfSale";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
-import TrafficIcon from "@mui/icons-material/Traffic";
+import FolderSpecialIcon from '@mui/icons-material/FolderSpecial';
+import RuleFolderIcon from '@mui/icons-material/RuleFolder';
+import AddTaskIcon from '@mui/icons-material/AddTask';
 import Header from "../../components/Header";
-import LineChart from "../../components/LineChart";
-import GeographyChart from "../../components/GeographyChart";
-import BarChart from "../../components/BarChart";
+import ProjectBarChart from "../../components/ProjectBarChart";
 import StatBox from "../../components/StatBox";
 import ProgressCircle from "../../components/ProgressCircle";
+import GeographyChart from "../../components/GeographyChart";
+import { useSelector } from 'react-redux';
 
 const Dashboard = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+  const user = useSelector((store) => store.auth.user);
 
   return (
     <Box m="20px">
       {/* HEADER */}
       <Box display="flex" justifyContent="space-between" alignItems="center">
-        <Header title="DASHBOARD" subtitle="Welcome to your dashboard" />
-
+        <Header title="Dashboard Overview" subtitle={`Welcome back, ${user?.firstname || 'User'} ! Here’s what’s happening today.`} />
         <Box>
           <Button
             sx={{
@@ -55,15 +55,11 @@ const Dashboard = () => {
           justifyContent="center"
         >
           <StatBox
-            title="12,361"
-            subtitle="Emails Sent"
+            title="+8"
+            subtitle="Active Projects"
             progress="0.75"
-            increase="+14%"
-            icon={
-              <EmailIcon
-                sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
-              />
-            }
+            increase="14%"
+            icon={<FolderSpecialIcon sx={{ color: colors.greenAccent[600], fontSize: "26px" }} />}
           />
         </Box>
         <Box
@@ -74,15 +70,11 @@ const Dashboard = () => {
           justifyContent="center"
         >
           <StatBox
-            title="431,225"
-            subtitle="Sales Obtained"
-            progress="0.50"
-            increase="+21%"
-            icon={
-              <PointOfSaleIcon
-                sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
-              />
-            }
+            title="+33"
+            subtitle="Completed Projects"
+            progress="0.76"
+            increase="86%"
+            icon={<RuleFolderIcon sx={{ color: colors.greenAccent[600], fontSize: "26px" }} />}
           />
         </Box>
         <Box
@@ -93,15 +85,10 @@ const Dashboard = () => {
           justifyContent="center"
         >
           <StatBox
-            title="32,441"
-            subtitle="New Clients"
-            progress="0.30"
-            increase="+5%"
-            icon={
-              <PersonAddIcon
-                sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
-              />
-            }
+            title="+40"
+            subtitle="Team members"
+            increase="80% assigned"
+            icon={<PersonAddIcon sx={{ color: colors.greenAccent[600], fontSize: "26px" }} />}
           />
         </Box>
         <Box
@@ -112,15 +99,11 @@ const Dashboard = () => {
           justifyContent="center"
         >
           <StatBox
-            title="1,325,134"
-            subtitle="Traffic Received"
+            title="123"
+            subtitle="Tasks created"
             progress="0.80"
-            increase="+43%"
-            icon={
-              <TrafficIcon
-                sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
-              />
-            }
+            increase="80% completed"
+            icon={<AddTaskIcon sx={{ color: colors.greenAccent[600], fontSize: "26px" }} />}
           />
         </Box>
 
@@ -138,22 +121,6 @@ const Dashboard = () => {
             alignItems="center"
           >
             <Box>
-              <Typography
-                variant="h5"
-                fontWeight="600"
-                color={colors.grey[100]}
-              >
-                Revenue Generated
-              </Typography>
-              <Typography
-                variant="h3"
-                fontWeight="bold"
-                color={colors.greenAccent[500]}
-              >
-                $59,342.32
-              </Typography>
-            </Box>
-            <Box>
               <IconButton>
                 <DownloadOutlinedIcon
                   sx={{ fontSize: "26px", color: colors.greenAccent[500] }}
@@ -161,8 +128,15 @@ const Dashboard = () => {
               </IconButton>
             </Box>
           </Box>
-          <Box height="250px" m="-20px 0 0 0">
-            <LineChart isDashboard={true} />
+          <Typography
+            variant="h5"
+            fontWeight="600"
+            sx={{ padding: "2px 2px 0 30px" }}
+          >
+            Project Progress Overview
+          </Typography>
+          <Box height="250px" mt="-40px">
+            <ProjectBarChart isDashboard={true} />
           </Box>
         </Box>
         <Box
@@ -176,16 +150,15 @@ const Dashboard = () => {
             justifyContent="space-between"
             alignItems="center"
             borderBottom={`4px solid ${colors.primary[500]}`}
-            colors={colors.grey[100]}
             p="15px"
           >
             <Typography color={colors.grey[100]} variant="h5" fontWeight="600">
-              Recent Transactions
+              Recent Notifications
             </Typography>
           </Box>
-          {mockTransactions.map((transaction, i) => (
+          {projectNotifications.map((notification, i) => (
             <Box
-              key={`${transaction.txId}-${i}`}
+              key={`${notification.notifId}-${i}`}
               display="flex"
               justifyContent="space-between"
               alignItems="center"
@@ -198,19 +171,23 @@ const Dashboard = () => {
                   variant="h5"
                   fontWeight="600"
                 >
-                  {transaction.txId}
+                  {notification.title}
                 </Typography>
                 <Typography color={colors.grey[100]}>
-                  {transaction.user}
+                  {notification.message}
                 </Typography>
               </Box>
-              <Box color={colors.grey[100]}>{transaction.date}</Box>
+              <Box color={colors.grey[100]}>{notification.date}</Box>
               <Box
                 backgroundColor={colors.greenAccent[500]}
                 p="5px 10px"
                 borderRadius="4px"
               >
-                ${transaction.cost}
+                {notification.type === "deadline_overdue" && (
+                  <Typography variant="body2" color={colors.grey[100]}>
+                    Overdue by {notification.daysOverdue} days
+                  </Typography>
+                )}
               </Box>
             </Box>
           ))}
@@ -243,6 +220,7 @@ const Dashboard = () => {
             <Typography>Includes extra misc expenditures and costs</Typography>
           </Box>
         </Box>
+
         <Box
           gridColumn="span 4"
           gridRow="span 2"
@@ -256,9 +234,10 @@ const Dashboard = () => {
             Sales Quantity
           </Typography>
           <Box height="250px" mt="-20px">
-            <BarChart isDashboard={true} />
+            {/* Add Sales Chart here */}
           </Box>
         </Box>
+
         <Box
           gridColumn="span 4"
           gridRow="span 2"

@@ -3,9 +3,12 @@ import { Link, useLocation } from "react-router-dom";
 import { Navbar, Nav, Button, Container } from "react-bootstrap";
 import logo from '../img/SopraHR_Noir.png';
 import "../css/Navbar.css";
+import {useDispatch} from "react-redux"
+import { resetState } from "../actions/authAction";
 
 const NavbarComponent = ({ showModeratorBoard, showAdminBoard, currentUser, logOut }) => {
   const location = useLocation();
+  const dispatch=useDispatch();
 
   const isActive = (path) => location.pathname === path;
 
@@ -41,6 +44,10 @@ const NavbarComponent = ({ showModeratorBoard, showAdminBoard, currentUser, logO
       as={Link}
       to="/login"
       className={`btn-login ${isActive("/login") ? "active" : ""}`}
+      onClick={() => {
+        // renitialize the state
+        dispatch(resetState());
+      }}
     >
       Login
     </Button>
@@ -51,6 +58,10 @@ const NavbarComponent = ({ showModeratorBoard, showAdminBoard, currentUser, logO
       as={Link}
       to="/register"
       className={`btn-signup ${isActive("/register") ? "active" : ""}`}
+      onClick={() => {
+        // renitialize the state
+        dispatch(resetState());
+      }}
     >
       Sign Up
     </Button>

@@ -33,6 +33,14 @@ const authReducer = (state = initialState, action) => {
         token: null,
         error: null, // clear error on logout
       };
+      case 'RESET':
+        return {
+          ...state,
+          isAuthenticated: false,
+          user: null,
+          token: null,
+          error: null, // clear error on logout
+        };
     default:
       return state;
   }
