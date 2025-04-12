@@ -3,20 +3,32 @@ import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import '../css/Register.css';  // Import the Register CSS file
 import LogoImg from "../img/app_logo.png";
+import { useDispatch, useSelector } from 'react-redux';
+import { register } from "../actions/authAction";  // Make sure you import the correct action
 
 const RegisterForm = () => {
+  const dispatch = useDispatch();
   const [message, setMessage] = useState("");
 
+  // Get error from Redux store
+  const error = useSelector((state) => state.auth.error);  // Assuming error is in authReducer
+
   const initialValues = {
-    username: "",
+    firstName: "",
+    lastName: "",
     email: "",
     password: "",
+    confirmPassword: "",  // Added confirmPassword field
   };
 
   const validationSchema = Yup.object({
-    username: Yup.string()
-      .min(3, "Username must be between 3 and 20 characters.")
-      .max(20, "Username must be between 3 and 20 characters.")
+    firstName: Yup.string()
+      .min(3, "First name must be between 3 and 20 characters.")
+      .max(20, "First name must be between 3 and 20 characters.")
+      .required("This field is required!"),
+    lastName: Yup.string()
+      .min(3, "Last name must be between 3 and 20 characters.")
+      .max(20, "Last name must be between 3 and 20 characters.")
       .required("This field is required!"),
     email: Yup.string()
       .email("Invalid email address.")
@@ -25,16 +37,25 @@ const RegisterForm = () => {
       .min(6, "Password must be at least 6 characters.")
       .max(40, "Password must be at most 40 characters.")
       .required("This field is required!"),
+    confirmPassword: Yup.string()
+      .oneOf([Yup.ref('password'), null], "Passwords must match")  // Passwords must match
+      .required("This field is required!"),
   });
 
   const handleRegister = (values, { setSubmitting }) => {
     setMessage("");
-    console.log("Register details", values);
 
-    setTimeout(() => {
-      setMessage("Registration successful!");
-      setSubmitting(false);
-    }, 1000); // Simulating a network request delay
+    // Dispatch register action
+    dispatch(register({firstname:values.firstName,lastname:values.lastName,email:values.email,password:values.password}))
+      .then(response => {
+      })
+      .catch(error => {
+        // Handle error (e.g., email already taken)
+        setMessage(error.message || "An error occurred during registration.");
+      })
+      .finally(() => {
+        setSubmitting(false);
+      });
   };
 
   return (
@@ -50,22 +71,39 @@ const RegisterForm = () => {
               <div className="logo-container">
                 <img src={LogoImg} alt="Logo" className="logo" />
               </div>
-
+              {/* First Name Field */}
               <div className="form-group">
-                <label htmlFor="username">Username:</label>
+                <label htmlFor="firstName">First Name:</label>
                 <Field
                   type="text"
-                  id="username"
-                  name="username"
+                  id="firstName"
+                  name="firstName"
                   className="form-control"
                 />
                 <ErrorMessage
-                  name="username"
+                  name="firstName"
                   component="div"
                   className="invalid-feedback d-block"
                 />
               </div>
 
+              {/* Last Name Field */}
+              <div className="form-group">
+                <label htmlFor="lastName">Last Name:</label>
+                <Field
+                  type="text"
+                  id="lastName"
+                  name="lastName"
+                  className="form-control"
+                />
+                <ErrorMessage
+                  name="lastName"
+                  component="div"
+                  className="invalid-feedback d-block"
+                />
+              </div>
+
+              {/* Email Field */}
               <div className="form-group">
                 <label htmlFor="email">Email:</label>
                 <Field
@@ -81,6 +119,7 @@ const RegisterForm = () => {
                 />
               </div>
 
+              {/* Password Field */}
               <div className="form-group">
                 <label htmlFor="password">Password:</label>
                 <Field
@@ -96,14 +135,40 @@ const RegisterForm = () => {
                 />
               </div>
 
+              {/* Confirm Password Field */}
+              <div className="form-group">
+                <label htmlFor="confirmPassword">Confirm Password:</label>
+                <Field
+                  type="password"
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  className="form-control"
+                />
+                <ErrorMessage
+                  name="confirmPassword"
+                  component="div"
+                  className="invalid-feedback d-block"
+                />
+              </div>
+              <br/>
+              {/* Success or error messages */}
               {message && (
                 <div className="form-group">
-                  <div className="alert alert-success" role="alert">
+                  <div className={message.includes("successful") ? "alert alert-success" : "alert alert-danger"} role="alert">
                     {message}
                   </div>
                 </div>
               )}
-               <br/>
+              
+              {/* Redux error message */}
+              {error && (
+                <div className="form-group">
+                  <div className="alert alert-danger" role="alert">
+                    {error}
+                  </div>
+                </div>
+              )}
+
               <div className="form-group">
                 <button type="submit" className="button" disabled={isSubmitting}>
                   {isSubmitting ? (

@@ -5,9 +5,6 @@ import authService from '../services/auth.service';
 // LOGIN
 export const login = ({email, password}) => async (dispatch) => {
   try {
-    console.log("login action")
-    console.log(email)
-    console.log(password)
     const data = await authService.login(email, password);
     dispatch({
       type: 'LOGIN_SUCCESS',

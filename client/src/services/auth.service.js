@@ -1,27 +1,32 @@
 import axios from "axios";
 import {base_url} from "../config/axiosConfig"
 
-const register = (username, email, password) => {
-  return axios.post(base_url + "signup", {
-    username,
+const register = ({firstname,lastname, email, password}) => {
+  console.log(firstname,lastname,email,password)
+  return axios.post(base_url + "user/register", {
+    firstname,
+    lastname,
     email,
     password,
+  }).then((response) => {
+    if (response.data.firstname) {
+      localStorage.setItem("user", JSON.stringify(response.data));
+    }
+    console.log(response);
+    return response.data;
   });
 };
 
 const login = (email, password) => {
-  console.log("auth services:")
-  console.log(email+" "+password);
   return axios
     .post(base_url + "user/login", {
       email,
       password,
     })
     .then((response) => {
-      if (response.data.username) {
+      if (response.data.firstname) {
         localStorage.setItem("user", JSON.stringify(response.data));
       }
-      console.log(response);
       return response.data;
     });
 };
