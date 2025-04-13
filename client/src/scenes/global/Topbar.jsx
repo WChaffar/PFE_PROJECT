@@ -16,7 +16,7 @@ const Topbar = () => {
   const colorMode = useContext(ColorModeContext);
 
   return (
-    <Box display="flex" justifyContent="space-between" p={3}>
+    <Box display="flex" justifyContent="space-between" paddingTop={2}>
    
       {/* SEARCH BAR */}
 
@@ -44,7 +44,8 @@ const Topbar = () => {
       transform: 'scale(4.5)',  // This zooms in the image by 1.5 times
       transformOrigin: 'center', // Ensures zoom starts from the center
       transition: 'transform 0.3s ease',  // Optional smooth transition effect
-      marginRight:"30px"
+      marginRight:"50px",
+
     }}/></Box>
     </Box>
   );
