@@ -6,6 +6,7 @@ import {
   Menu,
   MenuItem,
   Typography,
+  LinearProgress,
 } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert"; // Icône pour les trois points
 import {
@@ -19,12 +20,18 @@ import {
 import { useTheme } from "@mui/material";
 import { tokens } from "../../theme";
 import Header from "../../components/Header";
-import { projectsData, projectTasksData } from "../../data/ProjectsData";
+import {
+  projectsData,
+  projectTasksData,
+  projectTasksDeadlineData,
+} from "../../data/ProjectsData";
 import ProjectPipeline from "../../components/ProjectPipeline";
 import ProjectBudgetProgressPie from "../../components/ProjectBudgetProgressPie";
 import AdminPanelSettingsOutlinedIcon from "@mui/icons-material/AdminPanelSettingsOutlined";
 import LockOpenOutlinedIcon from "@mui/icons-material/LockOpenOutlined";
 import SecurityOutlinedIcon from "@mui/icons-material/SecurityOutlined";
+import ProjectWorkLoadBarChart from "../../components/ProjectWorkLoadBarChart";
+import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
 
 const CustomToolbar = () => {
   return (
@@ -155,18 +162,25 @@ const Projects = () => {
   ];
 
   const projectTasksColumns = [
-
     {
       field: "Overdue",
       headerName: "Overdue",
       flex: 1,
-      cellClassName: "name-column--cell",
+      renderCell: (params) => {
+        const days = parseInt(params.value);
+        let color = "black";
+        if (days <= 4) color = "blue";
+        else if (days > 4) color = "red";
+
+        return (
+          <span style={{ color, fontWeight: "bold" }}>{params.value}</span>
+        );
+      },
     },
     {
       field: "Task",
       headerName: "Task",
-      headerAlign: "left",
-      align: "left",
+      flex: 1,
     },
     {
       field: "Deadline",
@@ -178,7 +192,59 @@ const Projects = () => {
       headerName: "Employee",
       flex: 1,
     },
+  ];
 
+  const projectTasksDeadlineColumns = [
+    {
+      field: "Overdue",
+      headerName: "Overdue",
+      flex: 1,
+      cellClassName: "name-column--cell",
+    },
+    {
+      field: "Task",
+      headerName: "Task",
+      headerAlign: "left",
+      align: "left",
+      flex: 1,
+    },
+    {
+      field: "Deadline",
+      headerName: "Deadline",
+      flex: 1,
+    },
+    {
+      field: "Workload",
+      headerName: "Workload",
+      flex: 1.5,
+      renderCell: (params) => {
+        const value = params.value;
+        return (
+          <Box display="flex" alignItems="center" width="100%">
+            <Box width="100%" mr={1}>
+              <LinearProgress
+                variant="determinate"
+                value={value}
+                sx={{
+                  height: 8,
+                  borderRadius: 5,
+                  backgroundColor: "#e0e0e0",
+                  "& .MuiLinearProgress-bar": {
+                    backgroundColor: "#000066", // dark blue
+                  },
+                }}
+              />
+            </Box>
+            <Typography
+              variant="body2"
+              sx={{ color: "#0000FF", fontWeight: 600 }}
+            >
+              {`${value}%`}
+            </Typography>
+          </Box>
+        );
+      },
+    },
   ];
 
   const ActionsMenu = ({ row }) => {
@@ -319,6 +385,7 @@ const Projects = () => {
               </Typography>
             </Box>
           </Box>
+          {/*-------------------------------------------------------------------------------------------*/}
           <Box
             gridColumn="span 6"
             gridRow="span 2"
@@ -328,10 +395,15 @@ const Projects = () => {
             <Typography variant="h5" fontWeight="300">
               Overdue Task
             </Typography>
-            <Box display="flex" flexDirection="column" alignItems="center" paddingTop="10px" >
+            <Box
+              display="flex"
+              flexDirection="column"
+              alignItems="center"
+              paddingTop="10px"
+            >
               <Box
                 m="0px 0 0 0"
-                height="35vh"
+                height="30vh"
                 width="100%"
                 sx={{
                   "& .MuiDataGrid-root": {
@@ -346,7 +418,7 @@ const Projects = () => {
                   "& .MuiDataGrid-columnHeaders": {
                     backgroundColor: colors.grey[700],
                     borderBottom: "none",
-                    paddingLeft:"15px"
+                    paddingLeft: "15px",
                   },
                   "& .MuiDataGrid-virtualScroller": {
                     backgroundColor: colors.primary[400],
@@ -366,6 +438,85 @@ const Projects = () => {
                   hideFooter
                 />
               </Box>
+            </Box>
+          </Box>
+          {/*-----------------------------------------------*/}
+          <Box
+            gridColumn="span 6"
+            gridRow="span 2"
+            backgroundColor={colors.primary[400]}
+            padding="10px"
+          >
+            <Typography variant="h5" fontWeight="300">
+              Upcoming Deadlines
+            </Typography>
+            <Box
+              display="flex"
+              flexDirection="column"
+              alignItems="center"
+              paddingTop="10px"
+            >
+              <Box
+                m="0px 0 0 0"
+                height="30vh"
+                width="100%"
+                sx={{
+                  "& .MuiDataGrid-root": {
+                    border: "none",
+                  },
+                  "& .MuiDataGrid-cell": {
+                    borderBottom: "none",
+                  },
+                  "& .name-column--cell": {
+                    color: colors.greenAccent[300],
+                  },
+                  "& .MuiDataGrid-columnHeaders": {
+                    backgroundColor: colors.grey[700],
+                    borderBottom: "none",
+                    paddingLeft: "15px",
+                  },
+                  "& .MuiDataGrid-virtualScroller": {
+                    backgroundColor: colors.primary[400],
+                  },
+                  "& .MuiDataGrid-footerContainer": {
+                    borderTop: "none",
+                    backgroundColor: colors.blueAccent[700],
+                  },
+                  "& .MuiCheckbox-root": {
+                    color: `${colors.greenAccent[200]} !important`,
+                  },
+                }}
+              >
+                <DataGrid
+                  rows={projectTasksDeadlineData}
+                  columns={projectTasksDeadlineColumns}
+                  hideFooter
+                />
+              </Box>
+            </Box>
+          </Box>
+          {/* ROW 2 */}
+          <Box
+            gridColumn="span 6"
+            gridRow="span 2"
+            backgroundColor={colors.primary[400]}
+            padding="10px"
+          >
+          <Typography variant="h5" fontWeight="300">
+              Workload
+            </Typography>
+            <Box
+              mt="25px"
+              p="0 30px"
+              display="flex "
+              justifyContent="space-between"
+              alignItems="center"
+            >
+              <br />
+            </Box>
+
+            <Box height="250px" mt="-40px">
+              <ProjectWorkLoadBarChart isDashboard={true} />
             </Box>
           </Box>
         </Box>
