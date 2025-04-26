@@ -1,0 +1,48 @@
+export const teamMembersData = [
+    {
+      id: 1,
+      avatar: "https://i.pravatar.cc/150?img=1",
+      name: "Sarah Wilson",
+      role: "Senior Developer",
+      skills: ["React", "Nodejs", "Typescript"],
+      experience: "3 years",
+      availability: "Available",
+    },
+    {
+      id: 2,
+      avatar: "https://i.pravatar.cc/150?img=2",
+      name: "Jhon Doe",
+      role: "UX Designer",
+      skills: ["Figma", "AdobeXD"],
+      experience: "1 year",
+      availability: "On Project",
+    },
+    {
+      id: 3,
+      avatar: "https://i.pravatar.cc/150?img=3",
+      name: "Alex Arnold",
+      role: "FullStack Developer",
+      skills: ["Angular", "Django", "MongoDB"],
+      experience: "2 years",
+      availability: "On Project",
+    },
+    {
+      id: 4,
+      avatar: "https://i.pravatar.cc/150?img=4",
+      name: "Jad Piquer",
+      role: "Project Manager",
+      skills: ["Scrum Master"],
+      experience: "7 years",
+      availability: "On Project",
+    },
+    {
+      id: 5,
+      avatar: "https://i.pravatar.cc/150?img=5",
+      name: "Mark Musk",
+      role: "System Administrator",
+      skills: ["Linux", "Windows", "Network Configuration"],
+      experience: "5 years",
+      availability: "Available",
+    },
+  ];
+  

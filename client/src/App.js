@@ -19,6 +19,11 @@ import Navbar from "./components/LoginNavbar";
 import "./App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Projects from "./scenes/Projects";
+import CreateProjectForm from "./scenes/CreateProjectForm";
+import ProjectDetails from "./scenes/ProjectDetails";
+import EditProjectForm from "./scenes/EditProjectForm";
+import Team from "./scenes/team";
+import CreateTeamMemberForm from "./scenes/CreateTeamMemberForm";
 
 function PrivateRoute({ children }) {
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
@@ -58,6 +63,11 @@ function AppContent() {
               {/* Private Routes */}
               <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
               <Route path="/projects" element={<PrivateRoute><Projects /></PrivateRoute>} />
+              <Route path="/projects/create" element={<PrivateRoute><CreateProjectForm /></PrivateRoute>} />
+              <Route path="/projects/project/:id/details" element={<PrivateRoute><ProjectDetails /></PrivateRoute>} />
+              <Route path="/projects/project/:id/edit" element={<PrivateRoute><EditProjectForm /></PrivateRoute>} />
+              <Route path="/team" element={<PrivateRoute><Team /></PrivateRoute>} />
+              <Route path="/team/create" element={<PrivateRoute><CreateTeamMemberForm /></PrivateRoute>} />
               {/* Catch-All Route */}
               <Route path="*" element={<NotFound />} />
             </Routes>

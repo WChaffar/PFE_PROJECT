@@ -32,6 +32,7 @@ import LockOpenOutlinedIcon from "@mui/icons-material/LockOpenOutlined";
 import SecurityOutlinedIcon from "@mui/icons-material/SecurityOutlined";
 import ProjectWorkLoadBarChart from "../../components/ProjectWorkLoadBarChart";
 import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
+import { useNavigate } from "react-router-dom";
 
 const CustomToolbar = () => {
   return (
@@ -49,6 +50,7 @@ const CustomToolbar = () => {
 const Projects = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+    const navigate = useNavigate();
 
   const columns = [
     {
@@ -253,7 +255,13 @@ const Projects = () => {
     const handleClick = (event) => {
       setAnchorEl(event.currentTarget);
     };
-    const handleClose = () => {
+    const handleClose = (action) => {
+      if(action==="Edit"){
+        navigate("/projects/project/1234/edit")
+      }
+      if(action==="Details"){
+        navigate("/projects/project/1234/details")
+      }
       setAnchorEl(null);
     };
 
@@ -263,9 +271,9 @@ const Projects = () => {
           <MoreVertIcon />
         </IconButton>
         <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
-          <MenuItem onClick={handleClose}>Edit</MenuItem>
-          <MenuItem onClick={handleClose}>Delete</MenuItem>
-          <MenuItem onClick={handleClose}>Details</MenuItem>
+           <MenuItem onClick={() => handleClose("Edit")}>✏️ Edit</MenuItem>
+           <MenuItem onClick={() => handleClose("Delete")}>🗑️ Delete</MenuItem>
+           <MenuItem onClick={() => handleClose("Details")}>🔍 Details</MenuItem>
         </Menu>
       </>
     );
@@ -286,6 +294,9 @@ const Projects = () => {
               fontSize: "14px",
               fontWeight: "bold",
               padding: "10px 20px",
+            }}
+            onClick={()=> {
+              navigate("/projects/create");
             }}
           >
             Create new project
