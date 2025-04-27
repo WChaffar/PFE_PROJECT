@@ -174,7 +174,7 @@ const Sidebar = () => {
             />
                         <Item
               title="Staffing"
-              to="/assignement"
+              to="/assignements"
               icon={<AssignmentIndIcon />}
               selected={selected}
               setSelected={setSelected}

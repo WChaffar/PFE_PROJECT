@@ -133,12 +133,14 @@ const TeamManagement = () => {
     const handleClose = (action) => {
       if (action === "Edit") {
         // handle edit logic here
+        navigate("/team/12345/edit");
       }
       if (action === "Delete") {
         // handle delete logic here
       }
       if (action === "Details") {
         // handle details logic here
+        navigate("/team/1235/profile");
       }
       setAnchorEl(null);
     };
