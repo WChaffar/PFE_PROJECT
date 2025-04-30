@@ -27,6 +27,8 @@ import CreateTeamMemberForm from "./scenes/CreateTeamMemberForm";
 import EditTeamMemberForm from "./scenes/EditTeamMember";
 import TeamMemberProfile from "./scenes/TeamMemberProfile/indec";
 import StaffingBoard from "./scenes/Staffing";
+import EditStaffing from "./scenes/EditAssignement";
+import TaskManagement from "./scenes/tasks";
 
 function PrivateRoute({ children }) {
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
@@ -74,6 +76,8 @@ function AppContent() {
               <Route path="/team/:id/edit" element={<PrivateRoute><EditTeamMemberForm /></PrivateRoute>} />
               <Route path="/team/:id/profile" element={<PrivateRoute><TeamMemberProfile /></PrivateRoute>} />
               <Route path="/assignements" element={<PrivateRoute><StaffingBoard /></PrivateRoute>} />
+              <Route path="/assignements/:id/edit" element={<PrivateRoute><EditStaffing /></PrivateRoute>} />
+              <Route path="/tasks" element={<PrivateRoute><TaskManagement/></PrivateRoute>} />
               {/* Catch-All Route */}
               <Route path="*" element={<NotFound />} />
             </Routes>

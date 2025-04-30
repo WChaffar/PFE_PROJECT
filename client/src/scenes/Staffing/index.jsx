@@ -217,7 +217,7 @@ const StaffingCalendar = () => {
                 <TableCell>
                   <Box display="flex" alignItems="center">
                     <IconButton
-                      onClick={() => navigate(`/edit-assignments/${member.id}`)} // Navigate to the edit assignments page
+                      onClick={() => navigate("/assignements/12345/edit")} // Navigate to the edit assignments page
                       sx={{
                         mr: 1,
                         width: 25,
