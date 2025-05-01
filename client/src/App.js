@@ -29,6 +29,9 @@ import TeamMemberProfile from "./scenes/TeamMemberProfile/indec";
 import StaffingBoard from "./scenes/Staffing";
 import EditStaffing from "./scenes/EditAssignement";
 import TaskManagement from "./scenes/tasks";
+import CreateTaskForm from "./scenes/AddTasksForm";
+import TaskDetails from "./scenes/TaskDétails";
+import EditTaskForm from "./scenes/EditTaskForm";
 
 function PrivateRoute({ children }) {
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
@@ -78,6 +81,9 @@ function AppContent() {
               <Route path="/assignements" element={<PrivateRoute><StaffingBoard /></PrivateRoute>} />
               <Route path="/assignements/:id/edit" element={<PrivateRoute><EditStaffing /></PrivateRoute>} />
               <Route path="/tasks" element={<PrivateRoute><TaskManagement/></PrivateRoute>} />
+              <Route path="/tasks/:id/create" element={<PrivateRoute><CreateTaskForm/></PrivateRoute>} />
+              <Route path="/tasks/:id/détails" element={<PrivateRoute><TaskDetails/></PrivateRoute>} />
+              <Route path="/tasks/:id/edit" element={<PrivateRoute><EditTaskForm/></PrivateRoute>} />
               {/* Catch-All Route */}
               <Route path="*" element={<NotFound />} />
             </Routes>

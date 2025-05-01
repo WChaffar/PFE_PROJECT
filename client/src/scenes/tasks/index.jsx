@@ -119,8 +119,10 @@ const TasksManagement = () => {
         };
         const handleClose = (action) => {
           if(action==="Edit"){
+            navigate("/tasks/12345/edit")
           }
           if(action==="Details"){
+            navigate("/tasks/12345/détails")
           }
           setAnchorEl(null);
         };
@@ -162,7 +164,7 @@ const TasksManagement = () => {
                     padding: "10px 20px",
                   }}
                   onClick={()=> {
-                    navigate("/team/create");
+                    navigate("/tasks/12345/create");
                   }}
                 >
                   + Add Task
