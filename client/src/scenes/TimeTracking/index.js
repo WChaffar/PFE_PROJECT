@@ -98,12 +98,34 @@ const weekRange = `${format(startDate, "MMM dd")} - ${format(
     "MMM dd"
   )}`;
 
-const getStatus = (rowIndex, dayIndex) => {
-if ((rowIndex + dayIndex) % 7 === 0) return "inactive";
-if (dayIndex % 3 === 0) return "billable";
-if (dayIndex % 4 === 0) return "nonBillable";
-return "none";
+// Nouveau tableau de données : temps journalier pour chaque tâche
+const taskTimeEntries = [
+  { taskId: 1, date: "2025-05-05", status: "billable" },
+  { taskId: 1, date: "2025-05-06", status: "nonBillable" },
+  { taskId: 1, date: "2025-05-07", status: "billable" },
+  { taskId: 1, date: "2025-05-08", status: "inactive" },
+  { taskId: 1, date: "2025-05-09", status: "none" },
+  { taskId: 2, date: "2025-05-05", status: "billable" },
+  { taskId: 2, date: "2025-05-06", status: "billable" },
+  { taskId: 2, date: "2025-05-07", status: "nonBillable" },
+  { taskId: 2, date: "2025-05-08", status: "none" },
+  { taskId: 2, date: "2025-05-09", status: "billable" },
+  { taskId: 3, date: "2025-05-05", status: "inactive" },
+  { taskId: 3, date: "2025-05-06", status: "inactive" },
+  { taskId: 3, date: "2025-05-07", status: "billable" },
+  { taskId: 3, date: "2025-05-08", status: "nonBillable" },
+  { taskId: 3, date: "2025-05-09", status: "billable" },
+  // Ajoute les jours et tâches restants selon besoin
+];
+
+// Remplace ta fonction getStatus par celle-ci :
+const getStatus = (taskId, date) => {
+  const entry = taskTimeEntries.find(
+    (e) => e.taskId === taskId && e.date === format(date, "yyyy-MM-dd")
+  );
+  return entry ? entry.status : "none";
 };
+
 
 const projectColumns = [
 {
@@ -143,7 +165,10 @@ flex: 0.5,
 sortable: false,
 renderCell: (params) => {
 const rowIndex = params.api.getRowIndex(params.id);
-const status = getStatus(rowIndex, dayIndex);
+const taskId = params.row.id;
+const date = addDays(startDate, dayIndex);
+const status = getStatus(taskId, date);
+
 return ( <Tooltip title={status}>
 <Box
 width={28}
