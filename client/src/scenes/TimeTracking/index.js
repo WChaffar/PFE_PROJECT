@@ -9,11 +9,13 @@ useTheme,
 IconButton,
 Tooltip,
 LinearProgress,
+Menu
 } from "@mui/material";
 import {
 Edit,
 ArrowBack,
-ArrowForward
+ArrowForward,
+ArrowBackOutlined
 } from "@mui/icons-material";
 import {
 DataGrid,
@@ -25,6 +27,8 @@ GridToolbarDensitySelector,
 } from "@mui/x-data-grid";
 import { tokens } from "../../theme";
 import { addDays, format, startOfWeek, endOfWeek } from "date-fns";
+
+
 
 const mockProjects = [
 { id: 1, name: "HR project 1", tnf: "25,5 Days", bt: "10 Days" },
@@ -53,7 +57,7 @@ id: 3,
 projectId: 1,
 name: "Project Manager",
 assignedTo: "Alex Arnold",
-avatar: "https://i.pravatar.cc/40?img=3)",
+avatar: "https://i.pravatar.cc/40?img=3",
 workload: 90,
 },
 {
@@ -69,7 +73,7 @@ workload: 0,
 const timeStatusColors = {
 billable: "#4CAF50",
 nonBillable: "#FF9800",
-none: "#E0E0E0",
+none: "#ffffff00",
 inactive:
 "repeating-linear-gradient(45deg, #ccc 0, #ccc 2px, #fff 2px, #fff 4px)",
 };
@@ -77,28 +81,105 @@ inactive:
 const CustomToolbar = () => ( <GridToolbarContainer> <Box display="flex" gap={1} alignItems="center"> <GridToolbarColumnsButton /> <GridToolbarFilterButton /> <GridToolbarDensitySelector /> <GridToolbarExport /> </Box> </GridToolbarContainer>
 );
 
+function StatusCell({ status, onChange }) {
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
+
+  const handleClick = (event) => {
+    event.stopPropagation();
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleChange = (newStatus) => {
+    onChange(newStatus);
+    handleClose();
+  };
+  return (
+    <Box display="flex" alignItems="center" gap={0.5}>
+      <Tooltip title={status}>
+        <Box
+          width={28}
+          height={28}
+          borderRadius="4px"
+          sx={{
+            background:
+              status === "inactive"
+                ? timeStatusColors.inactive
+                : timeStatusColors[status],
+            border: "1px solid #ccc",
+          }}
+        >
+         <IconButton size="small" onClick={handleClick}>
+        <Edit fontSize="small" />
+      </IconButton>
+      </Box>
+      </Tooltip>
+     
+      <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
+        <MenuItem onClick={() => handleChange("billable")}>Billable</MenuItem>
+        <MenuItem onClick={() => handleChange("nonBillable")}>
+          Non-Billable
+        </MenuItem>
+        <MenuItem onClick={() => handleChange("inactive")}>Inactive</MenuItem>
+        <MenuItem onClick={() => handleChange("none")}>None</MenuItem>
+      </Menu>
+    </Box>
+  );
+}
+
+function WeekStatusCell({ onChange }) {
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
+
+  const handleClick = (event) => {
+    event.stopPropagation();
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleChange = (newStatus) => {
+    onChange(newStatus);
+    handleClose();
+  };
+  return (
+    <Box display="flex" alignItems="center" gap={0.5}>
+      <Tooltip>
+        <Box
+          width={28}
+          height={28}
+          borderRadius="4px"
+        >
+        <ArrowBackOutlined />
+         <IconButton size="small" onClick={handleClick}>
+        <Edit fontSize="small" />
+      </IconButton>
+      </Box>
+      </Tooltip>
+     
+      <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
+        <MenuItem onClick={() => handleChange("billable")}>Billable</MenuItem>
+        <MenuItem onClick={() => handleChange("nonBillable")}>
+          Non-Billable
+        </MenuItem>
+        <MenuItem onClick={() => handleChange("inactive")}>Inactive</MenuItem>
+        <MenuItem onClick={() => handleChange("none")}>None</MenuItem>
+      </Menu>
+    </Box>
+  );
+}
+
+
+
+
 export default function TimeTracking() {
-const theme = useTheme();
-const colors = tokens(theme.palette.mode);
-
-const [selectedProject, setSelectedProject] = useState(null);
-const [searchTask, setSearchTask] = useState("");
-const [searchEmployer, setSearchEmployer] = useState("");
-const [startDate, setStartDate] = useState(
-startOfWeek(new Date(), { weekStartsOn: 1 })
-);
-const [viewMode, setViewMode] = useState("Cost");
-
-const daysToShow = 7;
-const visibleDays = Array.from({ length: daysToShow }, (_, i) =>
-format(addDays(startDate, i), "EE dd")
-);
-const weekRange = `${format(startDate, "MMM dd")} - ${format(
-    endOfWeek(startDate, { weekStartsOn: 1 }),
-    "MMM dd"
-  )}`;
-
-// Nouveau tableau de données : temps journalier pour chaque tâche
+  // Nouveau tableau de données : temps journalier pour chaque tâche
 const taskTimeEntries = [
   { taskId: 1, date: "2025-05-05", status: "billable" },
   { taskId: 1, date: "2025-05-06", status: "nonBillable" },
@@ -117,14 +198,85 @@ const taskTimeEntries = [
   { taskId: 3, date: "2025-05-09", status: "billable" },
   // Ajoute les jours et tâches restants selon besoin
 ];
+const theme = useTheme();
+const colors = tokens(theme.palette.mode);
 
-// Remplace ta fonction getStatus par celle-ci :
-const getStatus = (taskId, date) => {
-  const entry = taskTimeEntries.find(
-    (e) => e.taskId === taskId && e.date === format(date, "yyyy-MM-dd")
-  );
-  return entry ? entry.status : "none";
+const [selectedProject, setSelectedProject] = useState(null);
+const [searchTask, setSearchTask] = useState("");
+const [searchEmployer, setSearchEmployer] = useState("");
+const [startDate, setStartDate] = useState(
+startOfWeek(new Date(), { weekStartsOn: 1 })
+);
+const [viewMode, setViewMode] = useState("Cost");
+const [entries, setEntries] = useState(taskTimeEntries);
+
+
+
+const daysToShow = 7;
+const visibleDays = Array.from({ length: daysToShow }, (_, i) =>
+format(addDays(startDate, i), "EE dd")
+);
+const weekRange = `${format(startDate, "MMM dd")} - ${format(
+    endOfWeek(startDate, { weekStartsOn: 1 }),
+    "MMM dd"
+  )}`;
+
+
+
+  const getStatus = (taskId, date) => {
+    const formattedDate = format(date, "yyyy-MM-dd");
+
+    const entry = entries.find(
+      (e) =>
+        String(e.taskId).trim() === String(taskId).trim() &&
+        String(e.date).trim() === formattedDate
+    );
+    
+    if(entry)
+
+    return entry ? entry.status : "none";
+  };
+
+const updateStatus = (taskId, date, newStatus) => {
+  const dateStr = format(date, "yyyy-MM-dd");
+  setEntries((prev) => {
+    const exists = prev.find((e) => e.taskId === taskId && e.date === dateStr);
+    if (exists) {
+      return prev.map((e) =>
+        e.taskId === taskId && e.date === dateStr
+          ? { ...e, status: newStatus }
+          : e
+      );
+    } else {
+      return [...prev, { taskId, date: dateStr, status: newStatus }];
+    }
+  });
 };
+
+
+const updateWeekStatus=(taskId,newStatus)=>{
+  const mergeEntries = (entries, newEntries) => {
+    // Extraire les taskIds uniques des newEntries
+    const newTaskIds = new Set(newEntries.map(entry => entry.taskId));
+  
+    // Filtrer les anciennes entrées pour supprimer celles avec un taskId présent dans newEntries
+    const filteredOldEntries = entries.filter(entry => !newTaskIds.has(entry.taskId));
+  
+    // Combiner les anciennes filtrées avec les nouvelles
+    return [...newEntries, ...filteredOldEntries];
+  };
+  
+  let newEntries=[];
+
+    for (let i = 0; i < visibleDays.length; i++) {
+      const dayIndex=i;
+      const date = addDays(startDate, dayIndex);
+      const dateStr = format(date, "yyyy-MM-dd");
+      newEntries.push ({taskId,date:dateStr, status:newStatus})
+    }
+    const updatedEntries = mergeEntries(entries, newEntries);
+    setEntries(updatedEntries);
+}
 
 
 const projectColumns = [
@@ -140,52 +292,58 @@ renderCell: ({ row }) => ( <Box display="flex" alignItems="center" gap={1}> <spa
 ];
 
 const taskColumnsCost = [
-{
-field: "name",
-headerName: "Task Name",
-flex: 1.5,
-},
-{
-field: "assignedTo",
-headerName: "Assigned Person",
-flex: 1.2,
-renderCell: (params) => ( <Box display="flex" alignItems="center" gap={1}>
-{params.row.avatar ? ( <Avatar src={params.row.avatar} />
-) : ( <Avatar>?</Avatar>
-)}
-{params.row.assignedTo || "Unassigned"} </Box>
-),
-},
-...visibleDays.map((day, i) => {
-const dayIndex = i;
-return {
-field: day,
-headerName: day,
-flex: 0.5,
-sortable: false,
-renderCell: (params) => {
-const rowIndex = params.api.getRowIndex(params.id);
-const taskId = params.row.id;
-const date = addDays(startDate, dayIndex);
-const status = getStatus(taskId, date);
-
-return ( <Tooltip title={status}>
-<Box
-width={28}
-height={28}
-borderRadius="4px"
-sx={{
-background:
-status === "inactive"
-? timeStatusColors.inactive
-: timeStatusColors[status],
-border: "1px solid #ccc",
-}}
-/> </Tooltip>
-);
-},
-};
-}),
+  {
+    field: "name",
+    headerName: "Task Name",
+    flex: 1.5,
+  },
+  {
+    field: "assignedTo",
+    headerName: "Assigned Person",
+    flex: 1.2,
+    renderCell: (params) => (
+      <Box display="flex" alignItems="center" gap={1}>
+        {params.row.avatar ? (
+          <Avatar src={params.row.avatar} />
+        ) : (
+          <Avatar>?</Avatar>
+        )}
+        {params.row.assignedTo || "Unassigned"}
+      </Box>
+    ),
+  },
+  ...visibleDays.map((day, i) => {
+    const dayIndex = i;
+    return {
+      field: day,
+      headerName: day,
+      flex: 0.5,
+      sortable: false,
+      renderCell: (params) => {
+        const taskId = params.row.id;
+        const date = addDays(startDate, dayIndex);
+        const status = getStatus(taskId, date);
+        return (
+          <StatusCell
+            status={status}
+            onChange={(newStatus) => updateStatus(taskId, date, newStatus)}
+            key={taskId}
+          />
+        );
+      },
+    };
+  }),
+  {
+    headerName: "Update throughout the week",
+    flex: 1.5,
+    renderCell: (params) =>{ 
+      const taskId = params.row.id;
+      return (
+      <WeekStatusCell
+      onChange={(newStatus) => updateWeekStatus(taskId,newStatus)}
+    />
+    )},
+  },
 ];
 
 const taskColumnsWorkload = [
