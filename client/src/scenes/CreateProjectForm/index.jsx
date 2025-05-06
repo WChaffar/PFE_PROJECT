@@ -1,26 +1,54 @@
-import { Box, Button, TextField, MenuItem } from "@mui/material";
+import { Box, Button, TextField, MenuItem, useTheme } from "@mui/material";
 import { Formik } from "formik";
 import * as yup from "yup";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import Header from "../../components/Header";
+import { tokens } from "../../theme";
+import { useDispatch, useSelector } from "react-redux";
+import { createProject } from "../../actions/projectAction";
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 const CreateProjectForm = () => {
   const isNonMobile = useMediaQuery("(min-width:600px)");
+  const theme = useTheme();
+  const colors = tokens(theme.palette.mode);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const error = useSelector((state) => state.projects.error);
+  const [success, setSuccess] = useState(null);
 
-  const handleFormSubmit = (values) => {
-    console.log(values);
+  const handleFormSubmit = async (values) => {
+    const result = await dispatch(createProject(values));
+    if (result.success) {
+      setSuccess("Project created with success.");
+      setTimeout(() => {
+        navigate("/projects"); // ✅ Only navigate on success
+      }, 1500);
+
+    }
   };
 
   return (
     <Box m="20px">
-      <Header title="Add project" subtitle="Create and define a new project with all necessary details" />
+      <Header
+        title="Add project"
+        subtitle="Create and define a new project with all necessary details"
+      />
 
       <Formik
         onSubmit={handleFormSubmit}
         initialValues={initialValues}
         validationSchema={projectSchema}
       >
-        {({ values, errors, touched, handleBlur, handleChange, handleSubmit }) => (
+        {({
+          values,
+          errors,
+          touched,
+          handleBlur,
+          handleChange,
+          handleSubmit,
+        }) => (
           <form onSubmit={handleSubmit}>
             <Box
               display="grid"
@@ -178,12 +206,45 @@ const CreateProjectForm = () => {
               />
             </Box>
             <Box display="flex" justifyContent="end" mt="20px">
-              <Button type="submit" color="secondary" variant="contained">
+              <Button
+                type="submit"
+                sx={{
+                  backgroundColor: colors.grey[100],
+                  color: colors.grey[900],
+                }}
+              >
                 Create New Project
               </Button>
             </Box>
+            {error && (
+          <Box
+            mt={2}
+            mb={2}
+            p={2}
+            borderRadius="5px"
+            bgcolor={colors.redAccent[500]}
+            color="white"
+            fontWeight="bold"
+          >
+            {error}
+          </Box>
+        )}
+          {success && (
+          <Box
+            mt={2}
+            mb={2}
+            p={2}
+            borderRadius="5px"
+            bgcolor={colors.greenAccent[500]}
+            color="white"
+            fontWeight="bold"
+          >
+            {success}
+          </Box>
+        )}
           </form>
         )}
+
       </Formik>
     </Box>
   );
