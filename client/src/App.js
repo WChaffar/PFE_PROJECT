@@ -33,6 +33,7 @@ import CreateTaskForm from "./scenes/AddTasksForm";
 import TaskDetails from "./scenes/TaskDétails";
 import EditTaskForm from "./scenes/EditTaskForm";
 import TimeTracking from "./scenes/TimeTracking";
+import Reports from "./scenes/Reports";
 
 function PrivateRoute({ children }) {
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
@@ -86,6 +87,7 @@ function AppContent() {
               <Route path="/tasks/:id/détails" element={<PrivateRoute><TaskDetails/></PrivateRoute>} />
               <Route path="/tasks/:id/edit" element={<PrivateRoute><EditTaskForm/></PrivateRoute>} />
               <Route path="/timeTraking" element={<PrivateRoute><TimeTracking/></PrivateRoute>} />
+              <Route path="/reports" element={<PrivateRoute><Reports/></PrivateRoute>} />
               {/* Catch-All Route */}
               <Route path="*" element={<NotFound />} />
             </Routes>
