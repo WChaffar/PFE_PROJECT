@@ -18,11 +18,24 @@ const initialState = {
       case 'CREATE_PROJECT_FAILURE':
         return {
           ...state,
-          isAuthenticated: false,
-          user: null,
-          token: null,
+          activeProject:{},
+          projects:[],
           error: action.payload, // store error message
         };
+      case 'GET_PROJECTS_SUCCESS':
+          return {
+            ...state,
+            activeProject:{},
+            projects:action.payload.data,
+            error: null, // NEW: to store project-related errors
+          };
+      case 'GET_PROJECTS_FAILURE':
+            return {
+              ...state,
+              activeProject:{},
+              projects:[],
+              error: action.payload, // store error message
+           };
         case 'RESET':
           return {
             ...state,

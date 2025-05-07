@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Box,
   Button,
@@ -33,6 +33,10 @@ import SecurityOutlinedIcon from "@mui/icons-material/SecurityOutlined";
 import ProjectWorkLoadBarChart from "../../components/ProjectWorkLoadBarChart";
 import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
 import { useNavigate } from "react-router-dom";
+import {useDispatch,useSelector} from 'react-redux';
+import {useEffect} from 'react'
+import { getAllProjects } from "../../actions/projectAction";
+import { format } from "date-fns";
 
 const CustomToolbar = () => {
   return (
@@ -50,7 +54,36 @@ const CustomToolbar = () => {
 const Projects = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
-    const navigate = useNavigate();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const selectedProjects=useSelector(state=> state.projects.projects) 
+  const [projects, setProjects]=useState([]);
+
+  useEffect(() => {
+    if (selectedProjects.length !== 0) {
+      const projectsMap = selectedProjects.map((project) => ({
+        id: project._id,
+        name: project.projectName,
+        status: "in progress",
+        daysUsed: 45,
+        budgetDays: project.budget,
+        deadline: format(project.endDate, "yyyy-MM-dd"),
+        team: [
+          "/avatars/avatar1.png",
+          "/avatars/avatar2.png",
+          "/avatars/avatar3.png",
+        ],
+        extraMembers: 1,
+      }));
+      setProjects(projectsMap);
+    }
+  }, [selectedProjects]); // <== Écoute les changements de selectedProjects
+  
+  useEffect(() => {
+    dispatch(getAllProjects());
+  }, [dispatch]); // <== Appelle une seule fois le fetch
+  
+  
 
   const columns = [
     {
@@ -351,12 +384,13 @@ const Projects = () => {
         }}
       >
         <DataGrid
-          rows={projectsData}
+          rows={projects}
           columns={columns}
           components={{ Toolbar: CustomToolbar }}
           pageSize={5}
           rowsPerPageOptions={[5, 10, 25, 50, 100]}
           pagination
+          loading={projects.length === 0}
         />
       </Box>
       <Box>

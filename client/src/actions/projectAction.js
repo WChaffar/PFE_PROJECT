@@ -23,3 +23,23 @@ export const createProject = (values) => async (dispatch) => {
     }
   };
   
+
+// create Project
+export const getAllProjects = () => async (dispatch) => {
+  try {
+    const data = await projectService.getProjects();
+    dispatch({
+      type: 'GET_PROJECTS_SUCCESS',
+      payload: { data },
+    });
+    return { success: true }; // ✅ return success
+  } catch (error) {
+    dispatch({
+      type: 'GET_PROJECTS_FAILURE',
+      payload: error.response?.data?.message || 'Get projects failed',
+    });
+    return { success: false }; // ✅ return failure
+  }
+};
+
+

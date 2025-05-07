@@ -2,21 +2,31 @@ import axios from "axios";
 import {base_url,getConfig} from "../config/axiosConfig"
 
 const createProject = (data) => {
-    console.log(getConfig())
   return axios
     .post(base_url + "project/create", 
      data,
      getConfig()
     )
     .then((response) => {
-      console.log(response.data)
       return response.data;
     })
 };
 
 
+const getProjects = () => {
+return axios
+  .get(base_url + "project/getAll", 
+   getConfig()
+  )
+  .then((response) => {
+    return response.data;
+  })
+};
+
+
 const ProjectService = {
-   createProject
+   createProject,
+   getProjects
   }
   
 
