@@ -1,17 +1,81 @@
-import { Box, Button, TextField, MenuItem } from "@mui/material";
+import {
+  Box,
+  Button,
+  TextField,
+  MenuItem,
+  useTheme,
+  CircularProgress,
+} from "@mui/material";
 import { Formik } from "formik";
 import * as yup from "yup";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import Header from "../../components/Header";
+import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { tokens } from "../../theme";
+import { editProject, getOneProject } from "../../actions/projectAction";
+import { useDispatch, useSelector } from "react-redux";
+import { format } from "date-fns";
 
 const EditProjectForm = () => {
   const isNonMobile = useMediaQuery("(min-width:600px)");
+  const { id } = useParams();
+  const theme = useTheme();
+  const colors = tokens(theme.palette.mode);
+  const dispatch = useDispatch();
+  const selectedProject = useSelector((state) => state.projects.activeProject);
+  const error = useSelector((state) => state.projects.error);
+  const [success, setSuccess] = useState(null);
+  const navigate=useNavigate();
+  const [project, setProject] = useState({
+    projectName: "",
+    description: "",
+    client: "",
+    projectType: "",
+    projectCategory: "",
+    projectPriority: "",
+    budget: "",
+    startDate: "",
+    endDate: "",
+    deliveryDate: "",
+  });
 
-  const handleFormSubmit = (values) => {
-    console.log("Submitted Project:", values);
-    // Later: send this to API
-    // await axios.put(`/api/projects/${id}`, values);
+  useEffect(() => {
+    if (Object.keys(selectedProject).length > 0) {
+      setProject({
+        ...selectedProject,
+        startDate: format(selectedProject.startDate, "yyyy-MM-dd"),
+        endDate: format(selectedProject.endDate, "yyyy-MM-dd"),
+        deliveryDate: format(selectedProject.deliveryDate, "yyyy-MM-dd"),
+      });
+    }
+  }, [selectedProject]); // <== Écoute les changements de selectedProjects
+
+  useEffect(() => {
+    dispatch(getOneProject(id));
+  }, [dispatch]); // <== Appelle une seule fois le fetch
+
+  const handleFormSubmit = async (values) => {
+    const result = await dispatch(editProject(values._id,values));
+    if (result.success) {
+      setSuccess("Project edited with success.");
+      setTimeout(() => {
+        navigate("/projects"); // ✅ Only navigate on success
+      }, 1500);
+    }
   };
+  if (!project || !project.projectName) {
+    return (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box m="20px">
@@ -19,10 +83,18 @@ const EditProjectForm = () => {
 
       <Formik
         onSubmit={handleFormSubmit}
-        initialValues={initialValues}
+        initialValues={project}
         validationSchema={projectSchema}
+        enableReinitialize
       >
-        {({ values, errors, touched, handleBlur, handleChange, handleSubmit }) => (
+        {({
+          values,
+          errors,
+          touched,
+          handleBlur,
+          handleChange,
+          handleSubmit,
+        }) => (
           <form onSubmit={handleSubmit}>
             <Box
               display="grid"
@@ -201,10 +273,42 @@ const EditProjectForm = () => {
 
             {/* Submit Button */}
             <Box display="flex" justifyContent="end" mt="20px">
-              <Button type="submit" color="secondary" variant="contained">
+              <Button
+                type="submit"
+                sx={{
+                  backgroundColor: colors.grey[100],
+                  color: colors.grey[900],
+                }}
+              >
                 Save Changes
               </Button>
             </Box>
+            {error && (
+              <Box
+                mt={2}
+                mb={2}
+                p={2}
+                borderRadius="5px"
+                bgcolor={colors.redAccent[500]}
+                color="white"
+                fontWeight="bold"
+              >
+                {error}
+              </Box>
+            )}
+            {success && (
+              <Box
+                mt={2}
+                mb={2}
+                p={2}
+                borderRadius="5px"
+                bgcolor={colors.greenAccent[500]}
+                color="white"
+                fontWeight="bold"
+              >
+                {success}
+              </Box>
+            )}
           </form>
         )}
       </Formik>
@@ -220,24 +324,14 @@ const projectSchema = yup.object().shape({
   projectType: yup.string().required("Required"),
   projectCategory: yup.string().required("Required"),
   projectPriority: yup.string().required("Required"),
-  budget: yup.number().required("Required").positive("Must be positive").min(1, "Minimum budget should be 1"),
+  budget: yup
+    .number()
+    .required("Required")
+    .positive("Must be positive")
+    .min(1, "Minimum budget should be 1"),
   startDate: yup.date().required("Required"),
   endDate: yup.date().required("Required"),
   deliveryDate: yup.date().required("Required"),
 });
-
-// Default form values
-const initialValues = {
-  projectName: "",
-  description: "",
-  client: "",
-  projectType: "",
-  projectCategory: "",
-  projectPriority: "",
-  budget: "",
-  startDate: "",
-  endDate: "",
-  deliveryDate: "",
-};
 
 export default EditProjectForm;

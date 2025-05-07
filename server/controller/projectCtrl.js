@@ -96,7 +96,8 @@ const validateProject = [
 
     // Send success response
     res.status(200).json({
-      message: "Project deleted successfully."
+      message: "Project deleted successfully.",
+      _id:id
     });
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -126,7 +127,7 @@ const editOneProject = asyncHandler(async (req, res) => {
     // Réponse réussie avec le projet mis à jour
     res.status(200).json({
       message: "Project updated successfully.",
-      project,
+      data:project,
     });
   } catch (error) {
     res.status(400).json({ message: error.message });

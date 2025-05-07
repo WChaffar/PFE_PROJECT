@@ -33,10 +33,18 @@ import SecurityOutlinedIcon from "@mui/icons-material/SecurityOutlined";
 import ProjectWorkLoadBarChart from "../../components/ProjectWorkLoadBarChart";
 import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
 import { useNavigate } from "react-router-dom";
-import {useDispatch,useSelector} from 'react-redux';
-import {useEffect} from 'react'
-import { getAllProjects } from "../../actions/projectAction";
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect } from "react";
+import { deleteProject, getAllProjects } from "../../actions/projectAction";
 import { format } from "date-fns";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+} from "@mui/material";
+import { Snackbar, Alert } from "@mui/material";
 
 const CustomToolbar = () => {
   return (
@@ -56,8 +64,10 @@ const Projects = () => {
   const colors = tokens(theme.palette.mode);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const selectedProjects=useSelector(state=> state.projects.projects) 
-  const [projects, setProjects]=useState([]);
+  const selectedProjects = useSelector((state) => state.projects.projects);
+  const [projects, setProjects] = useState([]);
+  const [openSnackbar, setOpenSnackbar] = React.useState(false); // Snackbar state
+  const [snackbarMessage, setSnackbarMessage] = React.useState(""); // Message for Snackbar
 
   useEffect(() => {
     if (selectedProjects.length !== 0) {
@@ -78,12 +88,19 @@ const Projects = () => {
       setProjects(projectsMap);
     }
   }, [selectedProjects]); // <== Écoute les changements de selectedProjects
-  
+
   useEffect(() => {
     dispatch(getAllProjects());
   }, [dispatch]); // <== Appelle une seule fois le fetch
-  
-  
+
+  useEffect(() => {
+    if (openSnackbar) {
+      const timer = setTimeout(() => {
+        handleSnackbarClose();
+      }, 6000); // 10 secondes
+      return () => clearTimeout(timer);
+    }
+  }, [openSnackbar]);
 
   const columns = [
     {
@@ -285,17 +302,37 @@ const Projects = () => {
   const ActionsMenu = ({ row }) => {
     const [anchorEl, setAnchorEl] = React.useState(null);
     const open = Boolean(anchorEl);
+    const [openConfirm, setOpenConfirm] = React.useState(false);
+
     const handleClick = (event) => {
       setAnchorEl(event.currentTarget);
     };
-    const handleClose = (action) => {
-      if(action==="Edit"){
-        navigate("/projects/project/1234/edit")
-      }
-      if(action==="Details"){
-        navigate("/projects/project/1234/details")
-      }
+
+    const handleCloseMenu = () => {
       setAnchorEl(null);
+    };
+
+    const handleAction = (action) => {
+      if (action === "Delete") {
+        setOpenConfirm(true); // Show confirmation dialog
+      } else if (action === "Edit") {
+        navigate(`/projects/project/${row.id}/edit`);
+        handleCloseMenu();
+      } else if (action === "Details") {
+        navigate(`/projects/project/${row.id}/details`);
+        handleCloseMenu();
+      }
+    };
+
+    const handleConfirmDelete = async () => {
+      const result = await dispatch(deleteProject(row.id));
+      if (result.success) {
+        setSnackbarMessage("Project deleted successfully!"); // Set success message
+        setOpenSnackbar(true); // Show Snackbar
+        console.log("delete with success");
+      }
+      setOpenConfirm(false);
+      handleCloseMenu();
     };
 
     return (
@@ -303,13 +340,44 @@ const Projects = () => {
         <IconButton onClick={handleClick}>
           <MoreVertIcon />
         </IconButton>
-        <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
-           <MenuItem onClick={() => handleClose("Edit")}>✏️ Edit</MenuItem>
-           <MenuItem onClick={() => handleClose("Delete")}>🗑️ Delete</MenuItem>
-           <MenuItem onClick={() => handleClose("Details")}>🔍 Details</MenuItem>
+        <Menu anchorEl={anchorEl} open={open} onClose={handleCloseMenu}>
+          <MenuItem onClick={() => handleAction("Edit")}>✏️ Edit</MenuItem>
+          <MenuItem onClick={() => handleAction("Delete")}>🗑️ Delete</MenuItem>
+          <MenuItem onClick={() => handleAction("Details")}>
+            🔍 Details
+          </MenuItem>
         </Menu>
+
+        <Dialog open={openConfirm} onClose={() => setOpenConfirm(false)}>
+          <DialogTitle>Confirm Deletion</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Are you sure you want to delete the project{" "}
+              <strong>{row.name}</strong>?<br />
+              This action can have significant consequences, including affecting
+              team assignments, associated tasks, and linked data. Proceed with
+              caution.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenConfirm(false)} color="secondary">
+              Cancel
+            </Button>
+            <Button
+              onClick={handleConfirmDelete}
+              color="error"
+              variant="contained"
+            >
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
       </>
     );
+  };
+
+  const handleSnackbarClose = () => {
+    setOpenSnackbar(false); // Close the Snackbar
   };
 
   return (
@@ -319,6 +387,15 @@ const Projects = () => {
           title="Project Management"
           subtitle="Centralize project management for better control and productivity."
         />
+        {openSnackbar && (
+          <Alert
+            onClose={handleSnackbarClose}
+            severity="success"
+            sx={{ width: "auto" }}
+          >
+            {snackbarMessage}
+          </Alert>
+        )}
         <Box>
           <Button
             sx={{
@@ -328,12 +405,13 @@ const Projects = () => {
               fontWeight: "bold",
               padding: "10px 20px",
             }}
-            onClick={()=> {
+            onClick={() => {
               navigate("/projects/create");
             }}
           >
             Create new project
           </Button>
+          {/* Snackbar for success message */}
         </Box>
       </Box>
       <Box
@@ -547,7 +625,7 @@ const Projects = () => {
             backgroundColor={colors.primary[400]}
             padding="10px"
           >
-          <Typography variant="h5" fontWeight="300">
+            <Typography variant="h5" fontWeight="300">
               Workload
             </Typography>
             <Box

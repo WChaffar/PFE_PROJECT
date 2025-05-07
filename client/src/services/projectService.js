@@ -23,10 +23,43 @@ return axios
   })
 };
 
+const deleteProject = (id) => {
+  return axios
+    .get(base_url + `project/deleteOne/${id}`, 
+     getConfig()
+    )
+    .then((response) => {
+      return response.data;
+    })
+  };
+
+  const getOneProject = (id) => {
+    return axios
+      .get(base_url + `project/getOne/${id}`, 
+       getConfig()
+      )
+      .then((response) => {
+        return response.data;
+      })
+    };
+
+    const editProject = (id,values) => {
+      return axios
+        .put(base_url + `project/editOne/${id}`, values,
+         getConfig()
+        )
+        .then((response) => {
+          return response.data;
+        })
+      };
+
 
 const ProjectService = {
    createProject,
-   getProjects
+   getProjects,
+   deleteProject,
+   getOneProject,
+   editProject
   }
   
 
