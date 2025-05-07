@@ -64,6 +64,7 @@ const EditProjectForm = () => {
       }, 1500);
     }
   };
+
   if (!project || !project.projectName) {
     return (
       <Box
@@ -73,6 +74,22 @@ const EditProjectForm = () => {
         height="100vh"
       >
         <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error && !project) {
+    return (
+      <Box
+        mt={2}
+        mb={2}
+        p={2}
+        borderRadius="5px"
+        bgcolor={colors.redAccent[500]}
+        color="white"
+        fontWeight="bold"
+      >
+        {error}
       </Box>
     );
   }

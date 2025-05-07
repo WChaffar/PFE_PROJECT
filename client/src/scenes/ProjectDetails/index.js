@@ -1,4 +1,4 @@
-import { Box, useTheme } from "@mui/material";
+import { Box, CircularProgress, useTheme } from "@mui/material";
 import Header from "../../components/Header";
 import Accordion from "@mui/material/Accordion";
 import AccordionSummary from "@mui/material/AccordionSummary";
@@ -6,28 +6,72 @@ import AccordionDetails from "@mui/material/AccordionDetails";
 import Typography from "@mui/material/Typography";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { tokens } from "../../theme";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { getOneProject } from "../../actions/projectAction";
+import { useParams } from "react-router-dom";
+import { format } from "date-fns";
 
 const ProjectDetails = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+  const selectedProject = useSelector((state) => state.projects.activeProject);
+  const [project, setProject] = useState({});
+  const dispatch = useDispatch();
+  const { id } = useParams();
+  const error = useSelector((state) => state.projects.error);
 
-  // Fake project data (later you will fetch this from backend)
-  const project = {
-    projectName: "HR Management System",
-    description: "A web application to manage all HR activities like recruitment, payroll, employee management, etc.",
-    client: "TechCorp Ltd.",
-    projectType: "External",
-    projectCategory: "Web Development",
-    projectPriority: "High",
-    budget: 50000,
-    startDate: "2025-05-01",
-    endDate: "2025-12-01",
-    deliveryDate: "2025-11-25"
-  };
+  useEffect(() => {
+    if (Object.keys(selectedProject).length > 0) {
+      setProject({
+        ...selectedProject,
+        startDate: format(selectedProject.startDate, "yyyy-MM-dd"),
+        endDate: format(selectedProject.endDate, "yyyy-MM-dd"),
+        deliveryDate: format(selectedProject.deliveryDate, "yyyy-MM-dd"),
+      });
+    }
+  }, [selectedProject]); // <== Écoute les changements de selectedProjects
+
+  useEffect(() => {
+    dispatch(getOneProject(id));
+  }, [dispatch]); // <== Appelle une seule fois le fetch
+
+
+  if (!project || !project.projectName) {
+    return (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error && !project) {
+    return (
+      <Box
+        mt={2}
+        mb={2}
+        p={2}
+        borderRadius="5px"
+        bgcolor={colors.redAccent[500]}
+        color="white"
+        fontWeight="bold"
+      >
+        {error}
+      </Box>
+    );
+  }
 
   return (
     <Box m="20px">
-      <Header title="Project Details" subtitle="Explore project specific information" />
+      <Header
+        title="Project Details"
+        subtitle="Explore project specific information"
+      />
 
       <Accordion defaultExpanded>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>

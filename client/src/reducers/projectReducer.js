@@ -18,8 +18,6 @@ const projectReducer = (state = initialState, action) => {
     case "CREATE_PROJECT_FAILURE":
       return {
         ...state,
-        activeProject: {},
-        projects: [],
         error: action.payload, // store error message
       };
     case "GET_PROJECTS_SUCCESS":
@@ -71,7 +69,6 @@ const projectReducer = (state = initialState, action) => {
       case "EDIT_PROJECT_FAILURE":
         return {
           ...state,
-          activeProject: {},
           error: action.payload, // store error message
         };
     case "RESET":

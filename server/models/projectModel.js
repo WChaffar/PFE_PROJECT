@@ -63,8 +63,8 @@ projectSchema.pre("save", function (next) {
   if (this.endDate < this.startDate) {
     return next(new Error("End date cannot be before start date"));
   }
-  if (this.deliveryDate < this.startDate) {
-    return next(new Error("Delivery date cannot be before start date"));
+  if (this.deliveryDate < this.endDateDate) {
+    return next(new Error("Delivery date cannot be before end date"));
   }
   next();
 });

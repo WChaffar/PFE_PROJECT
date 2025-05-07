@@ -2,13 +2,40 @@ const Project = require("../models/projectModel");
 const asyncHandler = require("express-async-handler");
 const validateMongoDbId = require("../utils/validateMongodbId");
 const jwt = require("jsonwebtoken");
-const { validationResult,check } = require("express-validator");
+const { validationResult, check, body } = require("express-validator");
 const mongoose = require("mongoose"); // Erase if already required
 
 // Middleware de validation de l'email
 const validateProject = [
-  ];
+  check("projectName").notEmpty().withMessage("Project name is required"),
+  check("description").notEmpty().withMessage("Description is required"),
+  check("client").notEmpty().withMessage("Client is required"),
+  check("projectType")
+    .isIn(["internal", "external"])
+    .withMessage("Invalid project type"),
+  check("projectCategory")
+    .isIn(["Web Development", "Mobile App", "Software", "Database", "Design"])
+    .withMessage("Invalid project category"),
+  check("projectPriority")
+    .isIn(["low", "medium", "high", "critical"])
+    .withMessage("Invalid project priority"),
+  check("budget").isNumeric().withMessage("Budget must be a number"),
+  check("startDate").isISO8601().withMessage("Start date is required"),
+  check("endDate").isISO8601().withMessage("End date is required"),
+  check("deliveryDate").isISO8601().withMessage("Delivery date is required"),
 
+  // Custom validator for date logic
+  body().custom((body) => {
+    const { startDate, endDate, deliveryDate } = body;
+    if (new Date(endDate) < new Date(startDate)) {
+      throw new Error("End date cannot be before start date.");
+    }
+    if (new Date(deliveryDate) < new Date(endDate)) {
+      throw new Error("Delivery date cannot be before end date.");
+    }
+    return true;
+  }),
+];
   
   // Create a Project ---------------------------------------------- 
   
@@ -17,12 +44,15 @@ const validateProject = [
     // Vérifier les erreurs de validation
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      throw new Error(errors.array()[0].msg); // Lancer la première erreur trouvée
+      return res.status(400).json({
+        message: errors.array()[0].msg,
+        errors: errors.array(),
+        data: req.body,
+      });
     }
     /**
      * TODO:With the help of project name find the project exists or not
      */
-    console.log(req.user?._id)
     const findProject = await Project.findOne({ projectName: req.body?.projectName , owner:req.user?._id });
   
     if (!findProject) {
@@ -105,8 +135,17 @@ const validateProject = [
 });
 
 
-const editOneProject = asyncHandler(async (req, res) => {
+const editOneProject =[validateProject, asyncHandler(async (req, res) => {
   try {
+        // Vérifier les erreurs de validation
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        message: errors.array()[0].msg,
+        errors: errors.array(),
+        data: req.body,
+      });
+    }
     const { id } = req.params;  // On récupère l'ID du projet dans les paramètres de la requête
 
     // Validation de l'ID MongoDB
@@ -132,7 +171,7 @@ const editOneProject = asyncHandler(async (req, res) => {
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
-});
+})];
 
   
 
