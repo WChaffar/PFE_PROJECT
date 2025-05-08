@@ -1297,17 +1297,17 @@ export const mockProjects = [
 
 export const mockTasks = [
   // Project 1
-  { id: 1, name: "Java developer full-stack", skills: ["React", "Nodejs", "Typescript"], assignedTo: "Sarah Wilson", avatar: "https://i.pravatar.cc/150?img=10", experience: 3, phase: "Development", projectId: 1 },
-  { id: 2, name: "React developer", skills: ["Figma", "AdobeXD"], assignedTo: "Jhon Doe", avatar: "https://i.pravatar.cc/150?img=11", experience: 1, phase: "Development", projectId: 1 },
-  { id: 3, name: "Project Manager", skills: ["Angular", "Django"], assignedTo: "Not assigned", avatar: "", experience: 2, phase: "All Phases", projectId: 1 },
-  { id: 4, name: "QA Tester", skills: ["Postman", "JIRA"], assignedTo: "Kate Miles", avatar: "https://i.pravatar.cc/150?img=19", experience: 2, phase: "Testing", projectId: 1 },
-  { id: 5, name: "Scrum Master", skills: ["Agile", "Kanban"], assignedTo: "Lucas Tran", avatar: "https://i.pravatar.cc/150?img=20", experience: 4, phase: "Planning", projectId: 1 },
-  { id: 6, name: "Data Analyst", skills: ["Excel", "SQL"], assignedTo: "Mina Lee", avatar: "https://i.pravatar.cc/150?img=21", experience: 2, phase: "Research", projectId: 1 },
+  { id: 1, name: "Java developer full-stack", skills: ["React", "Nodejs", "Typescript"], assignedTo: "Sarah Wilson", avatar: "https://i.pravatar.cc/150?img=10", experience: 3, phase: "Development", projectId: '681a2d233e61d3cc6c3f1443' },
+  { id: 2, name: "React developer", skills: ["Figma", "AdobeXD"], assignedTo: "Jhon Doe", avatar: "https://i.pravatar.cc/150?img=11", experience: 1, phase: "Development", projectId: '681a2dc53e61d3cc6c3f144f'},
+  { id: 3, name: "Project Manager", skills: ["Angular", "Django"], assignedTo: "Not assigned", avatar: "", experience: 2, phase: "All Phases", projectId: '681a2d233e61d3cc6c3f1443' },
+  { id: 4, name: "QA Tester", skills: ["Postman", "JIRA"], assignedTo: "Kate Miles", avatar: "https://i.pravatar.cc/150?img=19", experience: 2, phase: "Testing", projectId: '681a2d233e61d3cc6c3f1443' },
+  { id: 5, name: "Scrum Master", skills: ["Agile", "Kanban"], assignedTo: "Lucas Tran", avatar: "https://i.pravatar.cc/150?img=20", experience: 4, phase: "Planning", projectId: '681a2d233e61d3cc6c3f1443' },
+  { id: 6, name: "Data Analyst", skills: ["Excel", "SQL"], assignedTo: "Mina Lee", avatar: "https://i.pravatar.cc/150?img=21", experience: 2, phase: "Research", projectId: '681a2dc53e61d3cc6c3f144f' },
 
   // Project 2
-  { id: 7, name: "DevOps Engineer", skills: ["CI/CD", "Docker"], assignedTo: "Jad Piquer", avatar: "https://i.pravatar.cc/150?img=12", experience: 7, phase: "Dev-Testing", projectId: 2 },
-  { id: 8, name: "UX Designer", skills: ["Sketch", "InVision"], assignedTo: "Mark Musk", avatar: "https://i.pravatar.cc/150?img=13", experience: 5, phase: "Design", projectId: 2 },
-  { id: 9, name: "SysAdmin", skills: ["Linux", "Monitoring"], assignedTo: "Amy Zhou", avatar: "https://i.pravatar.cc/150?img=22", experience: 6, phase: "Infrastructure", projectId: 2 },
+  { id: 7, name: "DevOps Engineer", skills: ["CI/CD", "Docker"], assignedTo: "Jad Piquer", avatar: "https://i.pravatar.cc/150?img=12", experience: 7, phase: "Dev-Testing", projectId: '681a2dc53e61d3cc6c3f144f' },
+  { id: 8, name: "UX Designer", skills: ["Sketch", "InVision"], assignedTo: "Mark Musk", avatar: "https://i.pravatar.cc/150?img=13", experience: 5, phase: "Design", projectId: '681a2dc53e61d3cc6c3f144f' },
+  { id: 9, name: "SysAdmin", skills: ["Linux", "Monitoring"], assignedTo: "Amy Zhou", avatar: "https://i.pravatar.cc/150?img=22", experience: 6, phase: "Infrastructure", projectId: '681a2dc53e61d3cc6c3f144f' },
   { id: 10, name: "Mobile Developer", skills: ["Flutter", "Firebase"], assignedTo: "Kyle Ray", avatar: "https://i.pravatar.cc/150?img=23", experience: 3, phase: "Development", projectId: 2 },
 
   // Project 3

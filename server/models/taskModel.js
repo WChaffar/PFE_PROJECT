@@ -22,9 +22,9 @@ var taskSchema = new mongoose.Schema(
       ref: "Project", // Référence vers le modèle User
       required: true,
     },
-    prjectPhase:{
+    projectPhase:{
       type: String,
-      enum: ["Design", "Design","Developpement","Testing"], 
+      enum: ["Design", "Design","Development","Testing"], 
       required: true,
     },
       RequiredyearsOfExper:{

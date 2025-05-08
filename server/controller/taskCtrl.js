@@ -44,7 +44,25 @@ const validateTask = [
     }
   });
   
+  // get Tasks by project ID ---------------------------------------------- 
+  
+  const getTasksByPorjectID = asyncHandler(async (req, res) => {
+    const { projectId } = req.params;
+    try {
+      const findTasks = await Task.find({ owner: req.user?._id, project:projectId });
+  
+      if (findTasks.length === 0) {
+        throw new Error("No tasks found.");
+      }
+  
+      res.status(200).json(findTasks);
+    } catch (error) {
+      res.status(400).json({ message: error.message });
+    }
+  });
 
+
+  
   // get One Project by ID ---------------------------------------------- 
   
   const getOneTask = asyncHandler(async (req, res) => {
@@ -123,4 +141,4 @@ const editOneTask = asyncHandler(async (req, res) => {
   
 
 
-  module.exports = {createTask,getAllTasks, getOneTask,deleteOneTask,editOneTask};
+  module.exports = {createTask,getAllTasks, getOneTask,deleteOneTask,editOneTask,getTasksByPorjectID};

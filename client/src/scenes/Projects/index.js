@@ -90,7 +90,7 @@ const Projects = () => {
   }, [selectedProjects]); // <== Écoute les changements de selectedProjects
 
   useEffect(() => {
-    dispatch(getAllProjects());
+    dispatch(getAllProjects()); 
   }, [dispatch]); // <== Appelle une seule fois le fetch
 
   useEffect(() => {

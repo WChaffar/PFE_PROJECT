@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Typography,
@@ -11,52 +11,93 @@ import {
   MenuItem,
 } from "@mui/material";
 import {
-    DataGrid,
-    GridToolbarContainer,
-    GridToolbarExport,
-    GridToolbarFilterButton,
-    GridToolbarColumnsButton,
-    GridToolbarDensitySelector,
-  } from "@mui/x-data-grid";
+  DataGrid,
+  GridToolbarContainer,
+  GridToolbarExport,
+  GridToolbarFilterButton,
+  GridToolbarColumnsButton,
+  GridToolbarDensitySelector,
+} from "@mui/x-data-grid";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { mockTasks, mockProjects } from "../../data/mockData"; // You'll define these
 import { useNavigate } from "react-router-dom";
 import { ArrowBack, ArrowForward } from "@mui/icons-material";
 import { tokens } from "../../theme";
+import { useDispatch, useSelector } from "react-redux";
+import { format } from "date-fns";
+import { getAllProjects } from "../../actions/projectAction";
+import { getTasksByProjectId } from "../../actions/taskAction";
 
 const CustomToolbar = () => {
-    return (
-      <GridToolbarContainer>
-        <Box display="flex" flexDirection="row" gap={2} alignItems="center">
-          <GridToolbarColumnsButton />
-          <GridToolbarFilterButton />
-          <GridToolbarDensitySelector />
-          <GridToolbarExport />
-        </Box>
-      </GridToolbarContainer>
-    );
-  };
+  return (
+    <GridToolbarContainer>
+      <Box display="flex" flexDirection="row" gap={2} alignItems="center">
+        <GridToolbarColumnsButton />
+        <GridToolbarFilterButton />
+        <GridToolbarDensitySelector />
+        <GridToolbarExport />
+      </Box>
+    </GridToolbarContainer>
+  );
+};
 
 const TasksManagement = () => {
   const theme = useTheme();
   const navigate = useNavigate();
   const [selectedProject, setSelectedProject] = useState(null);
-    const colors = tokens(theme.palette.mode);
+  const colors = tokens(theme.palette.mode);
+  const selectedProjects = useSelector((state) => state.projects.projects);
+  const [projects, setProjects] = useState([]);
+  const dispatch = useDispatch();
+  const selectedTasks=useSelector((state) => state.tasks.tasks);
+  const [tasks,setTasks]= useState([]);
+  const [tasksLoading,setTasksLoading]=useState(false);
+  const [projectLoading,setProjectLoading]=useState(false);
+
+  useEffect(() => {
+    if (selectedProjects.length !== 0) {
+      const projectsMap = selectedProjects.map((project) => ({
+        id: project._id,
+        name: project.projectName,
+        taskCount: 6,
+        completed: 1,
+        active: 3,
+        overdue: 2,
+      }));
+      setProjects(projectsMap);
+      setProjectLoading(false);
+    }
+  }, [selectedProjects]); // <== Écoute les changements de selectedProjects
+
+  useEffect(() => {
+    setProjectLoading(true);
+    dispatch(getAllProjects());
+  }, [dispatch]); // <== Appelle une seule fois le fetch
+
+
+  useEffect(() => {
+    let selectTasks=selectedTasks.map(task=>{
+      return { id: task._id, name: task.taskName, skills: task.requiredSkills, assignedTo: "Sarah Wilson", avatar: "https://i.pravatar.cc/150?img=10", experience: task.RequiredyearsOfExper, phase: task.projectPhase, projectId: task.projectId }
+    });
+    setTasks(selectTasks);
+    setTasksLoading(false);
+  }, [selectedTasks])
+  
 
   const projectColumns = [
     {
-          field: "name",
-          headerName: "Project Name",
-          flex: 1,
-          renderCell: ({ row }) => (
-            <Box display="flex" alignItems="center" gap={1}>
-              <span role="img" aria-label="folder">
-                📁
-              </span>
-              {row.name}
-            </Box>
-          ),
-        },
+      field: "name",
+      headerName: "Project Name",
+      flex: 1,
+      renderCell: ({ row }) => (
+        <Box display="flex" alignItems="center" gap={1}>
+          <span role="img" aria-label="folder">
+            📁
+          </span>
+          {row.name}
+        </Box>
+      ),
+    },
     { field: "taskCount", headerName: "Taks Number", flex: 1 },
     { field: "completed", headerName: "Completed", flex: 1 },
     { field: "active", headerName: "Active Taks", flex: 1 },
@@ -106,73 +147,77 @@ const TasksManagement = () => {
     },
   ];
 
-  const filteredTasks = selectedProject
-    ? mockTasks.filter((task) => task.projectId === selectedProject.id)
-    : [];
 
+  const ActionsMenu = ({ row }) => {
+    const [anchorEl, setAnchorEl] = React.useState(null);
+    const open = Boolean(anchorEl);
+    const handleClick = (event) => {
+      setAnchorEl(event.currentTarget);
+    };
+    const handleClose = (action) => {
+      if (action === "Edit") {
+        navigate(`/tasks/${row.id}/edit`);
+      }
+      if (action === "Details") {
+        navigate(`/tasks/${row.id}/détails`);
+      }
+      setAnchorEl(null);
+    };
 
-    const ActionsMenu = ({ row }) => {
-        const [anchorEl, setAnchorEl] = React.useState(null);
-        const open = Boolean(anchorEl);
-        const handleClick = (event) => {
-          setAnchorEl(event.currentTarget);
-        };
-        const handleClose = (action) => {
-          if(action==="Edit"){
-            navigate("/tasks/12345/edit")
-          }
-          if(action==="Details"){
-            navigate("/tasks/12345/détails")
-          }
-          setAnchorEl(null);
-        };
-    
-        return (
-          <>
-            <IconButton onClick={handleClick}>
-              <MoreVertIcon />
-            </IconButton>
-            <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
-               <MenuItem onClick={() => handleClose("Edit")}>✏️ Edit</MenuItem>
-               <MenuItem onClick={() => handleClose("Delete")}>🗑️ Delete</MenuItem>
-               <MenuItem onClick={() => handleClose("Details")}>🔍 Details</MenuItem>
-            </Menu>
-          </>
-        );
-      };
-    
+    return (
+      <>
+        <IconButton onClick={handleClick}>
+          <MoreVertIcon />
+        </IconButton>
+        <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
+          <MenuItem onClick={() => handleClose("Edit")}>✏️ Edit</MenuItem>
+          <MenuItem onClick={() => handleClose("Delete")}>🗑️ Delete</MenuItem>
+          <MenuItem onClick={() => handleClose("Details")}>🔍 Details</MenuItem>
+        </Menu>
+      </>
+    );
+  };
+
+  const getTasksOfSelectedProject = async (params) => {
+    setTasksLoading(true);
+    const result = await dispatch(getTasksByProjectId(params.row.id));
+    if(result.success){
+        setSelectedProject(params.row.id);
+    }
+  };
 
   return (
     <Box p={3}>
-            <Box display="flex" justifyContent="space-between" alignItems="center">
-              <Box>
-            {/* Header */}
-            <Typography variant="h4" fontWeight="bold">
+      <Box display="flex" justifyContent="space-between" alignItems="center">
+        <Box>
+          {/* Header */}
+          <Typography variant="h4" fontWeight="bold">
             Tasks Management
           </Typography>
           <Typography variant="body2" color="textSecondary">
             Task management optimizes workloads and ensures deadlines are met
           </Typography>
-            </Box>
-            <Box>
-                <Button
-                  sx={{
-                    backgroundColor: colors.blueAccent[700],
-                    color: colors.grey[100],
-                    fontSize: "14px",
-                    fontWeight: "bold",
-                    padding: "10px 20px",
-                  }}
-                  onClick={()=> {
-                    navigate("/tasks/12345/create");
-                  }}
-                >
-                  + Add Task
-                </Button>
-              </Box>
-    </Box>
+        </Box>
+        <Box>
+          <Button
+            sx={{
+              backgroundColor: colors.blueAccent[700],
+              color: colors.grey[100],
+              fontSize: "14px",
+              fontWeight: "bold",
+              padding: "10px 20px",
+            }}
+            onClick={() => {
+              navigate("/tasks/12345/create");
+            }}
+          >
+            + Add Task
+          </Button>
+        </Box>
+      </Box>
       {/* Project Table */}
-      <Box m="-20px 0 0 0"
+      <Box
+        m="-20px 0 0 0"
         height="35vh"
         marginTop="10px"
         sx={{
@@ -217,15 +262,17 @@ const TasksManagement = () => {
           "& .MuiDataGrid-toolbarContainer .MuiButton-text": {
             color: `${colors.grey[100]} !important`,
           },
-        }}>
+        }}
+      >
         <DataGrid
-          rows={mockProjects}
+          rows={projects}
           columns={projectColumns}
-          onRowClick={(params) => setSelectedProject(params.row)}
+          onRowClick={(params) => getTasksOfSelectedProject(params)}
           components={{ Toolbar: CustomToolbar }}
           pageSize={5}
           rowsPerPageOptions={[5, 10, 25, 50, 100]}
           pagination
+          loading={projectLoading}
         />
       </Box>
       {/* Tasks Table */}
@@ -235,53 +282,55 @@ const TasksManagement = () => {
           overflow="hidden"
           border="1px solid #ddd"
           bgcolor="background.paper"
-          marginTop='25px'
+          marginTop="25px"
         >
           <Typography variant="h6" p={2}>
             Tasks
           </Typography>
-          <Box 
-          m="-20px 0 0 0"
-          height="40vh"
-          sx={{
-          "& .MuiDataGrid-root": {
-            border: "none",
-          },
-          "& .MuiDataGrid-cell": {
-            borderBottom: "none",
-          },
-          "& .name-column--cell": {
-            color: colors.greenAccent[300],
-          },
-          "& .MuiTablePagination-actions": {
-            display: "flex",
-            flexDirection: "row",
-            marginRight: "100px",
-            marginTop: "-10px",
-          },
-          "& .css-194a1fa-MuiSelect-select-MuiInputBase-input.css-194a1fa-MuiSelect-select-MuiInputBase-input.css-194a1fa-MuiSelect-select-MuiInputBase-input":
-            {
-              marginTop: "-15px",
-            },
-          "& .css-oatl8s-MuiSvgIcon-root-MuiSelect-icon": {
-            marginTop: "-8px",
-          },
-          "& .MuiCheckbox-root": {
-            color: `${colors.greenAccent[200]} !important`,
-          },
-          "& .MuiDataGrid-toolbarContainer .MuiButton-text": {
-            color: `${colors.grey[100]} !important`,
-          },
-        }}>
-          <DataGrid
-            rows={filteredTasks}
-            columns={taskColumns}
-            components={{ Toolbar: CustomToolbar }}
-            sx={{ border: "none" }}
-            pageSize={5}
-            rowsPerPageOptions={[5, 10, 25, 50, 100]}
-            pagination
-          />
+          <Box
+            m="-20px 0 0 0"
+            height="40vh"
+            sx={{
+              "& .MuiDataGrid-root": {
+                border: "none",
+              },
+              "& .MuiDataGrid-cell": {
+                borderBottom: "none",
+              },
+              "& .name-column--cell": {
+                color: colors.greenAccent[300],
+              },
+              "& .MuiTablePagination-actions": {
+                display: "flex",
+                flexDirection: "row",
+                marginRight: "100px",
+                marginTop: "-10px",
+              },
+              "& .css-194a1fa-MuiSelect-select-MuiInputBase-input.css-194a1fa-MuiSelect-select-MuiInputBase-input.css-194a1fa-MuiSelect-select-MuiInputBase-input":
+                {
+                  marginTop: "-15px",
+                },
+              "& .css-oatl8s-MuiSvgIcon-root-MuiSelect-icon": {
+                marginTop: "-8px",
+              },
+              "& .MuiCheckbox-root": {
+                color: `${colors.greenAccent[200]} !important`,
+              },
+              "& .MuiDataGrid-toolbarContainer .MuiButton-text": {
+                color: `${colors.grey[100]} !important`,
+              },
+            }}
+          >
+            <DataGrid
+              rows={tasks}
+              columns={taskColumns}
+              components={{ Toolbar: CustomToolbar }}
+              sx={{ border: "none" }}
+              pageSize={5}
+              rowsPerPageOptions={[5, 10, 25, 50, 100]}
+              pagination
+              loading={tasksLoading}
+            />
           </Box>
         </Box>
       )}

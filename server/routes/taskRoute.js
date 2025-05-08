@@ -4,7 +4,8 @@ const {
     getAllTasks,
     getOneTask,
     deleteOneTask,
-    editOneTask
+    editOneTask,
+    getTasksByPorjectID,
 } = require("../controller/taskCtrl");
 const { authMiddleware} = require("../middlewares/authMiddleware");
 
@@ -16,6 +17,7 @@ router.get("/getAll",authMiddleware,getAllTasks);
 router.get("/getOne/:id",authMiddleware,getOneTask);
 router.get("/deleteOne/:id",authMiddleware,deleteOneTask);
 router.put("/editOne/:id",authMiddleware,editOneTask);
+router.get("/getTaskByProjectID/:projectId",authMiddleware,getTasksByPorjectID);
 
 
 module.exports = router;
