@@ -25,7 +25,7 @@ return axios
 
 const deleteProject = (id) => {
   return axios
-    .get(base_url + `project/deleteOne/${id}`, 
+    .delete(base_url + `project/deleteOne/${id}`, 
      getConfig()
     )
     .then((response) => {

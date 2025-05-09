@@ -54,7 +54,26 @@ export const getTasksByProjectId = (values) => async (dispatch) => {
     } catch (error) {
       dispatch({
         type: 'GET_TASK_By_ID__FAILURE',
-        payload: error.response?.data?.message || 'Get tasks by project id failed',
+        payload: error.response?.data?.message || 'Get task by id failed',
+      });
+      return { success: false }; // ✅ return failure
+    }
+  };
+
+
+    // get Tasks by project id
+  export const deleteTaskById = (taskId) => async (dispatch) => {
+    try {
+      const data = await TaskService.deleteTaskById(taskId);
+      dispatch({
+        type: 'DELETE_TASK_By_ID_SUCCESS',
+        payload: { data },
+      });
+      return { success: true }; // ✅ return success
+    } catch (error) {
+      dispatch({
+        type: 'DELETE_TASK_By_ID__FAILURE',
+        payload: error.response?.data?.message || 'delete task by id failed',
       });
       return { success: false }; // ✅ return failure
     }

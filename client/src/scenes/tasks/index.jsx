@@ -9,6 +9,12 @@ import {
   useTheme,
   Menu,
   MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Alert,
 } from "@mui/material";
 import {
   DataGrid,
@@ -26,7 +32,7 @@ import { tokens } from "../../theme";
 import { useDispatch, useSelector } from "react-redux";
 import { format } from "date-fns";
 import { getAllProjects } from "../../actions/projectAction";
-import { getTasksByProjectId } from "../../actions/taskAction";
+import { deleteTaskById, getTasksByProjectId } from "../../actions/taskAction";
 
 const CustomToolbar = () => {
   return (
@@ -49,10 +55,12 @@ const TasksManagement = () => {
   const selectedProjects = useSelector((state) => state.projects.projects);
   const [projects, setProjects] = useState([]);
   const dispatch = useDispatch();
-  const selectedTasks=useSelector((state) => state.tasks.tasks);
-  const [tasks,setTasks]= useState([]);
-  const [tasksLoading,setTasksLoading]=useState(false);
-  const [projectLoading,setProjectLoading]=useState(false);
+  const selectedTasks = useSelector((state) => state.tasks.tasks);
+  const [tasks, setTasks] = useState([]);
+  const [tasksLoading, setTasksLoading] = useState(false);
+  const [projectLoading, setProjectLoading] = useState(false);
+  const [openSnackbar, setOpenSnackbar] = React.useState(false); // Snackbar state
+  const [snackbarMessage, setSnackbarMessage] = React.useState(""); // Message for Snackbar
 
   useEffect(() => {
     if (selectedProjects.length !== 0) {
@@ -74,15 +82,31 @@ const TasksManagement = () => {
     dispatch(getAllProjects());
   }, [dispatch]); // <== Appelle une seule fois le fetch
 
-
   useEffect(() => {
-    let selectTasks=selectedTasks.map(task=>{
-      return { id: task._id, name: task.taskName, skills: task.requiredSkills, assignedTo: "Sarah Wilson", avatar: "https://i.pravatar.cc/150?img=10", experience: task.RequiredyearsOfExper, phase: task.projectPhase, projectId: task.projectId }
+    let selectTasks = selectedTasks.map((task) => {
+      return {
+        id: task._id,
+        name: task.taskName,
+        skills: task.requiredSkills,
+        assignedTo: "Sarah Wilson",
+        avatar: "https://i.pravatar.cc/150?img=10",
+        experience: task.RequiredyearsOfExper,
+        phase: task.projectPhase,
+        projectId: task.projectId,
+      };
     });
     setTasks(selectTasks);
     setTasksLoading(false);
-  }, [selectedTasks])
-  
+  }, [selectedTasks]);
+
+    useEffect(() => {
+      if (openSnackbar) {
+        const timer = setTimeout(() => {
+          handleSnackbarClose();
+        }, 6000); // 10 secondes
+        return () => clearTimeout(timer);
+      }
+    }, [openSnackbar]);
 
   const projectColumns = [
     {
@@ -147,13 +171,18 @@ const TasksManagement = () => {
     },
   ];
 
-
   const ActionsMenu = ({ row }) => {
     const [anchorEl, setAnchorEl] = React.useState(null);
     const open = Boolean(anchorEl);
+    const [openConfirm, setOpenConfirm] = React.useState(false);
+
     const handleClick = (event) => {
       setAnchorEl(event.currentTarget);
     };
+    const handleCloseMenu = () => {
+      setAnchorEl(null);
+    };
+
     const handleClose = (action) => {
       if (action === "Edit") {
         navigate(`/tasks/${row.id}/edit`);
@@ -161,9 +190,21 @@ const TasksManagement = () => {
       if (action === "Details") {
         navigate(`/tasks/${row.id}/détails`);
       }
+      if (action === "Delete") {
+        setOpenConfirm(true); // Show confirmation dialog
+      }
       setAnchorEl(null);
     };
-
+    const handleConfirmDelete = async () => {
+      const result = await dispatch(deleteTaskById(row.id));
+      if (result.success) {
+        setSnackbarMessage("Task deleted successfully!"); // Set success message
+        setOpenSnackbar(true); // Show Snackbar
+        console.log("delete with success");
+      }
+      setOpenConfirm(false);
+      handleCloseMenu();
+    };
     return (
       <>
         <IconButton onClick={handleClick}>
@@ -174,6 +215,29 @@ const TasksManagement = () => {
           <MenuItem onClick={() => handleClose("Delete")}>🗑️ Delete</MenuItem>
           <MenuItem onClick={() => handleClose("Details")}>🔍 Details</MenuItem>
         </Menu>
+        <Dialog open={openConfirm} onClose={() => setOpenConfirm(false)}>
+          <DialogTitle>Confirm Deletion</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Are you sure you want to delete the task{" "}
+              <strong>{row.name}</strong>?<br />
+              This action can have significant consequences, including affecting
+              team assignments, projects, and linked data. Proceed with caution.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenConfirm(false)} color="secondary">
+              Cancel
+            </Button>
+            <Button
+              onClick={handleConfirmDelete}
+              color="error"
+              variant="contained"
+            >
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
       </>
     );
   };
@@ -181,9 +245,12 @@ const TasksManagement = () => {
   const getTasksOfSelectedProject = async (params) => {
     setTasksLoading(true);
     const result = await dispatch(getTasksByProjectId(params.row.id));
-    if(result.success){
-        setSelectedProject(params.row.id);
+    if (result.success) {
+      setSelectedProject(params.row.id);
     }
+  };
+  const handleSnackbarClose = () => {
+    setOpenSnackbar(false); // Close the Snackbar
   };
 
   return (
@@ -284,9 +351,20 @@ const TasksManagement = () => {
           bgcolor="background.paper"
           marginTop="25px"
         >
+          <Box display="flex" justifyContent="space-between" alignItems="center">
           <Typography variant="h6" p={2}>
             Tasks
           </Typography>
+          {openSnackbar && (
+            <Alert
+              onClose={handleSnackbarClose}
+              severity="success"
+              sx={{ width: "auto" }}
+            >
+              {snackbarMessage}
+            </Alert>
+          )}
+          </Box>
           <Box
             m="-20px 0 0 0"
             height="40vh"

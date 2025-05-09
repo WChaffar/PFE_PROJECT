@@ -101,7 +101,8 @@ const validateTask = [
 
     // Send success response
     res.status(200).json({
-      message: "Task deleted successfully."
+      message: "Task deleted successfully.",
+      _id:id
     });
   } catch (error) {
     res.status(400).json({ message: error.message });

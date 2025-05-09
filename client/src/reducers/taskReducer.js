@@ -42,6 +42,19 @@ const taskReducer = (state = initialState, action) => {
         ...state,
         error: action.payload, // store error message
       };
+    case "DELETE_TASK_By_ID_SUCCESS":
+      return {
+        ...state,
+        tasks: state.tasks.filter(
+          (t) => t._id !== action.payload.data._id
+        ),
+        error: null, // NEW: to store task-related errors
+      };
+    case "DELETE_TASK_By_ID__FAILURE":
+      return {
+        ...state,
+        error: action.payload, // store error message
+      };
     case "RESET":
       return {
         ...state,
