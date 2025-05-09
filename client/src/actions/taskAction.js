@@ -41,3 +41,21 @@ export const getTasksByProjectId = (values) => async (dispatch) => {
     return { success: false }; // ✅ return failure
   }
 };
+
+  // get Tasks by project id
+  export const getTaskById = (taskId) => async (dispatch) => {
+    try {
+      const data = await TaskService.getTaskById(taskId);
+      dispatch({
+        type: 'GET_TASK_By_ID_SUCCESS',
+        payload: { data },
+      });
+      return { success: true }; // ✅ return success
+    } catch (error) {
+      dispatch({
+        type: 'GET_TASK_By_ID__FAILURE',
+        payload: error.response?.data?.message || 'Get tasks by project id failed',
+      });
+      return { success: false }; // ✅ return failure
+    }
+  };

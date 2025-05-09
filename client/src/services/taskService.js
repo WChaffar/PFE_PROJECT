@@ -2,7 +2,6 @@ import axios from "axios";
 import {base_url,getConfig} from "../config/axiosConfig"
 
 const createTask = (data) => {
-    console.log(data)
   return axios
     .post(base_url + "task/create", 
      data,
@@ -25,10 +24,23 @@ const getTaskByProjectID = (projectId) => {
 };
 
 
+const getTaskById = (taskId) => {
+  console.log(taskId)
+  return axios
+    .get(base_url + `task/getOne/${taskId}`, 
+     getConfig()
+    )
+    .then((response) => {
+      return response.data;
+    })
+};
+
+
 
 const TaskService = {
     createTask,
-    getTaskByProjectID
+    getTaskByProjectID,
+    getTaskById
    }
    
  

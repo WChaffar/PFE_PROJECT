@@ -43,7 +43,7 @@ var taskSchema = new mongoose.Schema(
       type: [String],  // Declaring an array of strings
       required: true
     },
-     langaugesSpoken:{
+     languagesSpoken:{
      type: [String],  // Declaring an array of strings
      required: true
     },
