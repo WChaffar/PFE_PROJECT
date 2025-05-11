@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Box, IconButton, Typography, useTheme } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { teamMembersData } from "../../data/TeamData"; // <- Créez ce fichier
@@ -11,12 +11,11 @@ import {
   GridToolbarColumnsButton,
   GridToolbarDensitySelector,
 } from "@mui/x-data-grid";
-import {
-  Menu,
-  MenuItem,
-  Button
-} from "@mui/material";
+import { Menu, MenuItem, Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { getAllTeamMembers } from "../../actions/teamAction";
+import { BACKEND_URL } from "../../config/ServerConfig";
 
 const CustomToolbar = () => {
   return (
@@ -34,8 +33,34 @@ const CustomToolbar = () => {
 const TeamManagement = () => {
   const [search, setSearch] = useState("");
   const theme = useTheme(); // Accéder au thème
+  const colors = tokens(theme.palette.mode);
   const navigate = useNavigate();
- const colors = tokens(theme.palette.mode);
+  const dispatch = useDispatch();
+  const selectedTeamMembers = useSelector((state) => state.team.team);
+  const [teamMemebers, setTeamMembers] = useState([]);
+  const [openSnackbar, setOpenSnackbar] = React.useState(false); // Snackbar state
+  const [snackbarMessage, setSnackbarMessage] = React.useState(""); // Message for Snackbar
+
+  useEffect(() => {
+    if (selectedTeamMembers.length !== 0) {
+      const teamMembersMap = selectedTeamMembers.map((member) => ({
+        id: member?._id,
+        name: member?.fullName,
+        avatar: BACKEND_URL + member?.profilePicture,
+        role: member?.jobTitle,
+        skills: member?.keySkills,
+        experience:
+          member.yearsOfExperience +
+          (member.yearsOfExperience > 1 ? " years" : " year"),
+        availability: "On Project",
+      }));
+      setTeamMembers(teamMembersMap);
+    }
+  }, [selectedTeamMembers]); // <== Écoute les changements de selectedProjects
+
+  useEffect(() => {
+    dispatch(getAllTeamMembers());
+  }, [dispatch]); // <== Appelle une seule fois le fetch
 
   const columns = [
     {
@@ -51,7 +76,7 @@ const TeamManagement = () => {
           />
           <Typography
             fontSize="0.9rem"
-            color={theme.palette.mode === 'dark' ? 'white' : 'black'} // Couleur dynamique en fonction du mode
+            color={theme.palette.mode === "dark" ? "white" : "black"} // Couleur dynamique en fonction du mode
           >
             {row.name}
           </Typography>
@@ -68,7 +93,7 @@ const TeamManagement = () => {
           {row.skills.map((skill, idx) => (
             <Box
               key={idx}
-              bgcolor={theme.palette.mode === 'dark' ? '#555' : '#eee'}
+              bgcolor={theme.palette.mode === "dark" ? "#555" : "#eee"}
               px={1}
               py={0.5}
               borderRadius="12px"
@@ -121,15 +146,15 @@ const TeamManagement = () => {
   const filteredData = teamMembersData.filter((member) =>
     member.name.toLowerCase().includes(search.toLowerCase())
   );
-  
+
   const ActionsMenu = ({ row }) => {
     const [anchorEl, setAnchorEl] = React.useState(null);
     const open = Boolean(anchorEl);
-  
+
     const handleClick = (event) => {
       setAnchorEl(event.currentTarget);
     };
-  
+
     const handleClose = (action) => {
       if (action === "Edit") {
         // handle edit logic here
@@ -144,7 +169,7 @@ const TeamManagement = () => {
       }
       setAnchorEl(null);
     };
-  
+
     return (
       <>
         <IconButton onClick={handleClick}>
@@ -157,10 +182,10 @@ const TeamManagement = () => {
           slotProps={{
             paper: {
               sx: {
-                minWidth: 150,  // Ensure menu is wide enough
-                py: 1,          // Padding on Y-axis (top & bottom)
-                boxShadow: 3,   // Add some shadow for depth
-                zIndex: 1301,   // Ensure the menu pops above other elements
+                minWidth: 150, // Ensure menu is wide enough
+                py: 1, // Padding on Y-axis (top & bottom)
+                boxShadow: 3, // Add some shadow for depth
+                zIndex: 1301, // Ensure the menu pops above other elements
               },
             },
           }}
@@ -172,22 +197,25 @@ const TeamManagement = () => {
       </>
     );
   };
-  
-  
 
   return (
     <Box p={3} bgcolor={theme.palette.background.default}>
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Box>
-      {/* Header */}
-      <Typography variant="h4" fontWeight="bold" mb={1} color={theme.palette.text.primary}>
-        Team Management
-      </Typography>
-      <Typography color={theme.palette.text.secondary} mb={4}>
-        Manage Team for better Collaboration.
-      </Typography>
-      </Box>
-      <Box>
+          {/* Header */}
+          <Typography
+            variant="h4"
+            fontWeight="bold"
+            mb={1}
+            color={theme.palette.text.primary}
+          >
+            Team Management
+          </Typography>
+          <Typography color={theme.palette.text.secondary} mb={4}>
+            Manage Team for better Collaboration.
+          </Typography>
+        </Box>
+        <Box>
           <Button
             sx={{
               backgroundColor: colors.blueAccent[700],
@@ -196,14 +224,14 @@ const TeamManagement = () => {
               fontWeight: "bold",
               padding: "10px 20px",
             }}
-            onClick={()=> {
+            onClick={() => {
               navigate("/team/create");
             }}
           >
             Add Team Member
           </Button>
         </Box>
-        </Box>
+      </Box>
 
       {/* Stat Cards */}
       <Box display="flex" gap={2} mb={4}>
@@ -222,9 +250,18 @@ const TeamManagement = () => {
           </Typography>
           <Typography>Team Members</Typography>
           <Box mt={2} display="flex">
-            <img src="https://i.pravatar.cc/40?img=1" style={{ borderRadius: "50%" }} />
-            <img src="https://i.pravatar.cc/40?img=2" style={{ borderRadius: "50%", marginLeft: -10 }} />
-            <img src="https://i.pravatar.cc/40?img=3" style={{ borderRadius: "50%", marginLeft: -10 }} />
+            <img
+              src="https://i.pravatar.cc/40?img=1"
+              style={{ borderRadius: "50%" }}
+            />
+            <img
+              src="https://i.pravatar.cc/40?img=2"
+              style={{ borderRadius: "50%", marginLeft: -10 }}
+            />
+            <img
+              src="https://i.pravatar.cc/40?img=3"
+              style={{ borderRadius: "50%", marginLeft: -10 }}
+            />
           </Box>
         </Box>
 
@@ -243,8 +280,14 @@ const TeamManagement = () => {
           </Typography>
           <Typography>Available Now</Typography>
           <Box mt={2} display="flex">
-            <img src="https://i.pravatar.cc/40?img=4" style={{ borderRadius: "50%" }} />
-            <img src="https://i.pravatar.cc/40?img=5" style={{ borderRadius: "50%", marginLeft: -10 }} />
+            <img
+              src="https://i.pravatar.cc/40?img=4"
+              style={{ borderRadius: "50%" }}
+            />
+            <img
+              src="https://i.pravatar.cc/40?img=5"
+              style={{ borderRadius: "50%", marginLeft: -10 }}
+            />
           </Box>
         </Box>
 
@@ -263,8 +306,14 @@ const TeamManagement = () => {
           </Typography>
           <Typography>On Project</Typography>
           <Box mt={2} display="flex">
-            <img src="https://i.pravatar.cc/40?img=6" style={{ borderRadius: "50%" }} />
-            <img src="https://i.pravatar.cc/40?img=7" style={{ borderRadius: "50%", marginLeft: -10 }} />
+            <img
+              src="https://i.pravatar.cc/40?img=6"
+              style={{ borderRadius: "50%" }}
+            />
+            <img
+              src="https://i.pravatar.cc/40?img=7"
+              style={{ borderRadius: "50%", marginLeft: -10 }}
+            />
           </Box>
         </Box>
       </Box>
@@ -272,7 +321,7 @@ const TeamManagement = () => {
       {/* Team Members Table */}
       <Box height="60vh">
         <DataGrid
-          rows={filteredData}
+          rows={teamMemebers}
           columns={columns}
           pageSize={5}
           rowsPerPageOptions={[5]}

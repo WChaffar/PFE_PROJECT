@@ -7,11 +7,11 @@ const {
     editOneTeamMember
 } = require("../controller/teamCtrl");
 const { authMiddleware} = require("../middlewares/authMiddleware");
-
+const upload = require("../middlewares/upload");
 
 const router = express.Router();
 
-router.post("/create",authMiddleware,createTeamMember);
+router.post("/create",authMiddleware,upload.single("profilePicture"),createTeamMember);
 router.get("/getAll",authMiddleware,getAllTeamMember);
 router.get("/getOne/:id",authMiddleware,getOneTeamMember);
 router.get("/deleteOne/:id",authMiddleware,deleteOneTeamMemeber);

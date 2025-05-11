@@ -13,6 +13,7 @@ const projectRouter = require("./routes/projectRoute");
 const teamRouter = require("./routes/teamRoute");
 const taskRouter = require("./routes/taskRoute");
 const assignementRouter = require("./routes/assignementRoute");
+const path = require("path");
 
 dbConnect();
 app.use(morgan("dev"));
@@ -20,6 +21,7 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
+app.use("/uploads", express.static(path.join(__dirname, 'uploads')));
 app.use("/api/user", authRouter);
 app.use("/api/project", projectRouter);
 app.use("/api/team",teamRouter);

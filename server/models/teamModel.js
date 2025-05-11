@@ -5,22 +5,22 @@ const crypto = require("crypto");
 // Declare the Schema of the Experience object
 var experienceSchema = new mongoose.Schema(
     {
-      CompanyName: {
+      companyName: {
         type: String,
         required: true,
       },
-      JobTitle: {
+      jobTitle: {
         type: String,
         required: true,
       },
-      StartDate: {
+      startDate: {
         type: Date,
         required: true,
       },
-      EndDate: {
+      endDate: {
         type: Date,  // Optional, can be null if the person is still at the job
       },
-      Responsibilities: {
+      responsibilities: {
         type: String,
         required: true,
       },
@@ -36,38 +36,38 @@ var teamSchema = new mongoose.Schema(
       ref: "User", // Référence vers le modèle User
       required: true,
     },
-    FullName: {
+    fullName: {
       type: String,
       required: true,
     },
-    Email: {
+    email: {
         type:String,
         required:true
     },
-    PhoneNumber: {
+    phoneNumber: {
         type:String,
         required:true
     },
-    ProfilePicture:{
+    profilePicture:{
         type:String,
     },
-    JobTitle:{
-        type:String,
-        required:true
-    },
-    EmployementType:{
+    jobTitle:{
         type:String,
         required:true
     },
-    DateOfJoining:{
+    employmentType:{
+        type:String,
+        required:true
+    },
+    dateOfJoining:{
         type: Date,
         required:true
     },
-    SeniorityLevel:{
+    seniorityLevel:{
         type:String,
         required:true
     },
-    RemoteWorkAllowed:{
+    remoteWorkAllowed:{
         type:Boolean,
         default:false
     },
@@ -75,16 +75,16 @@ var teamSchema = new mongoose.Schema(
         type: [String],  // Declaring an array of strings
         required: true
     },
-    Certifications: {
+    certifications: {
         type: [String],  // Declaring an array of strings
         required: true
     },
-    YearsOfExperience: {
+    yearsOfExperience: {
         type: Number,  // Declaring an array of strings
         required: true
     },
     // Adding the array of experiences
-    Experience: [experienceSchema],  // An array of Experience objects
+    experience: [experienceSchema],  // An array of Experience objects
     assignments:{
       type:[mongoose.Schema.Types.ObjectId],
       default:[]

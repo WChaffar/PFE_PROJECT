@@ -1,47 +1,91 @@
-import { Box, Button, TextField, MenuItem, Checkbox, FormControlLabel } from "@mui/material";
+import {
+  Box,
+  Button,
+  TextField,
+  MenuItem,
+  Checkbox,
+  FormControlLabel,
+} from "@mui/material";
 import { Formik } from "formik";
 import * as yup from "yup";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
 import Header from "../../components/Header";
-import PhoneInput from 'react-phone-input-2';
-import 'react-phone-input-2/lib/material.css';
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/material.css";
 import { useState } from "react";
 import { tokens } from "../../theme";
+import { createTeamMember, teamReset } from "../../actions/teamAction";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 const CreateTeamMemberForm = () => {
   const isNonMobile = useMediaQuery("(min-width:600px)");
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
-  const isDarkMode = theme.palette.mode === 'dark';
-  const [selectedImageName, setSelectedImageName] = useState('');
+  const isDarkMode = theme.palette.mode === "dark";
+  const [selectedImageName, setSelectedImageName] = useState("");
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const error = useSelector((state) => state.team.error);
+  const [success, setSuccess] = useState(null);
 
-  const handleFormSubmit = (values) => {
-    console.log(values); 
-  };
-
-  const handleProfilePictureChange = (e, setFieldValue) => {
-    const file = e.target.files[0];
-    if (file) {
-      setSelectedImageName(file.name);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFieldValue("profilePicture", reader.result);
-      };
-      reader.readAsDataURL(file);
+const handleFormSubmit = async (values) => {
+  const formData = new FormData();
+  for (const key in values) {
+    if (key === "keySkills" || key === "certifications") {
+      values[key].forEach((item) => formData.append(key, item));
+    } else {
+      formData.append(key, values[key]);
     }
-  };
+  }
+
+  const result = await dispatch(createTeamMember(formData));
+
+  if (result.success) {
+    setSuccess("Team Member created with success.");
+    setTimeout(() => {
+    navigate("/team");
+    }, 1500);
+  }
+};
+
+
+const handleProfilePictureChange = (e, setFieldValue) => {
+  const file = e.target.files[0];
+  if (file) {
+    setSelectedImageName(file.name);
+    setFieldValue("profilePicture", file); // ✅ store the File directly
+  }
+};
+useEffect(() => {
+  dispatch(teamReset())
+}, [dispatch])
+
+
 
   return (
     <Box m="20px">
-      <Header title="Add Team Member" subtitle="Create and define a new team member with all necessary details" />
+      <Header
+        title="Add Team Member"
+        subtitle="Create and define a new team member with all necessary details"
+      />
 
       <Formik
         onSubmit={handleFormSubmit}
         initialValues={initialValues}
         validationSchema={teamMemberSchema}
       >
-        {({ values, errors, touched, handleBlur, handleChange, handleSubmit, setFieldValue }) => (
+        {({
+          values,
+          errors,
+          touched,
+          handleBlur,
+          handleChange,
+          handleSubmit,
+          setFieldValue,
+        }) => (
           <form onSubmit={handleSubmit}>
             <Box
               display="grid"
@@ -83,32 +127,34 @@ const CreateTeamMemberForm = () => {
               <Box sx={{ gridColumn: "span 2" }}>
                 <PhoneInput
                   inputStyle={{
-                    width: '100%',
-                    height: '56px',
-                    backgroundColor: isDarkMode ? '#424242' : '#f5f5f5',
-                    color: isDarkMode ? '#fff' : '#000',
-                    border: 'none',
-                    borderBottom: '2px solid #ccc',
-                    borderRadius: '4px',
-                    fontSize: '16px',
-                    paddingLeft: '50px'
+                    width: "100%",
+                    height: "56px",
+                    backgroundColor: isDarkMode ? "#424242" : "#f5f5f5",
+                    color: isDarkMode ? "#fff" : "#000",
+                    border: "none",
+                    borderBottom: "2px solid #ccc",
+                    borderRadius: "4px",
+                    fontSize: "16px",
+                    paddingLeft: "50px",
                   }}
                   buttonStyle={{
-                    backgroundColor: isDarkMode ? '#424242' : '#f5f5f5',
-                    border: 'none',
+                    backgroundColor: isDarkMode ? "#424242" : "#f5f5f5",
+                    border: "none",
                   }}
-                  containerStyle={{ width: '100%' }}
-                  country={'tn'}
+                  containerStyle={{ width: "100%" }}
+                  country={"tn"}
                   value={values.phoneNumber}
-                  onChange={(phone) => setFieldValue('phoneNumber', phone)}
+                  onChange={(phone) => setFieldValue("phoneNumber", phone)}
                   onBlur={handleBlur}
                   inputProps={{
-                    name: 'phoneNumber',
+                    name: "phoneNumber",
                     required: true,
                   }}
                 />
                 {touched.phoneNumber && errors.phoneNumber && (
-                  <div style={{ color: "red", fontSize: "12px" }}>{errors.phoneNumber}</div>
+                  <div style={{ color: "red", fontSize: "12px" }}>
+                    {errors.phoneNumber}
+                  </div>
                 )}
               </Box>
 
@@ -134,11 +180,15 @@ const CreateTeamMemberForm = () => {
                     hidden
                     accept="image/*"
                     type="file"
-                    onChange={(e) => handleProfilePictureChange(e, setFieldValue)}
+                    onChange={(e) =>
+                      handleProfilePictureChange(e, setFieldValue)
+                    }
                   />
                 </Button>
                 {touched.profilePicture && errors.profilePicture && (
-                  <div style={{ color: "red", fontSize: "12px" }}>{errors.profilePicture}</div>
+                  <div style={{ color: "red", fontSize: "12px" }}>
+                    {errors.profilePicture}
+                  </div>
                 )}
               </Box>
 
@@ -226,7 +276,10 @@ const CreateTeamMemberForm = () => {
                 name="keySkills"
                 value={values.keySkills.join(", ")}
                 onChange={(e) =>
-                  setFieldValue('keySkills', e.target.value.split(",").map(skill => skill.trim()))
+                  setFieldValue(
+                    "keySkills",
+                    e.target.value.split(",").map((skill) => skill.trim())
+                  )
                 }
                 onBlur={handleBlur}
                 error={!!touched.keySkills && !!errors.keySkills}
@@ -242,7 +295,10 @@ const CreateTeamMemberForm = () => {
                 name="certifications"
                 value={values.certifications.join(", ")}
                 onChange={(e) =>
-                  setFieldValue('certifications', e.target.value.split(",").map(cert => cert.trim()))
+                  setFieldValue(
+                    "certifications",
+                    e.target.value.split(",").map((cert) => cert.trim())
+                  )
                 }
                 onBlur={handleBlur}
                 error={!!touched.certifications && !!errors.certifications}
@@ -260,18 +316,54 @@ const CreateTeamMemberForm = () => {
                 value={values.yearsOfExperience}
                 onChange={handleChange}
                 onBlur={handleBlur}
-                error={!!touched.yearsOfExperience && !!errors.yearsOfExperience}
-                helperText={touched.yearsOfExperience && errors.yearsOfExperience}
+                error={
+                  !!touched.yearsOfExperience && !!errors.yearsOfExperience
+                }
+                helperText={
+                  touched.yearsOfExperience && errors.yearsOfExperience
+                }
                 sx={{ gridColumn: "span 2" }}
               />
             </Box>
 
             {/* Submit Button */}
             <Box display="flex" justifyContent="end" mt="20px">
-              <Button type="submit" color="secondary" variant="contained">
+              <Button
+                type="submit"
+                sx={{
+                  backgroundColor: colors.grey[100],
+                  color: colors.grey[900],
+                }}
+              >
                 Create New Team Member
               </Button>
             </Box>
+            {error && (
+              <Box
+                mt={2}
+                mb={2}
+                p={2}
+                borderRadius="5px"
+                bgcolor={colors.redAccent[500]}
+                color="white"
+                fontWeight="bold"
+              >
+                {error}
+              </Box>
+            )}
+            {success && (
+              <Box
+                mt={2}
+                mb={2}
+                p={2}
+                borderRadius="5px"
+                bgcolor={colors.greenAccent[500]}
+                color="white"
+                fontWeight="bold"
+              >
+                {success}
+              </Box>
+            )}
           </form>
         )}
       </Formik>
@@ -289,9 +381,18 @@ const teamMemberSchema = yup.object().shape({
   dateOfJoining: yup.date().required("Required"),
   seniorityLevel: yup.string().required("Required"),
   remoteWorkAllowed: yup.boolean(),
-  keySkills: yup.array().of(yup.string().required("Required")).min(1, "At least one skill required"),
-  certifications: yup.array().of(yup.string()).min(1, "At least one certification required"),
-  yearsOfExperience: yup.number().required("Required").min(0, "Experience cannot be negative"),
+  keySkills: yup
+    .array()
+    .of(yup.string().required("Required"))
+    .min(1, "At least one skill required"),
+  certifications: yup
+    .array()
+    .of(yup.string())
+    .min(1, "At least one certification required"),
+  yearsOfExperience: yup
+    .number()
+    .required("Required")
+    .min(0, "Experience cannot be negative"),
   profilePicture: yup.string().nullable(),
 });
 

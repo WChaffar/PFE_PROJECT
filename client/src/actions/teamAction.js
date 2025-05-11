@@ -1,0 +1,50 @@
+import TeamService from '../services/TeamService';
+
+
+// create Task
+export const createTeamMember = (values) => async (dispatch) => {
+    try {
+      const data = await TeamService.createTeamMember(values);
+      dispatch({
+        type: 'CREATE_TEAM_MEMBER_SUCCESS',
+        payload: { data },
+      });
+      return { success: true }; // ✅ return success
+    } catch (error) {
+      dispatch({
+        type: 'CREATE_TEAM_MEMBER_FAILURE',
+        payload: error.response?.data?.message || 'Create team member failed',
+      });
+      return { success: false }; // ✅ return failure
+    }
+  };
+
+
+
+
+  // create Project
+export const getAllTeamMembers = () => async (dispatch) => {
+  try {
+    const data = await TeamService.getTeamMembers();
+    dispatch({
+      type: 'GET_TEAM_MEMBERS_SUCCESS',
+      payload: { data },
+    });
+    return { success: true }; // ✅ return success
+  } catch (error) {
+    dispatch({
+      type: 'GET_TEAM_MEMBERS_FAILURE',
+      payload: error.response?.data?.message || 'Get team members failed',
+    });
+    return { success: false }; // ✅ return failure
+  }
+};
+
+
+  // create Project
+export const teamReset = () => async (dispatch) => {
+    dispatch({
+      type: 'TEAM_RESET',
+      payload: {},
+    });
+};

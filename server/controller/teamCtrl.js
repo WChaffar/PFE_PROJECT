@@ -12,33 +12,32 @@ const validateTeamMember = [
   
   // Create a Team Member ---------------------------------------------- 
   
-  const createTeamMember =[
-    validateTeamMember, asyncHandler(async (req, res) => {
-    // Vérifier les erreurs de validation
+const createTeamMember = [
+  asyncHandler(async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      throw new Error(errors.array()[0].msg); // Lancer la première erreur trouvée
+      throw new Error(errors.array()[0].msg);
     }
-    /**
-     * TODO:With the help of project name find the project exists or not
-     */
-    const findTeamMember = await Team.findOne({ FullName: req.body?.FullName});
+    const findTeamMember = await Team.findOne({ fullName: req.body?.fullName });
 
     if (!findTeamMember) {
-      /**
-       * TODO:if user not found user create a new user
-       */
       let newMember = req.body;
       newMember.manager = req.user?._id;
-      const newTeam = await Team.create(req.body);
+
+      if (req.file) {
+        newMember.profilePicture = `/uploads/profile-pictures/${req.file.filename}`;
+      }
+
+      const newTeam = await Team.create(newMember);
       res.json(newTeam);
     } else {
-      /**
-       * TODO:if user found then thow an error: User already exists
-       */
-      throw new Error("Team member already exists. Please add another character or number to the full name to resolve the conflict.");
+      throw new Error(
+        "Team member already exists. Please add another character or number to the full name to resolve the conflict."
+      );
     }
-  })];
+  }),
+];
+
 
   // get all Team ---------------------------------------------- 
   
@@ -64,7 +63,6 @@ const validateTeamMember = [
     try {
 
       const { id } = req.params;
-      console.log(id);
       validateMongoDbId(id);
       const findOneTeam = await Team.findOne({ manager: req.user?._id, _id:id});
   
