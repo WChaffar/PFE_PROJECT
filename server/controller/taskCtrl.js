@@ -71,7 +71,7 @@ const validateTask = [
       const { id } = req.params;
       console.log(id);
       validateMongoDbId(id);
-      const findTask = await Task.findOne({ owner: req.user?._id, _id:id}); 
+      const findTask = await Task.findOne({ owner: req.user?._id, _id:id}).populate('project', 'projectName _id');
       if (!findTask) {
         throw new Error("Task not found.");
       }
@@ -132,7 +132,7 @@ const editOneTask = asyncHandler(async (req, res) => {
     // Réponse réussie avec le projet mis à jour
     res.status(200).json({
       message: "Task updated successfully.",
-      task,
+      data:task
     });
   } catch (error) {
     res.status(400).json({ message: error.message });

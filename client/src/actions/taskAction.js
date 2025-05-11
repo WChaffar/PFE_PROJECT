@@ -78,3 +78,22 @@ export const getTasksByProjectId = (values) => async (dispatch) => {
       return { success: false }; // ✅ return failure
     }
   };
+
+
+  // create Project
+export const editTask = (id,values) => async (dispatch) => {
+  try {
+    const data = await TaskService.editTask(id,values);
+    dispatch({
+      type: 'EDIT_TASK_SUCCESS',
+      payload: { data },
+    });
+    return { success: true }; // ✅ return success
+  } catch (error) {
+    dispatch({
+      type: 'EDIT_TASK_FAILURE',
+      payload: error.response?.data?.message || 'edit project failed',
+    });
+    return { success: false }; // ✅ return failure
+  }
+};

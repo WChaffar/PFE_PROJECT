@@ -18,6 +18,7 @@ const TaskDetails = () => {
     const dispatch = useDispatch();
     const { id } = useParams();
     const error = useSelector((state) => state.projects.error);
+
   
   useEffect(() => {
     if (Object.keys(selectedTask).length > 0) {
@@ -81,7 +82,6 @@ const TaskDetails = () => {
           <Typography><strong>Task Name:</strong> {task.taskName}</Typography>
           <Typography><strong>Description:</strong> {task.description}</Typography>
           <Typography><strong>Project:</strong> {task.project?.projectName || task.project}</Typography>
-          <Typography><strong>Owner:</strong> {task.owner?.fullName || task.owner}</Typography>
         </AccordionDetails>
       </Accordion>
 

@@ -45,13 +45,23 @@ const deleteTaskById = (taskId) => {
     })
 };
 
+    const editTask = (id,values) => {
+      return axios
+        .put(base_url + `task/editOne/${id}`, values,
+         getConfig()
+        )
+        .then((response) => {
+          return response.data;
+        })
+      };
 
 
 const TaskService = {
     createTask,
     getTaskByProjectID,
     getTaskById,
-    deleteTaskById
+    deleteTaskById,
+    editTask
    }
    
  

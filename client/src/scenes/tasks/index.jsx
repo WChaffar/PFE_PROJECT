@@ -61,6 +61,7 @@ const TasksManagement = () => {
   const [projectLoading, setProjectLoading] = useState(false);
   const [openSnackbar, setOpenSnackbar] = React.useState(false); // Snackbar state
   const [snackbarMessage, setSnackbarMessage] = React.useState(""); // Message for Snackbar
+  const error = useSelector((state) => state.tasks.error);
 
   useEffect(() => {
     if (selectedProjects.length !== 0) {
@@ -99,14 +100,14 @@ const TasksManagement = () => {
     setTasksLoading(false);
   }, [selectedTasks]);
 
-    useEffect(() => {
-      if (openSnackbar) {
-        const timer = setTimeout(() => {
-          handleSnackbarClose();
-        }, 6000); // 10 secondes
-        return () => clearTimeout(timer);
-      }
-    }, [openSnackbar]);
+  useEffect(() => {
+    if (openSnackbar) {
+      const timer = setTimeout(() => {
+        handleSnackbarClose();
+      }, 6000); // 10 secondes
+      return () => clearTimeout(timer);
+    }
+  }, [openSnackbar]);
 
   const projectColumns = [
     {
@@ -253,6 +254,24 @@ const TasksManagement = () => {
     setOpenSnackbar(false); // Close the Snackbar
   };
 
+  function CustomErrorOverlay() {
+  return (
+    <Box
+      sx={{
+        p: 2,
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100%',
+      }}
+    >
+      <Typography color="error" variant="body1">
+        {error}
+      </Typography>
+    </Box>
+  );
+}
+
   return (
     <Box p={3}>
       <Box display="flex" justifyContent="space-between" alignItems="center">
@@ -351,19 +370,23 @@ const TasksManagement = () => {
           bgcolor="background.paper"
           marginTop="25px"
         >
-          <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Typography variant="h6" p={2}>
-            Tasks
-          </Typography>
-          {openSnackbar && (
-            <Alert
-              onClose={handleSnackbarClose}
-              severity="success"
-              sx={{ width: "auto" }}
-            >
-              {snackbarMessage}
-            </Alert>
-          )}
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            <Typography variant="h6" p={2}>
+              Tasks
+            </Typography>
+            {openSnackbar && (
+              <Alert
+                onClose={handleSnackbarClose}
+                severity="success"
+                sx={{ width: "auto" }}
+              >
+                {snackbarMessage}
+              </Alert>
+            )}
           </Box>
           <Box
             m="-20px 0 0 0"
@@ -402,12 +425,16 @@ const TasksManagement = () => {
             <DataGrid
               rows={tasks}
               columns={taskColumns}
-              components={{ Toolbar: CustomToolbar }}
+              components={{
+                Toolbar: CustomToolbar,
+                ErrorOverlay: CustomErrorOverlay,
+              }}
               sx={{ border: "none" }}
               pageSize={5}
               rowsPerPageOptions={[5, 10, 25, 50, 100]}
               pagination
               loading={tasksLoading}
+              error={!!error}
             />
           </Box>
         </Box>
