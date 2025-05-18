@@ -37,11 +37,22 @@ const getTeamMembers = () => {
       })
     };
 
+  const deleteTeamMember = (id) => {
+  return axios
+    .delete(base_url + `team/deleteOne/${id}`, 
+     getConfig()
+    )
+    .then((response) => {
+      return response.data;
+    })
+  };
+
 
 const TeamService = {
   createTeamMember,
   getTeamMembers,
   getOneTeamMember,
+  deleteTeamMember
 };
 
 export default TeamService;

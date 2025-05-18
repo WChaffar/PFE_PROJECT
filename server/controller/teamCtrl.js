@@ -81,7 +81,6 @@ const createTeamMember = [
   const deleteOneTeamMemeber = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;  // Get the project ID from request parameters
-
     // Validate MongoDB ID
     validateMongoDbId(id);
 
@@ -95,7 +94,8 @@ const createTeamMember = [
 
     // Send success response
     res.status(200).json({
-      message: "Team memeber deleted successfully."
+      message: "Team memeber deleted successfully.",
+       _id:id
     });
   } catch (error) {
     res.status(400).json({ message: error.message });

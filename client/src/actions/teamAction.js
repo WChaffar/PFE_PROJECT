@@ -58,6 +58,25 @@ export const getOneTeamMember = (id) => async (dispatch) => {
 };
 
 
+// create Project
+export const deleteTeamMember = (id) => async (dispatch) => {
+  try {
+    const data = await TeamService.deleteTeamMember(id);
+    dispatch({
+      type: 'DELETE_TEAM_MEMBER_SUCCESS',
+      payload: { data },
+    });
+    return { success: true }; // ✅ return success
+  } catch (error) {
+    dispatch({
+      type: 'DELETE_TEAM_MEMBER_FAILURE',
+      payload: error.response?.data?.message || 'delete team member failed',
+    });
+    return { success: false }; // ✅ return failure
+  }
+};
+
+
 
   // create Project
 export const teamReset = () => async (dispatch) => {

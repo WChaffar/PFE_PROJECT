@@ -1,5 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { Box, IconButton, Typography, useTheme } from "@mui/material";
+import {
+  Alert,
+  Box,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  IconButton,
+  Typography,
+  useTheme,
+} from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { teamMembersData } from "../../data/TeamData"; // <- Créez ce fichier
 import MoreVertIcon from "@mui/icons-material/MoreVert";
@@ -14,7 +25,7 @@ import {
 import { Menu, MenuItem, Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { getAllTeamMembers } from "../../actions/teamAction";
+import { deleteTeamMember, getAllTeamMembers } from "../../actions/teamAction";
 import { BACKEND_URL } from "../../config/ServerConfig";
 
 const CustomToolbar = () => {
@@ -40,6 +51,8 @@ const TeamManagement = () => {
   const [teamMemebers, setTeamMembers] = useState([]);
   const [openSnackbar, setOpenSnackbar] = React.useState(false); // Snackbar state
   const [snackbarMessage, setSnackbarMessage] = React.useState(""); // Message for Snackbar
+  const error = useSelector((state) => state.team.error);
+  const [errorState, setErrorState] = useState(null);
 
   useEffect(() => {
     if (selectedTeamMembers.length !== 0) {
@@ -61,6 +74,26 @@ const TeamManagement = () => {
   useEffect(() => {
     dispatch(getAllTeamMembers());
   }, [dispatch]); // <== Appelle une seule fois le fetch
+
+  useEffect(() => {
+    if (openSnackbar) {
+      const timer = setTimeout(() => {
+        handleSnackbarClose();
+        setErrorState(null)
+      }, 6000); // 10 secondes
+      return () => clearTimeout(timer);
+    }
+  }, [openSnackbar]);
+
+  useEffect(() => {
+    if (error !== null) {
+      console.log("hey")
+      setErrorState(error);
+      setSnackbarMessage(error); // Set success message
+      setOpenSnackbar(true); // Show Snackbar
+      console.log("delete failed");
+    }
+  }, [error]);
 
   const columns = [
     {
@@ -150,9 +183,13 @@ const TeamManagement = () => {
   const ActionsMenu = ({ row }) => {
     const [anchorEl, setAnchorEl] = React.useState(null);
     const open = Boolean(anchorEl);
+    const [openConfirm, setOpenConfirm] = React.useState(false);
 
     const handleClick = (event) => {
       setAnchorEl(event.currentTarget);
+    };
+    const handleCloseMenu = () => {
+      setAnchorEl(null);
     };
 
     const handleClose = (action) => {
@@ -162,6 +199,7 @@ const TeamManagement = () => {
       }
       if (action === "Delete") {
         // handle delete logic here
+        setOpenConfirm(true); // Show confirmation dialog
       }
       if (action === "Details") {
         // handle details logic here
@@ -170,6 +208,16 @@ const TeamManagement = () => {
       setAnchorEl(null);
     };
 
+    const handleConfirmDelete = async () => {
+      const result = await dispatch(deleteTeamMember(row.id));
+      if (result.success) {
+        setSnackbarMessage("Task deleted successfully!"); // Set success message
+        setOpenSnackbar(true); // Show Snackbar
+        console.log("delete with success");
+      }
+      setOpenConfirm(false);
+      handleCloseMenu();
+    };
     return (
       <>
         <IconButton onClick={handleClick}>
@@ -194,8 +242,35 @@ const TeamManagement = () => {
           <MenuItem onClick={() => handleClose("Delete")}>🗑️ Delete</MenuItem>
           <MenuItem onClick={() => handleClose("Details")}>🔍 Details</MenuItem>
         </Menu>
+        <Dialog open={openConfirm} onClose={() => setOpenConfirm(false)}>
+          <DialogTitle>Confirm Deletion</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Are you sure you want to delete the team member{" "}
+              <strong>{row.name}</strong>?<br />
+              This action can have significant consequences, including affecting
+              team assignments, projects, and linked data. Proceed with caution.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenConfirm(false)} color="secondary">
+              Cancel
+            </Button>
+            <Button
+              onClick={handleConfirmDelete}
+              color="error"
+              variant="contained"
+            >
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
       </>
     );
+  };
+
+  const handleSnackbarClose = () => {
+    setOpenSnackbar(false); // Close the Snackbar
   };
 
   return (
@@ -320,6 +395,24 @@ const TeamManagement = () => {
 
       {/* Team Members Table */}
       <Box height="60vh">
+        {openSnackbar && errorState == null && (
+          <Alert
+            onClose={handleSnackbarClose}
+            severity="success"
+            sx={{ width: "auto" }}
+          >
+            {snackbarMessage}
+          </Alert>
+        )}
+        {openSnackbar && errorState !== null && (
+          <Alert
+            onClose={handleSnackbarClose}
+            severity="error"
+            sx={{ width: "auto" }}
+          >
+            {snackbarMessage}
+          </Alert>
+        )}
         <DataGrid
           rows={teamMemebers}
           columns={columns}
