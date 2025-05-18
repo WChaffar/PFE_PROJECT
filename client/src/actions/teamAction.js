@@ -20,8 +20,6 @@ export const createTeamMember = (values) => async (dispatch) => {
   };
 
 
-
-
   // create Project
 export const getAllTeamMembers = () => async (dispatch) => {
   try {
@@ -39,6 +37,26 @@ export const getAllTeamMembers = () => async (dispatch) => {
     return { success: false }; // ✅ return failure
   }
 };
+
+
+// get One TEAM Member
+export const getOneTeamMember = (id) => async (dispatch) => {
+  try {
+    const data = await TeamService.getOneTeamMember(id);
+    dispatch({
+      type: 'GET_ONE_TEAM_MEMBER_SUCCESS',
+      payload: { data },
+    });
+    return { success: true }; // ✅ return success
+  } catch (error) {
+    dispatch({
+      type: 'GET_ONE_TEAM_MEMBER_FAILURE',
+      payload: error.response?.data?.message || 'get one team memeber failed',
+    });
+    return { success: false }; // ✅ return failure
+  }
+};
+
 
 
   // create Project

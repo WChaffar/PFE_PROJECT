@@ -31,7 +31,7 @@ const TaskDetails = () => {
   }, [dispatch]); // <== Appelle une seule fois le fetch
 
 
-  if (!task || !task.project) {
+  if ((Object.keys(task).length < 1 || !task.project) && !error) {
     return (
       <Box
         display="flex"
@@ -44,7 +44,7 @@ const TaskDetails = () => {
     );
   }
 
-  if (error && !task) {
+  if (error && Object.keys(task).length < 1) {
     return (
       <Box
         mt={2}

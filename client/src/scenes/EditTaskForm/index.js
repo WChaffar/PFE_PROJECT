@@ -77,7 +77,7 @@ const EditTaskForm = () => {
     requiredCertifications: task?.requiredCertifications || [],
   };
 
-    if (!task || !task.taskName) {
+    if ((Object.keys(task).length < 1 || !task.project) && !error) {
       return (
         <Box
           display="flex"
@@ -90,7 +90,7 @@ const EditTaskForm = () => {
       );
     }
   
-    if (error && !task) {
+    if (error && !Object.keys(task).length < 1) {
       return (
         <Box
           mt={2}

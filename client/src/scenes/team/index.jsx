@@ -165,7 +165,7 @@ const TeamManagement = () => {
       }
       if (action === "Details") {
         // handle details logic here
-        navigate("/team/1235/profile");
+        navigate(`/team/${row.id}/profile`);
       }
       setAnchorEl(null);
     };

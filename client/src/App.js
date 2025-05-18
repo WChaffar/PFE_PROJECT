@@ -25,7 +25,7 @@ import EditProjectForm from "./scenes/EditProjectForm";
 import Team from "./scenes/team";
 import CreateTeamMemberForm from "./scenes/CreateTeamMemberForm";
 import EditTeamMemberForm from "./scenes/EditTeamMember";
-import TeamMemberProfile from "./scenes/TeamMemberProfile/indec";
+import TeamMemberProfile from "./scenes/TeamMemberProfile/index";
 import StaffingBoard from "./scenes/Staffing";
 import EditStaffing from "./scenes/EditAssignement";
 import TaskManagement from "./scenes/tasks";

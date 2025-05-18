@@ -65,7 +65,7 @@ const EditProjectForm = () => {
     }
   };
  
-  if (!project || !project.projectName) {
+  if ((Object.keys(project).length < 1 || !project.projectName) && !error) {
     return (
       <Box
         display="flex"
@@ -78,7 +78,7 @@ const EditProjectForm = () => {
     );
   }
 
-  if (error && !project) {
+  if (error && Object.keys(project).length < 1) {
     return (
       <Box
         mt={2}

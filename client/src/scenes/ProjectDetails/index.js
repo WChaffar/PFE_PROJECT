@@ -11,7 +11,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { getOneProject } from "../../actions/projectAction";
 import { useParams } from "react-router-dom";
 import { format } from "date-fns";
-
+ 
 const ProjectDetails = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
@@ -37,7 +37,7 @@ const ProjectDetails = () => {
   }, [dispatch]); // <== Appelle une seule fois le fetch
 
 
-  if (!project || !project.projectName) {
+  if ((Object.keys(project).length < 1 || !project.projectName) && !error) {
     return (
       <Box
         display="flex"
@@ -50,7 +50,7 @@ const ProjectDetails = () => {
     );
   }
 
-  if (error && !project) {
+  if (error && Object.keys(project).length < 1) {
     return (
       <Box
         mt={2}

@@ -26,9 +26,22 @@ const getTeamMembers = () => {
   });
 };
 
+
+  const getOneTeamMember = (id) => {
+    return axios
+      .get(base_url + `team/getOne/${id}`, 
+       getConfig()
+      )
+      .then((response) => {
+        return response.data;
+      })
+    };
+
+
 const TeamService = {
   createTeamMember,
   getTeamMembers,
+  getOneTeamMember,
 };
 
 export default TeamService;
