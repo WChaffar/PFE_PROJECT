@@ -76,6 +76,23 @@ export const deleteTeamMember = (id) => async (dispatch) => {
   }
 };
 
+// edit team member
+export const editTeamMember = (id,formDat) => async (dispatch) => {
+    try {
+      const data = await TeamService.editTeamMember(id,formDat);
+      dispatch({
+        type: 'EDIT_TEAM_MEMBER_SUCCESS',
+        payload: { data },
+      });
+      return { success: true }; // ✅ return success
+    } catch (error) {
+      dispatch({
+        type: 'EDIT_TEAM_MEMBER_FAILURE',
+        payload: error.response?.data?.message || 'Edit team member failed',
+      });
+      return { success: false }; // ✅ return failure
+    }
+  };
 
 
   // create Project
@@ -85,3 +102,4 @@ export const teamReset = () => async (dispatch) => {
       payload: {},
     });
 };
+

@@ -1,24 +1,56 @@
-import { Box, Button, TextField, MenuItem, Checkbox, FormControlLabel } from "@mui/material";
+import {
+  Box,
+  Button,
+  TextField,
+  MenuItem,
+  Checkbox,
+  FormControlLabel,
+  Avatar,
+} from "@mui/material";
 import { Formik } from "formik";
 import * as yup from "yup";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
 import Header from "../../components/Header";
-import PhoneInput from 'react-phone-input-2';
-import 'react-phone-input-2/lib/material.css';
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/material.css";
 import { useState, useEffect } from "react";
 import { tokens } from "../../theme";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate, useParams } from "react-router-dom";
+import { getOneTeamMember } from "../../actions/teamAction";
+import { format } from "date-fns";
+import { BACKEND_URL } from "../../config/ServerConfig";
 
 const EditTeamMemberForm = ({ memberData, onSubmit }) => {
   const isNonMobile = useMediaQuery("(min-width:600px)");
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
-  const isDarkMode = theme.palette.mode === 'dark';
-  const [selectedImageName, setSelectedImageName] = useState('');
+  const isDarkMode = theme.palette.mode === "dark";
+  const [selectedImageName, setSelectedImageName] = useState("");
+  const dispatch = useDispatch();
+  const selectedteamMember = useSelector(
+    (state) => state.team.activeTeamMember
+  );
+  const [teamMember, setTeamMember] = useState(null);
+  const { id } = useParams();
+  const error = useSelector((state) => state.tasks.error);
+  const [success, setSuccess] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (Object.keys(selectedteamMember).length > 0) {
+      setTeamMember(selectedteamMember);
+    }
+  }, [selectedteamMember]); // <== Écoute les changements de selectedProjects
+
+  useEffect(() => {
+    dispatch(getOneTeamMember(id));
+  }, [dispatch, id]); // <== Appelle une seule fois le fetch
 
   useEffect(() => {
     if (memberData?.profilePicture) {
-      setSelectedImageName('Current Profile Picture');
+      setSelectedImageName("Current Profile Picture");
     }
   }, [memberData]);
 
@@ -39,17 +71,47 @@ const EditTeamMemberForm = ({ memberData, onSubmit }) => {
     }
   };
 
+  const initialValues = {
+    _id: teamMember?._id || "",
+    fullName: teamMember?.fullName || "",
+    email: teamMember?.email || "",
+    phoneNumber: teamMember?.phoneNumber || "",
+    profilePicture: teamMember?.profilePicture || "",
+    jobTitle: teamMember?.jobTitle || "",
+    employmentType: teamMember?.employmentType || "",
+    dateOfJoining:
+      (teamMember?.dateOfJoining &&
+        format(teamMember?.dateOfJoining, "yyyy-MM-dd")) ||
+      "",
+    seniorityLevel: teamMember?.seniorityLevel || "",
+    remoteWorkAllowed: teamMember?.remoteWorkAllowed || false,
+    keySkills: teamMember?.keySkills || [],
+    certifications: teamMember?.certifications || [],
+    yearsOfExperience: teamMember?.yearsOfExperience || 0,
+  };
+
   return (
     <Box m="20px">
-      <Header title="Edit Team Member" subtitle="Modify the details of an existing team member" />
+      <Header
+        title="Edit Team Member"
+        subtitle="Modify the details of an existing team member"
+      />
 
       <Formik
         onSubmit={handleFormSubmit}
-        initialValues={memberData || initialValues}
+        initialValues={initialValues}
         validationSchema={teamMemberSchema}
         enableReinitialize // Important: to update form if memberData changes
       >
-        {({ values, errors, touched, handleBlur, handleChange, handleSubmit, setFieldValue }) => (
+        {({
+          values,
+          errors,
+          touched,
+          handleBlur,
+          handleChange,
+          handleSubmit,
+          setFieldValue,
+        }) => (
           <form onSubmit={handleSubmit}>
             <Box
               display="grid"
@@ -93,37 +155,45 @@ const EditTeamMemberForm = ({ memberData, onSubmit }) => {
               <Box sx={{ gridColumn: "span 2" }}>
                 <PhoneInput
                   inputStyle={{
-                    width: '100%',
-                    height: '56px',
-                    backgroundColor: isDarkMode ? '#424242' : '#f5f5f5',
-                    color: isDarkMode ? '#fff' : '#000',
-                    border: 'none',
-                    borderBottom: '2px solid #ccc',
-                    borderRadius: '4px',
-                    fontSize: '16px',
-                    paddingLeft: '50px'
+                    width: "100%",
+                    height: "56px",
+                    backgroundColor: isDarkMode ? "#424242" : "#f5f5f5",
+                    color: isDarkMode ? "#fff" : "#000",
+                    border: "none",
+                    borderBottom: "2px solid #ccc",
+                    borderRadius: "4px",
+                    fontSize: "16px",
+                    paddingLeft: "50px",
                   }}
                   buttonStyle={{
-                    backgroundColor: isDarkMode ? '#424242' : '#f5f5f5',
-                    border: 'none',
+                    backgroundColor: isDarkMode ? "#424242" : "#f5f5f5",
+                    border: "none",
                   }}
-                  containerStyle={{ width: '100%' }}
-                  country={'tn'}
+                  containerStyle={{ width: "100%" }}
+                  country={"tn"}
                   value={values.phoneNumber}
-                  onChange={(phone) => setFieldValue('phoneNumber', phone)}
+                  onChange={(phone) => setFieldValue("phoneNumber", phone)}
                   onBlur={handleBlur}
                   inputProps={{
-                    name: 'phoneNumber',
+                    name: "phoneNumber",
                     required: true,
                   }}
                 />
                 {touched.phoneNumber && errors.phoneNumber && (
-                  <div style={{ color: "red", fontSize: "12px" }}>{errors.phoneNumber}</div>
+                  <div style={{ color: "red", fontSize: "12px" }}>
+                    {errors.phoneNumber}
+                  </div>
                 )}
               </Box>
 
               {/* Profile Picture */}
-              <Box sx={{ gridColumn: "span 2" }}>
+              <Box sx={{ gridColumn: "span 2", display:"flex", flexDirection:"row" }}>
+                {/* Profile Picture */}
+                <Avatar
+                  src={BACKEND_URL + values?.profilePicture}
+                  alt={values?.fullName}
+                  sx={{ width: 80, height: 80, mb: 2 }}
+                />
                 <Button
                   variant="contained"
                   component="label"
@@ -132,11 +202,13 @@ const EditTeamMemberForm = ({ memberData, onSubmit }) => {
                     backgroundColor: isDarkMode ? "#424242" : "#f5f5f5",
                     color: isDarkMode ? "#fff" : "#000",
                     height: "56px",
+                    width:"300px",
                     justifyContent: "flex-start",
                     pl: "15px",
                     "&:hover": {
                       backgroundColor: isDarkMode ? "#333" : "#e0e0e0",
                     },
+                    marginLeft:"30px"
                   }}
                 >
                   {selectedImageName || "Upload Profile Picture"}
@@ -144,17 +216,21 @@ const EditTeamMemberForm = ({ memberData, onSubmit }) => {
                     hidden
                     accept="image/*"
                     type="file"
-                    onChange={(e) => handleProfilePictureChange(e, setFieldValue)}
+                    onChange={(e) =>
+                      handleProfilePictureChange(e, setFieldValue)
+                    }
                   />
                 </Button>
                 {touched.profilePicture && errors.profilePicture && (
-                  <div style={{ color: "red", fontSize: "12px" }}>{errors.profilePicture}</div>
+                  <div style={{ color: "red", fontSize: "12px" }}>
+                    {errors.profilePicture}
+                  </div>
                 )}
               </Box>
 
               {/* Other fields (Job Title, Employment Type, etc.) */}
               {/* exactly like you had them - no need to retype here */}
-              
+
               <TextField
                 fullWidth
                 variant="filled"
@@ -233,7 +309,10 @@ const EditTeamMemberForm = ({ memberData, onSubmit }) => {
                 name="keySkills"
                 value={values.keySkills.join(", ")}
                 onChange={(e) =>
-                  setFieldValue('keySkills', e.target.value.split(",").map(skill => skill.trim()))
+                  setFieldValue(
+                    "keySkills",
+                    e.target.value.split(",").map((skill) => skill.trim())
+                  )
                 }
                 onBlur={handleBlur}
                 error={!!touched.keySkills && !!errors.keySkills}
@@ -248,7 +327,10 @@ const EditTeamMemberForm = ({ memberData, onSubmit }) => {
                 name="certifications"
                 value={values.certifications.join(", ")}
                 onChange={(e) =>
-                  setFieldValue('certifications', e.target.value.split(",").map(cert => cert.trim()))
+                  setFieldValue(
+                    "certifications",
+                    e.target.value.split(",").map((cert) => cert.trim())
+                  )
                 }
                 onBlur={handleBlur}
                 error={!!touched.certifications && !!errors.certifications}
@@ -265,15 +347,25 @@ const EditTeamMemberForm = ({ memberData, onSubmit }) => {
                 value={values.yearsOfExperience}
                 onChange={handleChange}
                 onBlur={handleBlur}
-                error={!!touched.yearsOfExperience && !!errors.yearsOfExperience}
-                helperText={touched.yearsOfExperience && errors.yearsOfExperience}
+                error={
+                  !!touched.yearsOfExperience && !!errors.yearsOfExperience
+                }
+                helperText={
+                  touched.yearsOfExperience && errors.yearsOfExperience
+                }
                 sx={{ gridColumn: "span 2" }}
               />
             </Box>
-
+            <br/><br/>
             {/* Submit Button */}
             <Box display="flex" justifyContent="end" mt="20px">
-              <Button type="submit" color="secondary" variant="contained">
+              <Button
+                type="submit"
+                sx={{
+                  backgroundColor: colors.grey[100],
+                  color: colors.grey[900],
+                }}
+              >
                 Update Team Member
               </Button>
             </Box>
@@ -294,26 +386,19 @@ const teamMemberSchema = yup.object().shape({
   dateOfJoining: yup.date().required("Required"),
   seniorityLevel: yup.string().required("Required"),
   remoteWorkAllowed: yup.boolean(),
-  keySkills: yup.array().of(yup.string().required("Required")).min(1, "At least one skill required"),
-  certifications: yup.array().of(yup.string()).min(1, "At least one certification required"),
-  yearsOfExperience: yup.number().required("Required").min(0, "Experience cannot be negative"),
+  keySkills: yup
+    .array()
+    .of(yup.string().required("Required"))
+    .min(1, "At least one skill required"),
+  certifications: yup
+    .array()
+    .of(yup.string())
+    .min(1, "At least one certification required"),
+  yearsOfExperience: yup
+    .number()
+    .required("Required")
+    .min(0, "Experience cannot be negative"),
   profilePicture: yup.string().nullable(),
 });
-
-// Default initial values (fallback)
-const initialValues = {
-  fullName: "",
-  email: "",
-  phoneNumber: "",
-  profilePicture: "",
-  jobTitle: "",
-  employmentType: "",
-  dateOfJoining: "",
-  seniorityLevel: "",
-  remoteWorkAllowed: false,
-  keySkills: [],
-  certifications: [],
-  yearsOfExperience: 0,
-};
 
 export default EditTeamMemberForm;

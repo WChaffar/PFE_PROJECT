@@ -43,7 +43,7 @@ const deleteProject = (id) => {
       })
     };
 
-    const editProject = (id,values) => {
+    const editTeam = (id,values) => {
       return axios
         .put(base_url + `project/editOne/${id}`, values,
          getConfig()
@@ -59,7 +59,7 @@ const ProjectService = {
    getProjects,
    deleteProject,
    getOneProject,
-   editProject
+   editTeam
   }
   
 

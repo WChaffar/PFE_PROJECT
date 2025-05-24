@@ -50,12 +50,21 @@ const teamReducer = (state = initialState, action) => {
       return {
         ...state,
         activeTeamMember: {},
-        team: state.team.filter(
-          (e) => e._id !== action.payload.data._id
-        ),
+        team: state.team.filter((e) => e._id !== action.payload.data._id),
         error: null, // NEW: to store project-related errors
       };
     case "DELETE_TEAM_MEMBER_FAILURE":
+      return {
+        ...state,
+        error: action.payload, // store error message
+      };
+    case "EDIT_TEAM_MEMBER_SUCCESS":
+      return {
+        ...state,
+        activeTeamMember: action.payload.data.data,
+        error: null, // NEW: to store project-related errors
+      };
+    case "EDIT_TEAM_MEMBER_FAILURE":
       return {
         ...state,
         error: action.payload, // store error message

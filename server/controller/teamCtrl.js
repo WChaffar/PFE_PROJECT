@@ -102,35 +102,36 @@ const createTeamMember = [
   }
 });
 
-
+8
 const editOneTeamMember = asyncHandler(async (req, res) => {
   try {
-    const { id } = req.params;  // On récupère l'ID du projet dans les paramètres de la requête
-
-    // Validation de l'ID MongoDB
+    const { id } = req.params;
     validateMongoDbId(id);
 
-    // Chercher et mettre à jour le projet si l'utilisateur est le propriétaire
+    // Si une nouvelle photo est uploadée, on la rajoute au corps de la requête
+    if (req.file) {
+      req.body.profilePicture = `/uploads/profile-pictures/${req.file.filename}`;
+    }
+
     const teamMember = await Team.findOneAndUpdate(
-      { manager: req.user?._id, _id: id }, // On s'assure que l'utilisateur est bien le propriétaire du projet
-      { ...req.body }, // Données à mettre à jour
-      { new: true } // Retourner le projet mis à jour
+      { manager: req.user?._id, _id: id },
+      { ...req.body },
+      { new: true }
     );
 
-    // Si le projet n'est pas trouvé
     if (!teamMember) {
       throw new Error("Team member not found or you do not have permission to edit it.");
     }
 
-    // Réponse réussie avec le projet mis à jour
     res.status(200).json({
       message: "Team member updated successfully.",
-      teamMember,
+      data:teamMember,
     });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
 });
+
 
 
   module.exports = {createTeamMember,getAllTeamMember, getOneTeamMember,deleteOneTeamMemeber,editOneTeamMember};

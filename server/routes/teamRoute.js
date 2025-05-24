@@ -15,7 +15,7 @@ router.post("/create",authMiddleware,upload.single("profilePicture"),createTeamM
 router.get("/getAll",authMiddleware,getAllTeamMember);
 router.get("/getOne/:id",authMiddleware,getOneTeamMember);
 router.delete("/deleteOne/:id",authMiddleware,deleteOneTeamMemeber);
-router.put("/editOne/:id",authMiddleware,editOneTeamMember);
+router.put("/editOne/:id",authMiddleware,upload.single("profilePicture"),editOneTeamMember);
 
 
 module.exports = router;

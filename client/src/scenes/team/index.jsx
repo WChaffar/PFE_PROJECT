@@ -195,7 +195,7 @@ const TeamManagement = () => {
     const handleClose = (action) => {
       if (action === "Edit") {
         // handle edit logic here
-        navigate("/team/12345/edit");
+        navigate(`/team/${row.id}/edit`);
       }
       if (action === "Delete") {
         // handle delete logic here

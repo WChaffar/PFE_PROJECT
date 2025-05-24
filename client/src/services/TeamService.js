@@ -26,33 +26,43 @@ const getTeamMembers = () => {
   });
 };
 
-
-  const getOneTeamMember = (id) => {
-    return axios
-      .get(base_url + `team/getOne/${id}`, 
-       getConfig()
-      )
-      .then((response) => {
-        return response.data;
-      })
-    };
-
-  const deleteTeamMember = (id) => {
+const getOneTeamMember = (id) => {
   return axios
-    .delete(base_url + `team/deleteOne/${id}`, 
-     getConfig()
-    )
+    .get(base_url + `team/getOne/${id}`, getConfig())
     .then((response) => {
       return response.data;
-    })
-  };
+    });
+};
 
+const deleteTeamMember = (id) => {
+  return axios
+    .delete(base_url + `team/deleteOne/${id}`, getConfig())
+    .then((response) => {
+      return response.data;
+    });
+};
+
+const editTeamMember = (id,data) => {
+  return axios
+    .put(base_url + `team/editOne/${id}`,{
+      ...getConfig(),
+      headers: {
+        // Let Axios set the correct multipart boundaries
+        ...getConfig().headers,
+        "Content-Type": "multipart/form-data",
+      },
+    })
+    .then((response) => {
+      return response.data;
+    });
+};
 
 const TeamService = {
   createTeamMember,
   getTeamMembers,
   getOneTeamMember,
-  deleteTeamMember
+  deleteTeamMember,
+  editTeamMember,
 };
 
 export default TeamService;
