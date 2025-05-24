@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Typography,
@@ -14,52 +14,31 @@ import {
   ToggleButton,
   ToggleButtonGroup,
 } from "@mui/material";
-import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
-import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
-import EditIcon from '@mui/icons-material/Edit';
+import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
+import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
+import EditIcon from "@mui/icons-material/Edit";
 import dayjs from "dayjs";
-import isBetween from 'dayjs/plugin/isBetween';
+import isBetween from "dayjs/plugin/isBetween";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { BACKEND_URL } from "../../config/ServerConfig";
+import { getAllTeamMembers } from "../../actions/teamAction";
 
 dayjs.extend(isBetween);
 
-const teamMembers = [
-  { id: 1, name: "Sarah Wilson", avatar: "https://i.pravatar.cc/300?img=1", grade: "Senior", team: "A" },
-  { id: 2, name: "John Doe", avatar: "https://i.pravatar.cc/300?img=2", grade: "Junior", team: "B" },
-  { id: 3, name: "Alex Arnold", avatar: "https://i.pravatar.cc/300?img=3", grade: "Mid", team: "A" },
-  { id: 4, name: "Jad Piquer", avatar: "https://i.pravatar.cc/300?img=4", grade: "Junior", team: "B" },
-  { id: 5, name: "Mark Musk", avatar: "https://i.pravatar.cc/300?img=5", grade: "Senior", team: "C" },
-  { id: 6, name: "Emily Davis", avatar: "https://i.pravatar.cc/300?img=6", grade: "Mid", team: "A" },
-  { id: 7, name: "Tommy Lee", avatar: "https://i.pravatar.cc/300?img=7", grade: "Junior", team: "C" },
-  { id: 8, name: "Jessica Martinez", avatar: "https://i.pravatar.cc/300?img=8", grade: "Senior", team: "B" },
-];
+
 
 const assignments = [
-  { memberId: 1, date: "2025-06-22", task: "TMA" },
-  { memberId: 1, date: "2025-06-23", task: "Projet Client 1" },
-  { memberId: 1, date: "2025-06-24", task: "Client ee" },
-  { memberId: 1, date: "2025-06-25", task: "TMA Client 1" },
-  { memberId: 2, date: "2025-06-22", task: "TMA Client 2" },
-  { memberId: 2, date: "2025-06-23", task: "TMA Client 2" },
-  { memberId: 2, date: "2025-06-24", task: "Projet Client 2" },
-  { memberId: 3, date: "2025-06-22", task: "TMA Client 3" },
-  { memberId: 3, date: "2025-06-23", task: "TMA Client 2" },
-  { memberId: 3, date: "2025-06-24", task: "Projet Client 1" },
-  { memberId: 4, date: "2025-06-22", task: "TMA Client 3" },
-  { memberId: 4, date: "2025-06-23", task: "TMA Client 2" },
-  { memberId: 4, date: "2025-06-24", task: "Client ee" },
-  { memberId: 5, date: "2025-06-22", task: "Client ee" },
-  { memberId: 5, date: "2025-06-23", task: "TMA Projet" },
-  { memberId: 5, date: "2025-06-24", task: "Projet Client 3" },
-  { memberId: 6, date: "2025-06-22", task: "Client ee" },
-  { memberId: 6, date: "2025-06-23", task: "TMA Client 2" },
-  { memberId: 6, date: "2025-06-24", task: "Projet Client 2" },
-  { memberId: 7, date: "2025-06-22", task: "TMA Client 1" },
-  { memberId: 7, date: "2025-06-23", task: "Client ee" },
-  { memberId: 7, date: "2025-06-24", task: "TMA Client 2" },
-  { memberId: 8, date: "2025-06-22", task: "TMA Client 3" },
-  { memberId: 8, date: "2025-06-23", task: "TMA Client 3" },
-  { memberId: 8, date: "2025-06-24", task: "Projet Client 1" },
+  { memberId: "6820d9789f2baaeeb93fad6f", date: "2025-06-22", task: "TMA" },
+  { memberId: "6820d9789f2baaeeb93fad6f", date: "2025-06-23", task: "Projet Client 1" },
+  { memberId: "6820d9789f2baaeeb93fad6f", date: "2025-06-24", task: "Client ee" },
+  { memberId: "6820d9789f2baaeeb93fad6f", date: "2025-06-25", task: "TMA Client 1" },
+  { memberId: "6820db3af922822b3a40dbb6", date: "2025-06-22", task: "TMA Client 2" },
+  { memberId: "6820db3af922822b3a40dbb6", date: "2025-06-23", task: "TMA Client 2" },
+  { memberId: "6820db3af922822b3a40dbb6", date: "2025-06-24", task: "Projet Client 2" },
+  { memberId: "68324bd5b1925a8801633df6", date: "2025-06-22", task: "TMA Client 3" },
+  { memberId: "68324bd5b1925a8801633df6", date: "2025-06-23", task: "TMA Client 2" },
+  { memberId: "68324bd5b1925a8801633df6", date: "2025-06-24", task: "Projet Client 1" },
 ];
 
 const getColor = (task: string) => {
@@ -79,6 +58,28 @@ const StaffingCalendar = () => {
   const [searchName, setSearchName] = useState("");
   const [viewMode, setViewMode] = useState("perDay");
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const selectedTeamMembers = useSelector((state) => state.team.team);
+  const [teamMembers, setTeamMembers] = useState([]);
+  const [openSnackbar, setOpenSnackbar] = React.useState(false); // Snackbar state
+  const [snackbarMessage, setSnackbarMessage] = React.useState(""); // Message for Snackbar
+  const error = useSelector((state) => state.team.error);
+  const [errorState, setErrorState] = useState(null);
+
+  useEffect(() => {
+    if (selectedTeamMembers.length !== 0) {
+      const teamMembersMap = selectedTeamMembers.map((member) => ({
+        _id: member?._id,
+        fullName: member?.fullName,
+        avatar: BACKEND_URL + member?.profilePicture,
+      }));
+      setTeamMembers(teamMembersMap);
+    }
+  }, [selectedTeamMembers]); // <== Écoute les changements de selectedProjects
+
+  useEffect(() => {
+    dispatch(getAllTeamMembers());
+  }, [dispatch]); // <== Appelle une seule fois le fetch
 
   const daysToShow = 14; // 2 weeks
   const dates = Array.from({ length: daysToShow }).map((_, i) =>
@@ -86,7 +87,7 @@ const StaffingCalendar = () => {
   );
 
   const filteredMembers = teamMembers.filter((member) =>
-    member.name.toLowerCase().includes(searchName.toLowerCase())
+    member.fullName.toLowerCase().includes(searchName.toLowerCase())
   );
 
   const handlePrev = () => {
@@ -105,20 +106,30 @@ const StaffingCalendar = () => {
     }
   };
 
-  const handleViewChange = (event: React.MouseEvent<HTMLElement>, newView: string) => {
+  const handleViewChange = (
+    event: React.MouseEvent<HTMLElement>,
+    newView: string
+  ) => {
     if (newView) {
       setViewMode(newView);
     }
   };
 
   const calculateAssignedDaysPerWeek = (memberId: number) => {
-    const memberAssignments = assignments.filter((a) => a.memberId === memberId);
+    const memberAssignments = assignments.filter(
+      (a) => a.memberId === memberId
+    );
     const weeks = Array.from({ length: 2 }).map((_, i) =>
       memberAssignments.filter((a) =>
-        dayjs(a.date).isBetween(startDate.add(i * 7, "days"), startDate.add((i + 1) * 7 - 1, "days"), null, "[]")
+        dayjs(a.date).isBetween(
+          startDate.add(i * 7, "days"),
+          startDate.add((i + 1) * 7 - 1, "days"),
+          null,
+          "[]"
+        )
       )
     );
-    
+
     return weeks.map((week, index) => {
       const taskCount: Record<string, number> = {};
 
@@ -134,18 +145,24 @@ const StaffingCalendar = () => {
 
       return {
         week: `Week ${index + 1}`,
-        totalAssignedDays: new Set(week.map(a => dayjs(a.date).format("YYYY-MM-DD"))).size,
+        totalAssignedDays: new Set(
+          week.map((a) => dayjs(a.date).format("YYYY-MM-DD"))
+        ).size,
         taskBreakdown: taskCount,
       };
     });
   };
 
   const calculateAssignedDaysPerMonth = (memberId: number) => {
-    const memberAssignments = assignments.filter((a) => a.memberId === memberId);
-    const totalAssignedDays = new Set(memberAssignments.map(a => dayjs(a.date).format("YYYY-MM-DD"))).size;
-    
+    const memberAssignments = assignments.filter(
+      (a) => a.memberId === memberId
+    );
+    const totalAssignedDays = new Set(
+      memberAssignments.map((a) => dayjs(a.date).format("YYYY-MM-DD"))
+    ).size;
+
     const taskBreakdown: Record<string, number> = {};
-    memberAssignments.forEach(assignment => {
+    memberAssignments.forEach((assignment) => {
       const task = assignment.task;
       if (!taskBreakdown[task]) {
         taskBreakdown[task] = 1;
@@ -162,7 +179,9 @@ const StaffingCalendar = () => {
 
   return (
     <Box m="20px">
-      <Typography variant="h4" mb={2}>Staffing Calendar</Typography>
+      <Typography variant="h4" mb={2}>
+        Staffing Calendar
+      </Typography>
 
       <Box display="flex" alignItems="center" mb={2} gap={2}>
         <input
@@ -171,28 +190,55 @@ const StaffingCalendar = () => {
           value={searchName}
           onChange={(e) => setSearchName(e.target.value)}
           style={{
-            padding: '8px',
-            fontSize: '14px',
-            borderRadius: '4px',
-            border: '1px solid #ccc',
-            width: '250px',
+            padding: "8px",
+            fontSize: "14px",
+            borderRadius: "4px",
+            border: "1px solid #ccc",
+            width: "250px",
           }}
         />
-        <IconButton onClick={handlePrev} size="small" sx={{ backgroundColor: "#f0f0f0", borderRadius: "50%", padding: "5px", fontSize: "18px", width:"35px" }}>
+        <IconButton
+          onClick={handlePrev}
+          size="small"
+          sx={{
+            backgroundColor: "#f0f0f0",
+            borderRadius: "50%",
+            padding: "5px",
+            fontSize: "18px",
+            width: "35px",
+          }}
+        >
           <ArrowBackIosNewIcon />
         </IconButton>
         <Typography>
           {viewMode === "perMonth"
             ? `${startDate.format("MMMM YYYY")}`
-            : `${startDate.format("MMM D, YYYY")} - ${startDate.add(daysToShow - 1, "day").format("MMM D, YYYY")}`}
+            : `${startDate.format("MMM D, YYYY")} - ${startDate
+                .add(daysToShow - 1, "day")
+                .format("MMM D, YYYY")}`}
         </Typography>
-        <IconButton onClick={handleNext} size="small" sx={{ backgroundColor: "#f0f0f0", borderRadius: "50%", padding: "5px", fontSize: "18px", width:"35px" }}>
+        <IconButton
+          onClick={handleNext}
+          size="small"
+          sx={{
+            backgroundColor: "#f0f0f0",
+            borderRadius: "50%",
+            padding: "5px",
+            fontSize: "18px",
+            width: "35px",
+          }}
+        >
           <ArrowForwardIosIcon />
         </IconButton>
       </Box>
 
       <Box mb={2}>
-        <ToggleButtonGroup value={viewMode} exclusive onChange={handleViewChange} aria-label="view mode">
+        <ToggleButtonGroup
+          value={viewMode}
+          exclusive
+          onChange={handleViewChange}
+          aria-label="view mode"
+        >
           <ToggleButton value="perDay">Per Day</ToggleButton>
           <ToggleButton value="perWeek">Per Week</ToggleButton>
           <ToggleButton value="perMonth">Per Month</ToggleButton>
@@ -204,20 +250,23 @@ const StaffingCalendar = () => {
           <TableHead>
             <TableRow>
               <TableCell>Team Member</TableCell>
-              {viewMode === "perDay" && dates.map((date) => (
-                <TableCell key={date} align="center">{dayjs(date).format("DD/MM")}</TableCell>
-              ))}
+              {viewMode === "perDay" &&
+                dates.map((date) => (
+                  <TableCell key={date} align="center">
+                    {dayjs(date).format("DD/MM")}
+                  </TableCell>
+                ))}
               {viewMode === "perWeek" && <TableCell>Summary</TableCell>}
               {viewMode === "perMonth" && <TableCell>Summary</TableCell>}
             </TableRow>
           </TableHead>
           <TableBody>
             {filteredMembers.map((member) => (
-              <TableRow key={member.id}>
+              <TableRow key={member._id}>
                 <TableCell>
                   <Box display="flex" alignItems="center">
                     <IconButton
-                      onClick={() => navigate("/assignements/12345/edit")} // Navigate to the edit assignments page
+                      onClick={() => navigate(`/assignements/${member._id}/edit`)} // Navigate to the edit assignments page
                       sx={{
                         mr: 1,
                         width: 25,
@@ -229,52 +278,78 @@ const StaffingCalendar = () => {
                       <EditIcon sx={{ fontSize: 18 }} />
                     </IconButton>
                     <Avatar src={member.avatar} sx={{ mr: 1 }} />
-                    {member.name}
+                    {member.fullName}
                   </Box>
                 </TableCell>
-                {viewMode === "perDay" && dates.map((date) => {
-                  const assignment = assignments.find(
-                    (a) => a.memberId === member.id && a.date === date
-                  );
-                  return (
-                    <TableCell key={date} align="center">
-                      {assignment && (
-                        <Box sx={{
-                          backgroundColor: getColor(assignment.task),
-                          borderRadius: "20px",
-                          padding: "4px 8px",
-                          fontSize: "12px",
-                          fontWeight: "bold",
-                          color: "black",
-                        }}>
-                          {assignment.task}
-                        </Box>
-                      )}
-                    </TableCell>
-                  );
-                })}
+                {viewMode === "perDay" &&
+                  dates.map((date) => {
+                    const assignment = assignments.find(
+                      (a) => a.memberId === member._id && a.date === date
+                    );
+                    return (
+                      <TableCell key={date} align="center">
+                        {assignment && (
+                          <Box
+                            sx={{
+                              backgroundColor: getColor(assignment.task),
+                              borderRadius: "20px",
+                              padding: "4px 8px",
+                              fontSize: "12px",
+                              fontWeight: "bold",
+                              color: "black",
+                            }}
+                          >
+                            {assignment.task}
+                          </Box>
+                        )}
+                      </TableCell>
+                    );
+                  })}
                 {viewMode === "perWeek" && (
                   <TableCell>
-                    {calculateAssignedDaysPerWeek(member.id).map((week) => (
+                    {calculateAssignedDaysPerWeek(member._id).map((week) => (
                       <Box key={week.week}>
-                        <Typography variant="body2" fontWeight="bold">{week.week}:</Typography>
-                        <Typography variant="body2">Total Days Assigned: {week.totalAssignedDays}</Typography>
-                        {Object.entries(week.taskBreakdown).map(([task, count]) => (
-                          <Typography key={task} variant="caption" display="block">
-                            {task}: {count} days
-                          </Typography>
-                        ))}
+                        <Typography variant="body2" fontWeight="bold">
+                          {week.week}:
+                        </Typography>
+                        <Typography variant="body2">
+                          Total Days Assigned: {week.totalAssignedDays}
+                        </Typography>
+                        {Object.entries(week.taskBreakdown).map(
+                          ([task, count]) => (
+                            <Typography
+                              key={task}
+                              variant="caption"
+                              display="block"
+                            >
+                              {task}: {count} days
+                            </Typography>
+                          )
+                        )}
                       </Box>
                     ))}
                   </TableCell>
                 )}
                 {viewMode === "perMonth" && (
                   <TableCell>
-                    {calculateAssignedDaysPerMonth(member.id) && (
+                    {calculateAssignedDaysPerMonth(member._id) && (
                       <Box>
-                        <Typography variant="body2" fontWeight="bold">Total Assigned Days: {calculateAssignedDaysPerMonth(member.id).totalAssignedDays}</Typography>
-                        {Object.entries(calculateAssignedDaysPerMonth(member.id).taskBreakdown).map(([task, count]) => (
-                          <Typography key={task} variant="caption" display="block">
+                        <Typography variant="body2" fontWeight="bold">
+                          Total Assigned Days:{" "}
+                          {
+                            calculateAssignedDaysPerMonth(member._id)
+                              .totalAssignedDays
+                          }
+                        </Typography>
+                        {Object.entries(
+                          calculateAssignedDaysPerMonth(member._id)
+                            .taskBreakdown
+                        ).map(([task, count]) => (
+                          <Typography
+                            key={task}
+                            variant="caption"
+                            display="block"
+                          >
                             {task}: {count} days
                           </Typography>
                         ))}

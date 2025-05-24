@@ -1,5 +1,5 @@
 // (tout en haut, inchangé)
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Typography,
@@ -15,7 +15,10 @@ import dayjs from "dayjs";
 import { tokens } from "../../theme";
 import CompareArrowsIcon from "@mui/icons-material/CompareArrows";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
-
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate, useParams } from "react-router-dom";
+import { getOneTeamMember } from "../../actions/teamAction";
+import { BACKEND_URL } from "../../config/ServerConfig";
 
 const mockCollaborator = {
   id: 1,
@@ -54,6 +57,25 @@ const EditStaffing = () => {
   const dates = Array.from({ length: daysToShow }).map((_, i) =>
     startDate.add(i, "day")
   );
+  const dispatch = useDispatch();
+  const selectedteamMember = useSelector(
+    (state) => state.team.activeTeamMember
+  );
+  const [teamMember, setTeamMember] = useState({});
+  const { id } = useParams();
+  const error = useSelector((state) => state.tasks.error);
+  const [success, setSuccess] = useState(null);
+  const navigate = useNavigate();
+
+    useEffect(() => {
+      if (Object.keys(selectedteamMember).length > 0) {
+        setTeamMember(selectedteamMember);
+      }
+    }, [selectedteamMember]); // <== Écoute les changements de selectedProjects
+  
+    useEffect(() => {
+      dispatch(getOneTeamMember(id));
+    }, [dispatch, id]); // <== Appelle une seule fois le fetch
 
   const handlePrev = () =>
     setStartDate((prev) => prev.subtract(daysToShow, "day"));
@@ -85,10 +107,10 @@ const EditStaffing = () => {
       <Paper sx={{ p: 2, mb: 2 }}>
         <Box display="flex" alignItems="center" mb={2}>
           <Avatar
-            src={mockCollaborator.avatar}
+            src={BACKEND_URL+teamMember?.profilePicture}
             sx={{ width: 56, height: 56, mr: 2 }}
           />
-          <Typography variant="h6">{mockCollaborator.name}</Typography>
+          <Typography variant="h6">{teamMember?.fullName}</Typography>
         </Box>
 
         <Box
@@ -275,39 +297,37 @@ const EditStaffing = () => {
               </Box>
             </Box>
             <Box mt={2} display="flex" flexDirection="column" gap={1}>
-  <Button
-    variant="outlined"
-    size="small"
-    startIcon={<CompareArrowsIcon />}
-    sx={{
-      width: "400px",
-      fontSize: "10px",
-      borderColor: colors.grey[100],
-      backgroundColor: "#fff",
-      color: "#000",
-      alignSelf: "start",
-    }}
-  >
-    Compare salary skills with assigned task skill requirements
-  </Button>
-  <Button
-    variant="contained"
-    size="small"
-    startIcon={<AutoAwesomeIcon />}
-    sx={{
-      width: "250px",
-      fontSize: "10px",
-      px: 1,
-      borderRadius: "5px",
-      backgroundColor: colors.primary[100],
-      color: colors.grey[900],
-    }}
-  >
-    Generate assignment recommendations
-  </Button>
-</Box>
-
-
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<CompareArrowsIcon />}
+                sx={{
+                  width: "400px",
+                  fontSize: "10px",
+                  borderColor: colors.grey[100],
+                  backgroundColor: "#fff",
+                  color: "#000",
+                  alignSelf: "start",
+                }}
+              >
+                Compare salary skills with assigned task skill requirements
+              </Button>
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<AutoAwesomeIcon />}
+                sx={{
+                  width: "250px",
+                  fontSize: "10px",
+                  px: 1,
+                  borderRadius: "5px",
+                  backgroundColor: colors.primary[100],
+                  color: colors.grey[900],
+                }}
+              >
+                Generate assignment recommendations
+              </Button>
+            </Box>
 
             <Box mt={2} display="flex" alignItems="center" gap={2}>
               <Button
