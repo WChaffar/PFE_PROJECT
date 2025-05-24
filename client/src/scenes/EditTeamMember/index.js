@@ -6,6 +6,7 @@ import {
   Checkbox,
   FormControlLabel,
   Avatar,
+  CircularProgress,
 } from "@mui/material";
 import { Formik } from "formik";
 import * as yup from "yup";
@@ -18,11 +19,11 @@ import { useState, useEffect } from "react";
 import { tokens } from "../../theme";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
-import { getOneTeamMember } from "../../actions/teamAction";
+import { editTeamMember, getOneTeamMember } from "../../actions/teamAction";
 import { format } from "date-fns";
 import { BACKEND_URL } from "../../config/ServerConfig";
 
-const EditTeamMemberForm = ({ memberData, onSubmit }) => {
+const EditTeamMemberForm = () => {
   const isNonMobile = useMediaQuery("(min-width:600px)");
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
@@ -32,7 +33,7 @@ const EditTeamMemberForm = ({ memberData, onSubmit }) => {
   const selectedteamMember = useSelector(
     (state) => state.team.activeTeamMember
   );
-  const [teamMember, setTeamMember] = useState(null);
+  const [teamMember, setTeamMember] = useState({});
   const { id } = useParams();
   const error = useSelector((state) => state.tasks.error);
   const [success, setSuccess] = useState(null);
@@ -48,26 +49,39 @@ const EditTeamMemberForm = ({ memberData, onSubmit }) => {
     dispatch(getOneTeamMember(id));
   }, [dispatch, id]); // <== Appelle une seule fois le fetch
 
-  useEffect(() => {
-    if (memberData?.profilePicture) {
-      setSelectedImageName("Current Profile Picture");
-    }
-  }, [memberData]);
-
-  const handleFormSubmit = (values) => {
+  const handleFormSubmit = async (values) => {
     console.log("Updated values:", values);
-    if (onSubmit) onSubmit(values);
+    const newData = { ...values };
+    if (newData.profilePicture === teamMember.profilePicture) {
+      delete newData.profilePicture;
+    }
+    const formData = new FormData();
+    for (const key in newData) {
+      if (key === "keySkills" || key === "certifications") {
+        newData[key].forEach((item) => formData.append(key, item));
+      } else {
+        formData.append(key, newData[key]);
+      }
+    }
+    // 🔍 Afficher les valeurs du formData
+    console.log("FormData entries:");
+    for (let pair of formData.entries()) {
+      console.log(pair[0] + ": " + pair[1]);
+    }
+    const result = await dispatch(editTeamMember(values._id, formData));
+    if (result.success) {
+      setSuccess("Team member edited with success.");
+      setTimeout(() => {
+        navigate("/team"); // ✅ Only navigate on success
+      }, 1500);
+    }
   };
 
   const handleProfilePictureChange = (e, setFieldValue) => {
     const file = e.target.files[0];
     if (file) {
       setSelectedImageName(file.name);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFieldValue("profilePicture", reader.result);
-      };
-      reader.readAsDataURL(file);
+      setFieldValue("profilePicture", file); // ✅ store the File directly
     }
   };
 
@@ -89,6 +103,39 @@ const EditTeamMemberForm = ({ memberData, onSubmit }) => {
     certifications: teamMember?.certifications || [],
     yearsOfExperience: teamMember?.yearsOfExperience || 0,
   };
+
+  //
+  // ERRORS
+  if ((Object.keys(teamMember).length < 1 || !teamMember.fullName) && !error) {
+    return (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error && Object.keys(teamMember).length < 1) {
+    return (
+      <Box
+        mt={2}
+        mb={2}
+        p={2}
+        borderRadius="5px"
+        bgcolor={colors.redAccent[500]}
+        color="white"
+        fontWeight="bold"
+      >
+        {error}
+      </Box>
+    );
+  }
+
+  /////
 
   return (
     <Box m="20px">
@@ -187,10 +234,21 @@ const EditTeamMemberForm = ({ memberData, onSubmit }) => {
               </Box>
 
               {/* Profile Picture */}
-              <Box sx={{ gridColumn: "span 2", display:"flex", flexDirection:"row" }}>
+              <Box
+                sx={{
+                  gridColumn: "span 2",
+                  display: "flex",
+                  flexDirection: "row",
+                }}
+              >
+                {console.log(values?.profilePicture)}
                 {/* Profile Picture */}
                 <Avatar
-                  src={BACKEND_URL + values?.profilePicture}
+                  src={
+                    typeof values?.profilePicture === "string"
+                      ? BACKEND_URL + values?.profilePicture
+                      : URL.createObjectURL(values?.profilePicture)
+                  }
                   alt={values?.fullName}
                   sx={{ width: 80, height: 80, mb: 2 }}
                 />
@@ -202,13 +260,13 @@ const EditTeamMemberForm = ({ memberData, onSubmit }) => {
                     backgroundColor: isDarkMode ? "#424242" : "#f5f5f5",
                     color: isDarkMode ? "#fff" : "#000",
                     height: "56px",
-                    width:"300px",
+                    width: "300px",
                     justifyContent: "flex-start",
                     pl: "15px",
                     "&:hover": {
                       backgroundColor: isDarkMode ? "#333" : "#e0e0e0",
                     },
-                    marginLeft:"30px"
+                    marginLeft: "30px",
                   }}
                 >
                   {selectedImageName || "Upload Profile Picture"}
@@ -356,7 +414,8 @@ const EditTeamMemberForm = ({ memberData, onSubmit }) => {
                 sx={{ gridColumn: "span 2" }}
               />
             </Box>
-            <br/><br/>
+            <br />
+            <br />
             {/* Submit Button */}
             <Box display="flex" justifyContent="end" mt="20px">
               <Button
@@ -369,6 +428,32 @@ const EditTeamMemberForm = ({ memberData, onSubmit }) => {
                 Update Team Member
               </Button>
             </Box>
+            {error && (
+              <Box
+                mt={2}
+                mb={2}
+                p={2}
+                borderRadius="5px"
+                bgcolor={colors.redAccent[500]}
+                color="white"
+                fontWeight="bold"
+              >
+                {error}
+              </Box>
+            )}
+            {success && (
+              <Box
+                mt={2}
+                mb={2}
+                p={2}
+                borderRadius="5px"
+                bgcolor={colors.greenAccent[500]}
+                color="white"
+                fontWeight="bold"
+              >
+                {success}
+              </Box>
+            )}
           </form>
         )}
       </Formik>

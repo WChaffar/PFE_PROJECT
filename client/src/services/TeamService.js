@@ -44,7 +44,7 @@ const deleteTeamMember = (id) => {
 
 const editTeamMember = (id,data) => {
   return axios
-    .put(base_url + `team/editOne/${id}`,{
+    .put(base_url + `team/editOne/${id}`,data,{
       ...getConfig(),
       headers: {
         // Let Axios set the correct multipart boundaries

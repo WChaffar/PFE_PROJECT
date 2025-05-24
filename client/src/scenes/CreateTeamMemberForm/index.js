@@ -40,7 +40,6 @@ const handleFormSubmit = async (values) => {
       formData.append(key, values[key]);
     }
   }
-
   const result = await dispatch(createTeamMember(formData));
 
   if (result.success) {
