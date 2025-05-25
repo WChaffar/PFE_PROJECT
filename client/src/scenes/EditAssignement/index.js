@@ -24,6 +24,7 @@ import { Autocomplete, TextField } from "@mui/material";
 import { getAllProjects } from "../../actions/projectAction";
 import { getTasksByProjectId } from "../../actions/taskAction";
 import { Formik } from "formik";
+import { createAssignement } from "../../actions/assignementsAction";
 
 const mockCollaborator = {
   id: 1,
@@ -158,8 +159,15 @@ const EditStaffing = () => {
     );
   });
 
-  const handleFormSubmit = (data) => {
-    console.log(data);
+  const handleFormSubmit = async (data) => {
+        const result = await dispatch(createAssignement(data));
+    if (result.success) {
+      setSuccess("Assignement created with success.");
+      setTimeout(() => {
+        // navigate("/"); // ✅ Only navigate on success
+      }, 1500);
+
+    }
   };
 
   return (

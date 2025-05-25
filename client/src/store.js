@@ -5,6 +5,7 @@ import authReducer from './reducers/authReducer';
 import projectReducer from './reducers/projectReducer';
 import taskReducer from './reducers/taskReducer';
 import teamReducer from './reducers/teamReducer';
+import assignementReducer from './reducers/assignementReducer';
 
 function saveToLocalStorage(state) {
   try {
@@ -35,7 +36,8 @@ const store = configureStore({
     auth: authReducer,  
     projects:projectReducer,
     tasks:taskReducer,
-    team:teamReducer
+    team:teamReducer,
+    assignements: assignementReducer
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(thunk),
   devTools: process.env.NODE_ENV !== 'production',

@@ -44,10 +44,7 @@ exports.createAssignment = async (req, res) => {
       endDate: new Date(endDate),
       assignmentType,
       totalDays,
-      dayDetails: dayDetails.map(detail => ({
-        date: new Date(detail.date),
-        period: detail.period
-      })),
+      dayDetails: dayDetails,
       skillMatchScore,
       status: 'assigned',
       recommendations: skillMatchScore < 0.7 ? 
