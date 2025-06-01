@@ -9,6 +9,7 @@ import {
   Paper,
   useTheme,
   CircularProgress,
+  Tooltip,
 } from "@mui/material";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
@@ -24,38 +25,60 @@ import { Autocomplete, TextField } from "@mui/material";
 import { getAllProjects } from "../../actions/projectAction";
 import { getTasksByProjectId } from "../../actions/taskAction";
 import { Formik } from "formik";
-import { createAssignement } from "../../actions/assignementsAction";
+import {
+  createAssignement,
+  resetAssignementErros,
+} from "../../actions/assignementsAction";
+import WarningIcon from "@mui/icons-material/Warning";
 
-const mockCollaborator = {
-  id: 1,
-  name: "Jeff Bezos",
-  avatar: "https://i.pravatar.cc/150?img=65",
+const transformAssignmentsToMissions = (assignments) => {
+  return assignments.map((assignment) => {
+    // Create mission object with basic info
+    const mission = {
+      id: assignment._id,
+      title: `${assignment.project?.projectName || "Unknown Project"} - ${
+        assignment.taskId?.taskName || "Unknown Task"
+      }`,
+      // Separate arrays for different date types
+      detailedDates: [], // From dayDetails (AM/PM periods)
+      fullRangeDates: [], // From startDate to endDate (FULL days)
+      assignmentData: assignment,
+    };
+
+    // 1. Process dayDetails (specific periods)
+    if (assignment.dayDetails && assignment.dayDetails.length > 0) {
+      mission.detailedDates = assignment.dayDetails.map((day) => ({
+        date: new Date(day.date).toISOString().split("T")[0],
+        period: day.period, // Keep original "Morning" or "Afternoon"
+      }));
+    }
+
+    // 2. Process full date range (startDate to endDate)
+    if (assignment.startDate && assignment.endDate) {
+      const start = new Date(assignment.startDate);
+      const end = new Date(assignment.endDate);
+      const current = new Date(start);
+
+      while (current <= end) {
+        const dateStr = current.toISOString().split("T")[0];
+
+        // Only add to fullRangeDates if not already in detailedDates
+        if (!mission.detailedDates.some((d) => d.date === dateStr)) {
+          mission.fullRangeDates.push({
+            date: dateStr,
+            period: "FULL",
+          });
+        }
+        current.setDate(current.getDate() + 1);
+      }
+    }
+
+    return mission;
+  });
 };
 
-const mockMissions = [
-  {
-    id: 1,
-    title: "Projet Client 0 - Developpeur Java",
-    dates: [
-      { date: "2025-12-22", period: "AM" },
-      { date: "2025-12-22", period: "PM" },
-      { date: "2025-12-23", period: "AM" },
-    ],
-  },
-  {
-    id: 2,
-    title: "Projet Client 1 - Developpeur Spring",
-    dates: [
-      { date: "2025-12-24", period: "FULL" },
-      { date: "2025-12-25", period: "AM" },
-      { date: "2025-12-26", period: "PM" },
-      { date: "2025-12-29", period: "FULL" },
-    ],
-  },
-];
-
 const EditStaffing = () => {
-  const [startDate, setStartDate] = useState(dayjs("2025-12-22"));
+  const [startDate, setStartDate] = useState(dayjs("2025-01-01"));
   const [showAssignmentForm, setShowAssignmentForm] = useState(false);
   const daysToShow = 14;
   const theme = useTheme();
@@ -70,6 +93,7 @@ const EditStaffing = () => {
   const [teamMember, setTeamMember] = useState({});
   const { id } = useParams();
   const error = useSelector((state) => state.tasks.error);
+  const assignementError = useSelector((state) => state.assignements.error);
   const [success, setSuccess] = useState(null);
   const navigate = useNavigate();
   const [selectedTask, setSelectedTask] = useState(null);
@@ -80,8 +104,106 @@ const EditStaffing = () => {
   const selectedProjects = useSelector((state) => state.projects.projects);
   const [projects, setProjects] = useState([]);
   const [tasksLoading, setTasksLoading] = useState(false);
+  const [assignementLoading, setAssignementLoading] = useState(false);
   const selectedTasks = useSelector((state) => state.tasks.tasks);
   const [tasks, setTasks] = useState([]);
+  const [assignementErrors, setAssignementErrors] = useState(null);
+  // Add to your existing state
+  const [assignments, setAssignments] = useState([
+    {
+      _id: "683b235ba6d38d38ab355549",
+      Owner: "67e2875c154deffe5e118082",
+      employee: "6820d9789f2baaeeb93fad6f",
+      project: {
+        projectName: "BNPP HR 4YOU",
+        client: "BNP Paribas",
+      },
+      taskId: {
+        taskName: "task1",
+      },
+      startDate: "2025-01-01",
+      endDate: "2025-01-30",
+      assignmentType: "enduring - long period",
+      totalDays: 0.5,
+      dayDetails: [
+        {
+          date: "2025-01-01",
+          period: "Morning",
+          _id: "683b235ba6d38d38ab35554a",
+        },
+        {
+          date: "2025-01-30",
+          period: "Afternoon",
+          _id: "683b235ba6d38d38ab35554e",
+        },
+      ],
+      status: "assigned",
+      skillMatchScore: 0.5,
+      recommendations:
+        "Warning: Employee skills don't fully match project requirements",
+      createdAt: "2025-05-31",
+    },
+    {
+      _id: "683b235ba6d38d38ab355550",
+      Owner: "67e2875c154deffe5e118081",
+      employee: "6820d9789f2baaeeb93fad6e",
+      project: {
+        projectName: "BNPP HR 4YOU 2",
+        client: "BNP Paribas 2",
+      },
+      taskId: {
+        taskName: "task2",
+      },
+      startDate: "2025-02-01",
+      endDate: "2025-02-28",
+      assignmentType: "enduring - long period",
+      totalDays: 0.5,
+      dayDetails: [
+        {
+          date: "2025-01-01",
+          period: "Afternoon",
+          _id: "683b235ba6d38d38ab355542",
+        },
+        {
+          date: "2025-01-30",
+          period: "Morning",
+          _id: "683b235ba6d38d38ab35554t",
+        },
+        {
+          date: "2025-02-01",
+          period: "Morning",
+          _id: "683b235ba6d38d38ab35554t",
+        },
+        {
+          date: "2025-02-28",
+          period: "Morning",
+          _id: "683b235ba6d38d38ab35554t",
+        },
+      ],
+      status: "assigned",
+      skillMatchScore: 0.5,
+      recommendations:
+        "Warning: Employee skills don't fully match project requirements",
+      createdAt: "2025-05-31",
+    },
+  ]);
+
+  // // Add this useEffect to fetch assignments
+  // useEffect(() => {
+  //   const fetchAssignments = async () => {
+  //     try {
+  //       const response = await fetch(
+  //         `${BACKEND_URL}/assignments?employee=${id}`
+  //       );
+  //       const data = await response.json();
+  //       setAssignments(data);
+  //     } catch (error) {
+  //       console.error("Error fetching assignments:", error);
+  //     }
+  //   };
+
+  //   fetchAssignments();
+  // }, [id]);
 
   useEffect(() => {
     if (selectedProjects.length !== 0) {
@@ -96,6 +218,10 @@ const EditStaffing = () => {
   useEffect(() => {
     dispatch(getAllProjects());
   }, [dispatch]);
+
+  useEffect(() => {
+    setAssignementErrors(assignementError);
+  }, [assignementError]);
 
   useEffect(() => {
     if (selectedTasks.length !== 0) {
@@ -124,13 +250,6 @@ const EditStaffing = () => {
     setHalfDayPeriod("");
   };
 
-  const taskList = [
-    { id: 1, title: "Développeur Java sur le projet Client 3" },
-    { id: 2, title: "Développeur Frontend React" },
-    { id: 3, title: "DevOps Engineer - AWS Migration" },
-    { id: 4, title: "Data Analyst - Business Reporting" },
-  ];
-
   useEffect(() => {
     if (Object.keys(selectedteamMember).length > 0) {
       setTeamMember(selectedteamMember);
@@ -138,6 +257,7 @@ const EditStaffing = () => {
   }, [selectedteamMember]); // <== Écoute les changements de selectedProjects
 
   useEffect(() => {
+    dispatch(resetAssignementErros());
     dispatch(getOneTeamMember(id));
   }, [dispatch, id]); // <== Appelle une seule fois le fetch
 
@@ -159,14 +279,36 @@ const EditStaffing = () => {
     );
   });
 
+  // Add this right after the monthRow declaration
+  const yearRow = dates.map((date, i) => {
+    const showLabel =
+      i === 0 || date.format("YYYY") !== dates[i - 1].format("YYYY");
+    return (
+      <Box key={`year-${i}`} width="60px" textAlign="center">
+        {showLabel ? (
+          <Typography fontWeight="bold" fontSize="12px" sx={{ color: "#000" }}>
+            {date.format("YYYY")}
+          </Typography>
+        ) : null}
+      </Box>
+    );
+  });
   const handleFormSubmit = async (data) => {
-        const result = await dispatch(createAssignement(data));
+    setAssignementLoading(true);
+    const result = await dispatch(createAssignement(data));
     if (result.success) {
+      dispatch(resetAssignementErros());
+      setAssignementLoading(false);
       setSuccess("Assignement created with success.");
+      setHalfDayAssignments([]);
+      setHalfDayDate(null);
       setTimeout(() => {
-        // navigate("/"); // ✅ Only navigate on success
-      }, 1500);
-
+        setSuccess(null);
+        setShowAssignmentForm(false);
+        navigate(`/assignements/${id}/edit`); // ✅ Only navigate on success
+      }, 2000);
+    } else {
+      setAssignementLoading(false);
     }
   };
 
@@ -197,8 +339,18 @@ const EditStaffing = () => {
           <IconButton onClick={handlePrev} sx={{ width: 30, height: 30 }}>
             <ArrowBackIosNewIcon fontSize="small" />
           </IconButton>
-
           <Box flex={1} overflow="hidden" sx={{ marginLeft: 22 }}>
+            <Box
+              display="flex"
+              bgcolor="#fff9c4"
+              sx={{
+                bgcolor: "#fff9c4",
+                display: "flex",
+                textAlign: "center",
+              }}
+            >
+              {yearRow} {/* Add this line for the year row */}
+            </Box>
             <Box display="flex" bgcolor="#fff9c4">
               {monthRow}
             </Box>
@@ -219,39 +371,63 @@ const EditStaffing = () => {
               ))}
             </Box>
           </Box>
-
           <IconButton onClick={handleNext} sx={{ width: 30, height: 30 }}>
             <ArrowForwardIosIcon fontSize="small" />
           </IconButton>
         </Box>
-
-        {mockMissions.map((mission) => (
+        {transformAssignmentsToMissions(assignments).map((mission) => (
           <Box key={mission.id} display="flex" alignItems="center" mb={1}>
             <Typography width="200px" fontSize="14px">
               {mission.title}
             </Typography>
+
             {dates.map((date) => {
               const dateStr = date.format("YYYY-MM-DD");
-              const slots = mission.dates.filter((d) => d.date === dateStr);
 
-              if (slots.length === 0) {
+              // Check for detailed dates first (AM/PM)
+              const detailedSlot = mission.detailedDates.find(
+                (d) => d.date === dateStr
+              );
+              if (detailedSlot) {
                 return (
                   <Box
-                    key={dateStr}
+                    key={`${mission.id}-detail-${dateStr}`}
                     width="60px"
                     height="20px"
                     m="1px"
-                    border="1px solid #eee"
-                  />
+                    display="flex"
+                    flexDirection="column"
+                  >
+                    <Box
+                      flex={1}
+                      bgcolor={
+                        detailedSlot.period === "Morning"
+                          ? "#FFD580"
+                          : "transparent"
+                      }
+                      border="1px solid #FFD580"
+                    />
+                    <Box
+                      flex={1}
+                      bgcolor={
+                        detailedSlot.period === "Afternoon"
+                          ? "#FFA500"
+                          : "transparent"
+                      }
+                      border="1px solid #FFA500"
+                    />
+                  </Box>
                 );
               }
 
-              const isFull = slots.some((s) => s.period === "FULL");
-
-              if (isFull) {
+              // Check for full range dates
+              const fullRangeSlot = mission.fullRangeDates.find(
+                (d) => d.date === dateStr
+              );
+              if (fullRangeSlot) {
                 return (
                   <Box
-                    key={dateStr}
+                    key={`${mission.id}-full-${dateStr}`}
                     width="60px"
                     height="20px"
                     m="1px"
@@ -260,33 +436,15 @@ const EditStaffing = () => {
                 );
               }
 
+              // Empty slot
               return (
                 <Box
-                  key={dateStr}
+                  key={`${mission.id}-empty-${dateStr}`}
                   width="60px"
                   height="20px"
                   m="1px"
-                  display="flex"
-                  flexDirection="column"
                   border="1px solid #eee"
-                >
-                  <Box
-                    flex={1}
-                    bgcolor={
-                      slots.some((s) => s.period === "AM")
-                        ? "#FFD580"
-                        : "transparent"
-                    }
-                  />
-                  <Box
-                    flex={1}
-                    bgcolor={
-                      slots.some((s) => s.period === "PM")
-                        ? "#FFD580"
-                        : "transparent"
-                    }
-                  />
-                </Box>
+                />
               );
             })}
           </Box>
@@ -346,6 +504,32 @@ const EditStaffing = () => {
                 <Typography variant="h6" mb={2}>
                   New assignment
                 </Typography>
+                {assignementErrors && (
+                  <Box
+                    mt={2}
+                    mb={2}
+                    p={2}
+                    borderRadius="5px"
+                    bgcolor={colors.redAccent[500]}
+                    color="white"
+                    fontWeight="bold"
+                  >
+                    {assignementErrors}
+                  </Box>
+                )}
+                {success && (
+                  <Box
+                    mt={2}
+                    mb={2}
+                    p={2}
+                    borderRadius="5px"
+                    bgcolor={colors.greenAccent[500]}
+                    color="white"
+                    fontWeight="bold"
+                  >
+                    {success}
+                  </Box>
+                )}
                 <Box display="flex" flexWrap="wrap" gap={2}>
                   <Box flex="1" minWidth="200px">
                     <Typography fontSize="14px" mb={0.5}>
@@ -611,6 +795,7 @@ const EditStaffing = () => {
                   >
                     SAVE
                   </Button>
+                  {assignementLoading && <CircularProgress />}
                 </Box>
               </Box>
             )}

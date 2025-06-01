@@ -57,7 +57,7 @@ const AssignmentSchema = new mongoose.Schema({
       period: {
         type: String,
         required: true,
-        enum: ['morning', 'afternoon']
+        enum: ['Morning', 'Afternoon']
       }
     }],
     status: {

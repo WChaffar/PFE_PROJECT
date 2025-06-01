@@ -27,6 +27,11 @@ const assignementReducer = (state = initialState, action) => {
         assignements: [],
         error: null, // NEW: to store project-related errors
       };
+    case "RESET_ASSIGNEMENT_ERROR":
+      return {
+        ...state,
+        error: null, // NEW: to store project-related errors
+      };
     default:
       return state;
   }
