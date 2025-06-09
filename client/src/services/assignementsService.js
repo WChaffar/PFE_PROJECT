@@ -12,9 +12,21 @@ const createAssignement = (data) => {
     })
 };
 
+const getEmployeeAssignement = (empId) => {
+  return axios
+    .get(base_url + `assignement/getEmployeeAssignement/${empId}`, 
+     getConfig()
+    )
+    .then((response) => {
+      return response.data;
+    })
+};
+
+
 
 const AssignementService = {
     createAssignement,
+    getEmployeeAssignement
    }
    
  

@@ -27,6 +27,7 @@ import { getTasksByProjectId } from "../../actions/taskAction";
 import { Formik } from "formik";
 import {
   createAssignement,
+  getEmployeeAssignement,
   resetAssignementErros,
 } from "../../actions/assignementsAction";
 import WarningIcon from "@mui/icons-material/Warning";
@@ -108,85 +109,11 @@ const EditStaffing = () => {
   const selectedTasks = useSelector((state) => state.tasks.tasks);
   const [tasks, setTasks] = useState([]);
   const [assignementErrors, setAssignementErrors] = useState(null);
+  const selectedAssignements = useSelector(
+    (state) => state.assignements.assignements
+  );
   // Add to your existing state
-  const [assignments, setAssignments] = useState([
-    {
-      _id: "683b235ba6d38d38ab355549",
-      Owner: "67e2875c154deffe5e118082",
-      employee: "6820d9789f2baaeeb93fad6f",
-      project: {
-        projectName: "BNPP HR 4YOU",
-        client: "BNP Paribas",
-      },
-      taskId: {
-        taskName: "task1",
-      },
-      startDate: "2025-01-01",
-      endDate: "2025-01-30",
-      assignmentType: "enduring - long period",
-      totalDays: 0.5,
-      dayDetails: [
-        {
-          date: "2025-01-01",
-          period: "Morning",
-          _id: "683b235ba6d38d38ab35554a",
-        },
-        {
-          date: "2025-01-30",
-          period: "Afternoon",
-          _id: "683b235ba6d38d38ab35554e",
-        },
-      ],
-      status: "assigned",
-      skillMatchScore: 0.5,
-      recommendations:
-        "Warning: Employee skills don't fully match project requirements",
-      createdAt: "2025-05-31",
-    },
-    {
-      _id: "683b235ba6d38d38ab355550",
-      Owner: "67e2875c154deffe5e118081",
-      employee: "6820d9789f2baaeeb93fad6e",
-      project: {
-        projectName: "BNPP HR 4YOU 2",
-        client: "BNP Paribas 2",
-      },
-      taskId: {
-        taskName: "task2",
-      },
-      startDate: "2025-02-01",
-      endDate: "2025-02-28",
-      assignmentType: "enduring - long period",
-      totalDays: 0.5,
-      dayDetails: [
-        {
-          date: "2025-01-01",
-          period: "Afternoon",
-          _id: "683b235ba6d38d38ab355542",
-        },
-        {
-          date: "2025-01-30",
-          period: "Morning",
-          _id: "683b235ba6d38d38ab35554t",
-        },
-        {
-          date: "2025-02-01",
-          period: "Morning",
-          _id: "683b235ba6d38d38ab35554t",
-        },
-        {
-          date: "2025-02-28",
-          period: "Morning",
-          _id: "683b235ba6d38d38ab35554t",
-        },
-      ],
-      status: "assigned",
-      skillMatchScore: 0.5,
-      recommendations:
-        "Warning: Employee skills don't fully match project requirements",
-      createdAt: "2025-05-31",
-    },
-  ]);
+  const [assignments, setAssignments] = useState([]);
 
   // // Add this useEffect to fetch assignments
   // useEffect(() => {
@@ -218,6 +145,16 @@ const EditStaffing = () => {
   useEffect(() => {
     dispatch(getAllProjects());
   }, [dispatch]);
+
+  useEffect(() => {
+    dispatch(getEmployeeAssignement(id));
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (Object.keys(selectedAssignements).length > 0) {
+      setAssignments(selectedAssignements);
+    }
+  }, [selectedAssignements]);
 
   useEffect(() => {
     setAssignementErrors(assignementError);

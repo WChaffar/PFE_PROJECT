@@ -116,11 +116,12 @@ const getEmployeeAssignments = async (req, res) => {
     const assignments = await Assignment.find({ employee: employeeId })
       .populate("project", "client projectName requiredSkills")
       .populate("employee", "fullName keySkills")
+      .populate("taskId","taskName")
       .sort({ startDate: 1 });
 
     res.json(assignments);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: error.message });
   }
 };
 

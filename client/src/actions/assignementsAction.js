@@ -21,6 +21,26 @@ export const createAssignement = (values) => async (dispatch) => {
   }
 };
 
+
+// get Employee Assignement
+export const getEmployeeAssignement = (empId,values) => async (dispatch) => {
+  try {
+    const data = await AssignementService.getEmployeeAssignement(empId);
+    dispatch({
+      type: "GET_EMP_ASSIGNEMENT_SUCCESS",
+      payload: { data },
+    });
+    return { success: true }; // ✅ return success
+  } catch (error) {
+    dispatch({
+      type: "GET_EMP_ASSIGNEMENT_FAILURE",
+      payload: error.response?.data?.message || "Get employee assignement failed",
+    });
+    return { success: false }; // ✅ return failure
+  }
+};
+
+
 // create Assignement
 export const resetAssignementErros = () => async (dispatch) => {
     dispatch({

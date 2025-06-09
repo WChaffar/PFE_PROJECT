@@ -20,6 +20,20 @@ const assignementReducer = (state = initialState, action) => {
         ...state,
         error: action.payload, // store error message
       };
+    case "GET_EMP_ASSIGNEMENT_SUCCESS":
+      return {
+        ...state,
+        activeAssignement: {},
+        assignements: action.payload.data,
+        error: null, // NEW: to store project-related errors
+      };
+    case "GET_EMP_ASSIGNEMENT_FAILURE":
+      return {
+        ...state,
+        activeAssignement: {},
+        assignements: [],
+        error: action.payload, // store error message
+      };
     case "RESET":
       return {
         ...state,
