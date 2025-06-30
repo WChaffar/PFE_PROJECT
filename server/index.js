@@ -13,6 +13,8 @@ const projectRouter = require("./routes/projectRoute");
 const teamRouter = require("./routes/teamRoute");
 const taskRouter = require("./routes/taskRoute");
 const assignementRouter = require("./routes/assignementRoute");
+const BusinessUnitRouter = require("./routes/BusinessUnitRoute");
+
 const path = require("path");
 
 dbConnect();
@@ -27,6 +29,7 @@ app.use("/api/project", projectRouter);
 app.use("/api/team",teamRouter);
 app.use("/api/task",taskRouter);
 app.use("/api/assignement",assignementRouter);
+app.use("/api/BusinessUnit",BusinessUnitRouter);
 
 app.use(notFound); 
 app.use(errorHandler);

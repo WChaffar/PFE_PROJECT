@@ -1,4 +1,5 @@
 const Team = require("../models/teamModel");
+const User = require("../models/userModel");
 const asyncHandler = require("express-async-handler");
 const validateMongoDbId = require("../utils/validateMongodbId");
 const jwt = require("jsonwebtoken");
@@ -39,22 +40,20 @@ const createTeamMember = [
 ];
 
 
-  // get all Team ---------------------------------------------- 
   
-  const getAllTeamMember = asyncHandler(async (req, res) => {
-    try {
-  
-      const findTeam = await Team.find({ manager: req.user?._id });
-  
-      if (findTeam.length === 0) {
-        throw new Error("No team memebers found.");
-      }
-  
-      res.status(200).json(findTeam);
-    } catch (error) {
-      res.status(400).json({ message: error.message });
-    }
-  });
+// Get all users whose role is not "RH"
+const getAllUsers = asyncHandler(async (req, res) => {
+  const users = await User.find({ role: { $ne: "RH" } });
+  console.log(users)
+
+  if (users.length === 0) {
+    res.status(404).json({ message: "No users found." });
+    return;
+  }
+
+  res.status(200).json(users);
+});
+
   
 
   // get One Project by ID ---------------------------------------------- 
@@ -134,4 +133,4 @@ const editOneTeamMember = asyncHandler(async (req, res) => {
 
 
 
-  module.exports = {createTeamMember,getAllTeamMember, getOneTeamMember,deleteOneTeamMemeber,editOneTeamMember};
+  module.exports = {createTeamMember, getOneTeamMember,deleteOneTeamMemeber,editOneTeamMember, getAllUsers};

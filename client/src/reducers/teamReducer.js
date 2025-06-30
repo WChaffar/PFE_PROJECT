@@ -8,13 +8,13 @@ const initialState = {
 
 const teamReducer = (state = initialState, action) => {
   switch (action.type) {
-    case "CREATE_TASK_SUCCESS":
+    case "CREATE_TEAM_MEMBER_SUCCESS":
       return {
         ...state,
         activeTeamMember: {},
         error: null, // NEW: to store team-related errors
       };
-    case "CREATE_TASK_FAILURE":
+    case "CREATE_TEAM_MEMBER_FAILURE":
       return {
         ...state,
         error: action.payload, // store error message

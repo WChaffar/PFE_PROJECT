@@ -6,6 +6,7 @@ import "react-pro-sidebar/dist/css/styles.css";
 import { tokens } from "../../theme";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import PeopleOutlinedIcon from "@mui/icons-material/PeopleOutlined";
+import BusinessOutlinedIcon from "@mui/icons-material/BusinessOutlined";
 import ContactsOutlinedIcon from "@mui/icons-material/ContactsOutlined";
 import ReceiptOutlinedIcon from "@mui/icons-material/ReceiptOutlined";
 import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
@@ -17,13 +18,13 @@ import TimelineOutlinedIcon from "@mui/icons-material/TimelineOutlined";
 import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
 import MapOutlinedIcon from "@mui/icons-material/MapOutlined";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp"; // Icon for logout
-import FolderIcon from '@mui/icons-material/Folder';
-import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
-import TaskIcon from '@mui/icons-material/Task';
-import WorkHistoryIcon from '@mui/icons-material/WorkHistory';
-import SummarizeIcon from '@mui/icons-material/Summarize';
-import logo from '../../img/SopraHR_Noir.png';
-import {useSelector,useDispatch} from "react-redux"
+import FolderIcon from "@mui/icons-material/Folder";
+import AssignmentIndIcon from "@mui/icons-material/AssignmentInd";
+import TaskIcon from "@mui/icons-material/Task";
+import WorkHistoryIcon from "@mui/icons-material/WorkHistory";
+import SummarizeIcon from "@mui/icons-material/Summarize";
+import logo from "../../img/SopraHR_Noir.png";
+import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../../actions/authAction";
 
 const Item = ({ title, to, icon, selected, setSelected }) => {
@@ -50,19 +51,19 @@ const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [selected, setSelected] = useState("Dashboard");
   const navigate = useNavigate(); // Navigate to other routes
-  const dispatch=useDispatch();
+  const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user); // optional for redirect
 
   const logOut = () => {
+    // Redirect user to the login page after logging out
+    navigate("/login");
     // Clear localStorage or session storage
-    localStorage.removeItem("reduxState"); 
-    localStorage.removeItem("token"); 
+    localStorage.removeItem("reduxState");
+    localStorage.removeItem("token");
     localStorage.removeItem("user");
     //dispatch(logout());
     // Refresh the page
     window.location.reload();
-    // Redirect user to the login page after logging out
-    navigate("/login");
   };
 
   return (
@@ -104,7 +105,6 @@ const Sidebar = () => {
                 ml="15px"
               >
                 <img src={logo} alt="Logo" height="60" />
-               
               </Box>
             )}
           </MenuItem>
@@ -127,104 +127,148 @@ const Sidebar = () => {
                   fontWeight="bold"
                   sx={{ m: "10px 0 0 0" }}
                 >
-                  {user?.firstname+" "+user?.lastname}
+                  {user?.fullName}
                 </Typography>
               </Box>
             </Box>
           )}
+          {user?.role === "Manager" && (
+            <Box paddingLeft={isCollapsed ? undefined : "10%"}>
+              <Item
+                title="Dashboard"
+                to="/"
+                icon={<HomeOutlinedIcon />}
+                selected={selected}
+                setSelected={setSelected}
+              />
 
-          <Box paddingLeft={isCollapsed ? undefined : "10%"}>
-            <Item
-              title="Dashboard"
-              to="/"
-              icon={<HomeOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
+              <Typography
+                variant="h6"
+                color={colors.grey[300]}
+                sx={{ m: "15px 0 5px 20px" }}
+              >
+                Project
+              </Typography>
+              <Item
+                title="Projects"
+                to="/projects"
+                icon={<FolderIcon />}
+                selected={selected}
+                setSelected={setSelected}
+              />
+              <Typography
+                variant="h6"
+                color={colors.grey[300]}
+                sx={{ m: "15px 0 5px 20px" }}
+              >
+                Team
+              </Typography>
+              <Item
+                title="Manage Team"
+                to="/team"
+                icon={<PeopleOutlinedIcon />}
+                selected={selected}
+                setSelected={setSelected}
+              />
+              <Item
+                title="Staffing"
+                to="/assignements"
+                icon={<AssignmentIndIcon />}
+                selected={selected}
+                setSelected={setSelected}
+              />
+              <Typography
+                variant="h6"
+                color={colors.grey[300]}
+                sx={{ m: "15px 0 5px 20px" }}
+              >
+                Tasks
+              </Typography>
+              <Item
+                title="Tasks"
+                to="/tasks"
+                icon={<TaskIcon />}
+                selected={selected}
+                setSelected={setSelected}
+              />
+              <Item
+                title="Time Tracking"
+                to="/timeTraking"
+                icon={<WorkHistoryIcon />}
+                selected={selected}
+                setSelected={setSelected}
+              />
 
-            <Typography
-              variant="h6"
-              color={colors.grey[300]}
-              sx={{ m: "15px 0 5px 20px" }}
-            >
-              Project
-            </Typography>
-            <Item
-              title="Projects"
-              to="/projects"
-              icon={<FolderIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
-            <Typography
-              variant="h6"
-              color={colors.grey[300]}
-              sx={{ m: "15px 0 5px 20px" }}
-            >
-              Team
-            </Typography>
-            <Item
-              title="Manage Team"
-              to="/team"
-              icon={<PeopleOutlinedIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
-                        <Item
-              title="Staffing"
-              to="/assignements"
-              icon={<AssignmentIndIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
-            <Typography
-              variant="h6"
-              color={colors.grey[300]}
-              sx={{ m: "15px 0 5px 20px" }}
-            >
-              Tasks
-            </Typography>
-            <Item
-              title="Tasks"
-              to="/tasks"
-              icon={<TaskIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
-            <Item
-              title="Time Tracking"
-              to="/timeTraking"
-              icon={<WorkHistoryIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
-
-            <Typography
-              variant="h6"
-              color={colors.grey[300]}
-              sx={{ m: "15px 0 5px 20px" }}
-            >
-              Reports
-            </Typography>
-            <Item
-              title="Reports"
-              to="/reports"
-              icon={<SummarizeIcon />}
-              selected={selected}
-              setSelected={setSelected}
-            />
-             {/* Logout */}
-             <MenuItem
-              onClick={logOut}
-              style={{
-                color: colors.grey[100],
-                marginTop: "20px",
-              }}
-              icon={<ExitToAppIcon />}
-            >
-              <Typography>Logout</Typography>
-            </MenuItem> 
-          </Box>
+              <Typography
+                variant="h6"
+                color={colors.grey[300]}
+                sx={{ m: "15px 0 5px 20px" }}
+              >
+                Reports
+              </Typography>
+              <Item
+                title="Reports"
+                to="/reports"
+                icon={<SummarizeIcon />}
+                selected={selected}
+                setSelected={setSelected}
+              />
+              {/* Logout */}
+              <MenuItem
+                onClick={logOut}
+                style={{
+                  color: colors.grey[100],
+                  marginTop: "20px",
+                }}
+                icon={<ExitToAppIcon />}
+              >
+                <Typography>Logout</Typography>
+              </MenuItem>
+            </Box>
+          )}
+          {user?.role === "RH" && (
+            <Box paddingLeft={isCollapsed ? undefined : "10%"}>
+              <Typography
+                variant="h6"
+                color={colors.grey[300]}
+                sx={{ m: "15px 0 5px 20px" }}
+              >
+                People Operations
+              </Typography>
+              <Item
+                title="Review accounts"
+                to="/review-accounts"
+                icon={<PeopleOutlinedIcon />}
+                selected={selected}
+                setSelected={setSelected}
+              />
+              <Typography
+                variant="h6"
+                color={colors.grey[300]}
+                sx={{ m: "15px 0 5px 20px" }}
+              >
+                BU Operations
+              </Typography>
+              <Item
+                title="Add and review BU "
+                to="/add-review-bu"
+                icon={<BusinessOutlinedIcon />}
+                selected={selected}
+                setSelected={setSelected}
+              />
+              {/* Logout */}
+              <MenuItem
+                onClick={logOut}
+                style={{
+                  color: colors.grey[100],
+                  marginTop: "20px",
+                }}
+                icon={<ExitToAppIcon />}
+              >
+                <Typography>Logout</Typography>
+              </MenuItem>
+            </Box>
+          )}
         </Menu>
       </ProSidebar>
     </Box>

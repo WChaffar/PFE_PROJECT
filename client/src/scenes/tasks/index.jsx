@@ -62,6 +62,7 @@ const TasksManagement = () => {
   const [openSnackbar, setOpenSnackbar] = React.useState(false); // Snackbar state
   const [snackbarMessage, setSnackbarMessage] = React.useState(""); // Message for Snackbar
   const error = useSelector((state) => state.tasks.error);
+   const [getProjectsError, setGetProjectsError ] = useState(null);
 
   useEffect(() => {
     if (selectedProjects.length !== 0) {
@@ -80,7 +81,16 @@ const TasksManagement = () => {
 
   useEffect(() => {
     setProjectLoading(true);
-    dispatch(getAllProjects());
+    async function fetchData(params) {
+      const result = await dispatch(getAllProjects());
+      if (result.success) {
+        setProjectLoading(false);
+      } else {
+        setProjectLoading(false);
+        setGetProjectsError(result.error);
+      }
+    }
+    fetchData();
   }, [dispatch]); // <== Appelle une seule fois le fetch
 
   useEffect(() => {
@@ -255,22 +265,22 @@ const TasksManagement = () => {
   };
 
   function CustomErrorOverlay() {
-  return (
-    <Box
-      sx={{
-        p: 2,
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100%',
-      }}
-    >
-      <Typography color="error" variant="body1">
-        {error}
-      </Typography>
-    </Box>
-  );
-}
+    return (
+      <Box
+        sx={{
+          p: 2,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100%",
+        }}
+      >
+        <Typography color="error" variant="body1">
+          {error}
+        </Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box p={3}>
@@ -358,7 +368,7 @@ const TasksManagement = () => {
           pageSize={5}
           rowsPerPageOptions={[5, 10, 25, 50, 100]}
           pagination
-          loading={projectLoading}
+          loading={projectLoading && !getProjectsError}
         />
       </Box>
       {/* Tasks Table */}

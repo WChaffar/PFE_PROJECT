@@ -1,14 +1,9 @@
 import axios from "axios";
 import {base_url} from "../config/axiosConfig"
 
-const register = ({firstname,lastname, email, password}) => {
-  console.log(firstname,lastname,email,password)
-  return axios.post(base_url + "user/register", {
-    firstname,
-    lastname,
-    email,
-    password,
-  }).then((response) => {
+const register = (data) => {
+  console.log(data)
+  return axios.post(base_url + "user/register", data ).then((response) => {
     if (response.data.firstname) {
       localStorage.setItem("user", JSON.stringify(response.data));
     }

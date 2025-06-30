@@ -34,21 +34,41 @@ import TaskDetails from "./scenes/TaskDétails";
 import EditTaskForm from "./scenes/EditTaskForm";
 import TimeTracking from "./scenes/TimeTracking";
 import Reports from "./scenes/Reports";
+import AwaitingValidation from "./components/AwaitingValidation";
+import ReviewAccounts from "./scenes/ReviewAccounts";
+import ReviewBU from "./scenes/ReviewBU";
+import CreateBUForm from "./scenes/AddBuForm";
 
 function PrivateRoute({ children }) {
-  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+  const isAuthenticated = useSelector((state) => state.auth?.isAuthenticated);
   return isAuthenticated ? children : <Navigate to="/login" replace />;
 }
 
 function AuthRedirect({ children }) {
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
-  return isAuthenticated ? <Navigate to="/dashboard" replace /> : children;
+  const isActivated = useSelector((state) => state.auth.user?.Activated);
+  const role = useSelector((state) => state.auth.user?.role);
+  return isAuthenticated ? (
+    isActivated === true ? (
+      role === "RH" ? (
+        <Navigate to="/review-accounts" replace />
+      ) : (
+        <Navigate to="/dashboard" replace />
+      )
+    ) : (
+      <Navigate to="/AwaitingValidation" replace />
+    )
+  ) : (
+    children
+  );
 }
 
 function AppContent() {
   const [theme, colorMode] = useMode();
   const [isSidebar, setIsSidebar] = useState(true);
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+  const isActivated = useSelector((state) => state.auth.user?.Activated);
+  const user = useSelector((state) => state.auth.user);
 
   return (
     <ColorModeContext.Provider value={colorMode}>
@@ -59,35 +79,221 @@ function AppContent() {
         {!isAuthenticated && <Navbar />}
 
         <div className={isAuthenticated ? "app" : ""}>
-          {isAuthenticated && <Sidebar isSidebar={isSidebar} />}
+          {isAuthenticated && isActivated && <Sidebar isSidebar={isSidebar} />}
 
           <main className={isAuthenticated ? "content" : ""}>
-            {isAuthenticated && <Topbar setIsSidebar={setIsSidebar} />}
+            {isAuthenticated && isActivated && (
+              <Topbar setIsSidebar={setIsSidebar} />
+            )}
 
             <Routes>
               {/* Public Routes */}
-              <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Home />} />
-              <Route path="/login" element={<AuthRedirect><Login /></AuthRedirect>} />
-              <Route path="/register" element={<AuthRedirect><Register /></AuthRedirect>} />
+              <Route
+                path="/"
+                element={
+                  isAuthenticated ? (
+                    isActivated ? (
+                      <Navigate to="/dashboard" replace />
+                    ) : (
+                      <Navigate to="/AwaitingValidation" replace />
+                    )
+                  ) : (
+                    <Home />
+                  )
+                }
+              />
+              <Route
+                path="/login"
+                element={
+                  <AuthRedirect>
+                    <Login />
+                  </AuthRedirect>
+                }
+              />
+              <Route
+                path="/register"
+                element={
+                  <AuthRedirect>
+                    <Register />
+                  </AuthRedirect>
+                }
+              />
 
               {/* Private Routes */}
-              <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-              <Route path="/projects" element={<PrivateRoute><Projects /></PrivateRoute>} />
-              <Route path="/projects/create" element={<PrivateRoute><CreateProjectForm /></PrivateRoute>} />
-              <Route path="/projects/project/:id/details" element={<PrivateRoute><ProjectDetails /></PrivateRoute>} />
-              <Route path="/projects/project/:id/edit" element={<PrivateRoute><EditProjectForm /></PrivateRoute>} />
-              <Route path="/team" element={<PrivateRoute><Team /></PrivateRoute>} />
-              <Route path="/team/create" element={<PrivateRoute><CreateTeamMemberForm /></PrivateRoute>} />
-              <Route path="/team/:id/edit" element={<PrivateRoute><EditTeamMemberForm /></PrivateRoute>} />
-              <Route path="/team/:id/profile" element={<PrivateRoute><TeamMemberProfile /></PrivateRoute>} />
-              <Route path="/assignements" element={<PrivateRoute><StaffingBoard /></PrivateRoute>} />
-              <Route path="/assignements/:id/edit" element={<PrivateRoute><EditStaffing /></PrivateRoute>} />
-              <Route path="/tasks" element={<PrivateRoute><TaskManagement/></PrivateRoute>} />
-              <Route path="/tasks/:id/create" element={<PrivateRoute><CreateTaskForm/></PrivateRoute>} />
-              <Route path="/tasks/:id/détails" element={<PrivateRoute><TaskDetails/></PrivateRoute>} />
-              <Route path="/tasks/:id/edit" element={<PrivateRoute><EditTaskForm/></PrivateRoute>} />
-              <Route path="/timeTraking" element={<PrivateRoute><TimeTracking/></PrivateRoute>} />
-              <Route path="/reports" element={<PrivateRoute><Reports/></PrivateRoute>} />
+              <Route
+                path="/dashboard"
+                element={
+                  <PrivateRoute>
+                    <Dashboard />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/projects"
+                element={
+                  <PrivateRoute>
+                    <Projects />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/projects/create"
+                element={
+                  <PrivateRoute>
+                    <CreateProjectForm />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/projects/project/:id/details"
+                element={
+                  <PrivateRoute>
+                    <ProjectDetails />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/projects/project/:id/edit"
+                element={
+                  <PrivateRoute>
+                    <EditProjectForm />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/team"
+                element={
+                  <PrivateRoute>
+                    <Team />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/team/create"
+                element={
+                  <PrivateRoute>
+                    <CreateTeamMemberForm />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/team/:id/edit"
+                element={
+                  <PrivateRoute>
+                    <EditTeamMemberForm />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/team/:id/profile"
+                element={
+                  <PrivateRoute>
+                    <TeamMemberProfile />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/assignements"
+                element={
+                  <PrivateRoute>
+                    <StaffingBoard />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/assignements/:id/edit"
+                element={
+                  <PrivateRoute>
+                    <EditStaffing />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/tasks"
+                element={
+                  <PrivateRoute>
+                    <TaskManagement />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/tasks/:id/create"
+                element={
+                  <PrivateRoute>
+                    <CreateTaskForm />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/tasks/:id/détails"
+                element={
+                  <PrivateRoute>
+                    <TaskDetails />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/tasks/:id/edit"
+                element={
+                  <PrivateRoute>
+                    <EditTaskForm />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/timeTraking"
+                element={
+                  <PrivateRoute>
+                    <TimeTracking />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/reports"
+                element={
+                  <PrivateRoute>
+                    <Reports />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/AwaitingValidation"
+                element={
+                  <PrivateRoute>
+                    <AwaitingValidation />
+                  </PrivateRoute>
+                }
+              />
+              {user?.role === "RH" && (
+                <Route
+                  path="/review-accounts"
+                  element={
+                    <PrivateRoute>
+                      <ReviewAccounts />
+                    </PrivateRoute>
+                  }
+                />
+              )}
+              {user?.role === "RH" && (
+                <Route
+                  path="/add-review-bu"
+                  element={
+                    <PrivateRoute>
+                      <ReviewBU />
+                    </PrivateRoute>
+                  }
+                />
+              )}
+              {user?.role === "RH" && (
+                <Route
+                  path="/add-bu"
+                  element={
+                    <PrivateRoute>
+                      <CreateBUForm />
+                    </PrivateRoute>
+                  }
+                />
+              )}
               {/* Catch-All Route */}
               <Route path="*" element={<NotFound />} />
             </Routes>

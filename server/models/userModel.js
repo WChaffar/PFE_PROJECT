@@ -1,14 +1,38 @@
 const mongoose = require("mongoose"); // Erase if already required
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
+
+// Declare the Schema of the Experience object
+var experienceSchema = new mongoose.Schema({
+  companyName: {
+    type: String,
+    required: true,
+  },
+  jobTitle: {
+    type: String,
+    required: true,
+  },
+  startDate: {
+    type: Date,
+    required: true,
+  },
+  endDate: {
+    type: Date, // Optional, can be null if the person is still at the job
+  },
+  responsibilities: {
+    type: String,
+    required: true,
+  },
+});
+
 // Declare the Schema of the Mongo model
 var userSchema = new mongoose.Schema(
   {
-    firstname: {
-      type: String,
-      required: true,
+    manager: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User", // Référence vers le modèle User
     },
-    lastname: {
+    fullName: {
       type: String,
       required: true,
     },
@@ -27,6 +51,59 @@ var userSchema = new mongoose.Schema(
     passwordChangedAt: Date,
     passwordResetToken: String,
     passwordResetExpires: Date,
+    role: {
+      type: String,
+    },
+    phoneNumber: {
+      type: String,
+    },
+    profilePicture: {
+      type: String,
+      default:""
+    },
+    jobTitle: {
+      type: String,
+    },
+    employmentType: {
+      type: String,
+    },
+    dateOfJoining: {
+      type: Date,
+    },
+    seniorityLevel: {
+      type: String,
+    },
+    remoteWorkAllowed: {
+      type: Boolean,
+      default: false,
+    },
+    keySkills: {
+      type: [String], // Declaring an array of strings
+    },
+    certifications: {
+      type: [String], // Declaring an array of strings
+    },
+    yearsOfExperience: {
+      type: Number, // Declaring an array of strings
+    },
+    Activated: {
+      type: Boolean,
+      default: false,
+    },
+    profileCompleted: {
+      type: Boolean,
+      default: false,
+    },
+    BusinessUnit:{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "BusinessUnit", // Référence vers le modèle User
+    },
+    // Adding the array of experiences
+    experience: [experienceSchema], // An array of Experience objects
+    assignments: {
+      type: [mongoose.Schema.Types.ObjectId],
+      default: [],
+    },
   },
   {
     timestamps: true,

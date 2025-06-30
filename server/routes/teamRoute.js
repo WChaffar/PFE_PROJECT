@@ -4,7 +4,8 @@ const {
     getAllTeamMember,
     getOneTeamMember,
     deleteOneTeamMemeber,
-    editOneTeamMember
+    editOneTeamMember,
+    getAllUsers
 } = require("../controller/teamCtrl");
 const { authMiddleware} = require("../middlewares/authMiddleware");
 const upload = require("../middlewares/upload");
@@ -12,7 +13,7 @@ const upload = require("../middlewares/upload");
 const router = express.Router();
 
 router.post("/create",authMiddleware,upload.single("profilePicture"),createTeamMember);
-router.get("/getAll",authMiddleware,getAllTeamMember);
+router.get("/getAll",authMiddleware,getAllUsers);
 router.get("/getOne/:id",authMiddleware,getOneTeamMember);
 router.delete("/deleteOne/:id",authMiddleware,deleteOneTeamMemeber);
 router.put("/editOne/:id",authMiddleware,upload.single("profilePicture"),editOneTeamMember);

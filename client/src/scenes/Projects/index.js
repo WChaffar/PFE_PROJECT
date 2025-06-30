@@ -68,6 +68,8 @@ const Projects = () => {
   const [projects, setProjects] = useState([]);
   const [openSnackbar, setOpenSnackbar] = React.useState(false); // Snackbar state
   const [snackbarMessage, setSnackbarMessage] = React.useState(""); // Message for Snackbar
+  const [loadingProjects,setLoadingProjects] = useState(false);
+  const [getProjectsError, setGetProjectsError ] = useState(null);
 
   useEffect(() => {
     if (selectedProjects.length !== 0) {
@@ -90,7 +92,17 @@ const Projects = () => {
   }, [selectedProjects]); // <== Écoute les changements de selectedProjects
 
   useEffect(() => {
-    dispatch(getAllProjects()); 
+    setLoadingProjects(true)
+    async function fetchData(params) {
+      const result = await dispatch(getAllProjects());
+      if (result.success) {
+        setLoadingProjects(false);
+      }else {
+         setLoadingProjects(false);
+        setGetProjectsError(result.error)
+      }
+    }
+    fetchData();
   }, [dispatch]); // <== Appelle une seule fois le fetch
 
   useEffect(() => {
@@ -468,7 +480,7 @@ const Projects = () => {
           pageSize={5}
           rowsPerPageOptions={[5, 10, 25, 50, 100]}
           pagination
-          loading={projects.length === 0}
+          loading={loadingProjects && !getProjectsError}
         />
       </Box>
       <Box>

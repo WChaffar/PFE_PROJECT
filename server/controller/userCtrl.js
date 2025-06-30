@@ -9,80 +9,96 @@ const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const sendEmail = require("./emailCtrl");
 const { createPasswordResetToken } = require("../models/userModel");
-const { validationResult,check } = require("express-validator");
+const { validationResult, check } = require("express-validator");
 
 // Middleware de validation de l'email
 const validateUser = [
   check("email").isEmail().withMessage("Invalid email format"),
 ];
 
+// Create a User ----------------------------------------------
 
-
-// Create a User ---------------------------------------------- 
-
-const createUser =[
-  validateUser, asyncHandler(async (req, res) => {
-  // Vérifier les erreurs de validation
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    throw new Error(errors.array()[0].msg); // Lancer la première erreur trouvée
-  }
-  /**
-   * TODO:Get the email from req.body
-   */
-  const email = req.body.email;
-  /**
-   * TODO:With the help of email find the user exists or not
-   */
-  const findUser = await User.findOne({ email: email });
-
-  if (!findUser) {
+const createUser = [
+  validateUser,
+  asyncHandler(async (req, res) => {
+    // Vérifier les erreurs de validation
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throw new Error(errors.array()[0].msg); // Lancer la première erreur trouvée
+    }
     /**
-     * TODO:if user not found user create a new user
+     * TODO:Get the email from req.body
      */
-    const newUser = await User.create(req.body);
-    res.json(newUser);
-  } else {
+    const email = req.body.email;
+    console.log(req.body);
     /**
-     * TODO:if user found then thow an error: User already exists
+     * TODO:With the help of email find the user exists or not
      */
-    throw new Error("User Already Exists");
-  }
-})];
+    const findUser = await User.findOne({ email: email });
+
+    if (!findUser) {
+      /**
+       * TODO:if user not found user create a new user
+       */
+      const newUser = await User.create(req.body);
+      res.json(newUser);
+    } else {
+      /**
+       * TODO:if user found then thow an error: User already exists
+       */
+      throw new Error("User Already Exists");
+    }
+  }),
+];
 
 // Login a user
-const loginUserCtrl =[validateUser,asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
-  // check if user exists or not
-  const findUser = await User.findOne({ email });
-  if(!findUser){
-    throw new Error("Email does not exist!");
-  }
+const loginUserCtrl = [
+  validateUser,
+  asyncHandler(async (req, res) => {
+    const { email, password } = req.body;
+    // check if user exists or not
+    const findUser = await User.findOne({ email });
+    if (!findUser) {
+      throw new Error("Email does not exist!");
+    }
 
-  if (findUser && (await findUser.isPasswordMatched(password))) {
-    const refreshToken = await generateRefreshToken(findUser?._id);
-    const updateuser = await User.findByIdAndUpdate(
-      findUser.id,
-      {
-        refreshToken: refreshToken,
-      },
-      { new: true }
-    );
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      maxAge: 72 * 60 * 60 * 1000,
-    });
-    res.json({
-      _id: findUser?._id,
-      firstname: findUser?.firstname,
-      lastname: findUser?.lastname,
-      email: findUser?.email,
-      token: generateToken(findUser?._id),
-    });
-  } else {
-    throw new Error("Password Incorrect !");
-  }
-})];
+    if (findUser && (await findUser.isPasswordMatched(password))) {
+      const refreshToken = await generateRefreshToken(findUser?._id);
+      const updateuser = await User.findByIdAndUpdate(
+        findUser.id,
+        {
+          refreshToken: refreshToken,
+        },
+        { new: true }
+      );
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        maxAge: 72 * 60 * 60 * 1000,
+      });
+      if (findUser?.Activated == true) {
+        res.json({
+          _id: findUser?._id,
+          fullName: findUser?.fullName,
+          email: findUser?.email,
+          token: generateToken(findUser?._id),
+          Activated: findUser?.Activated,
+          profileCompleted: findUser?.profileCompleted,
+          role:findUser?.role,
+        });
+      } else {
+        res.json({
+          _id: findUser?._id,
+          fullName: findUser?.fullName,
+          Activated: findUser?.Activated,
+          profileCompleted: findUser?.profileCompleted,
+          role:findUser?.role,
+        });
+      }
+    } else {
+      throw new Error("Password Incorrect !");
+    }
+  }),
+];
 
 // admi
 
@@ -126,7 +142,6 @@ const logout = asyncHandler(async (req, res) => {
   });
   res.sendStatus(204); // forbidden
 });
-
 
 const updatePassword = asyncHandler(async (req, res) => {
   const { _id } = req.user;
@@ -192,8 +207,7 @@ const updatedUser = asyncHandler(async (req, res) => {
     const updatedUser = await User.findByIdAndUpdate(
       _id,
       {
-        firstname: req?.body?.firstname,
-        lastname: req?.body?.lastname,
+        fullName: req?.body?.fullName,
         email: req?.body?.email,
         mobile: req?.body?.mobile,
       },
@@ -207,7 +221,6 @@ const updatedUser = asyncHandler(async (req, res) => {
   }
 });
 
-
 module.exports = {
   createUser,
   loginUserCtrl,
@@ -216,5 +229,4 @@ module.exports = {
   updatePassword,
   forgotPasswordToken,
   resetPassword,
-
 };
