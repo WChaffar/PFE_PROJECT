@@ -33,7 +33,12 @@ import {
 import { Menu, MenuItem, Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { deleteTeamMember, getAllTeamMembers } from "../../actions/teamAction";
+import {
+  deleteTeamMember,
+  editTeamMemberBu,
+  editTeamMemberValidation,
+  getAllTeamMembers,
+} from "../../actions/teamAction";
 import { BACKEND_URL } from "../../config/ServerConfig";
 import BlockIcon from "@mui/icons-material/Block";
 import { getBU } from "../../actions/businessUnitAction";
@@ -121,7 +126,6 @@ const ReviewAccounts = () => {
   const selectedBusinessUnits = useSelector(
     (state) => state.businessUnit.businessUnit
   );
-  const [selectedBU, setselectedBU] = useState(null);
 
   useEffect(() => {
     if (selectedBusinessUnits.length !== 0) {
@@ -143,6 +147,7 @@ const ReviewAccounts = () => {
         role: member?.role,
         status:
           member?.Activated === true ? "Confirmed" : "Waiting for validation",
+        businessUnit: member?.businessUnit,
       }));
       setTeamMembers(teamMembersMap);
       // Count activated and deactivated members
@@ -173,7 +178,6 @@ const ReviewAccounts = () => {
 
   useEffect(() => {
     if (error !== null) {
-      console.log("hey");
       setErrorState(error);
       setSnackbarMessage(error); // Set success message
       setOpenSnackbar(true); // Show Snackbar
@@ -214,6 +218,35 @@ const ReviewAccounts = () => {
       },
     },
     {
+      field: "businessUnit",
+      headerName: "Business Unit",
+      flex: 1,
+      renderCell: ({ row }) => {
+        return (
+          <Box key={row.id}>
+            {row?.businessUnit === undefined ||
+            row?.businessUnit === "" ||
+            row?.businessUnit?.code === undefined ||
+            row?.businessUnit?.code === "" ? (
+              <Box
+                bgcolor={"red"}
+                px={1}
+                py={0.5}
+                borderRadius="12px"
+                fontSize="0.8rem"
+                color={"white"}
+              >
+                {" "}
+                Not assigned to a business unit
+              </Box>
+            ) : (
+              row?.businessUnit?.code + " : " + row?.businessUnit?.name
+            )}
+          </Box>
+        );
+      },
+    },
+    {
       field: "actions",
       headerName: "Actions",
       sortable: false,
@@ -230,6 +263,9 @@ const ReviewAccounts = () => {
     const [anchorEl, setAnchorEl] = React.useState(null);
     const open = Boolean(anchorEl);
     const [openConfirm, setOpenConfirm] = React.useState(false);
+    const [selectedBU, setselectedBU] = useState(null);
+    const [selectedManager, setselectedManager] = useState(null);
+    const [confirmError, setConfirmError] = useState(null);
 
     const handleClick = (event) => {
       setAnchorEl(event.currentTarget);
@@ -238,13 +274,19 @@ const ReviewAccounts = () => {
       setAnchorEl(null);
     };
 
-    const handleClose = (action) => {
+    const handleClose = async (action) => {
       if (action === "Validate") {
         // handle edit logic here
         setOpenConfirm(true);
       }
       if (action === "Suspend") {
         // handle delete logic here
+        const result4 = await dispatch(
+          editTeamMemberValidation(row.row.id, { Activated: false })
+        );
+        if (result4.success) {
+          console.log("This account is active now");
+        }
       }
       if (action === "Modify") {
         // handle details logic here
@@ -253,14 +295,44 @@ const ReviewAccounts = () => {
     };
 
     const handleConfirmation = async () => {
-      const result = await dispatch(deleteTeamMember(row.id));
-      if (result.success) {
-        setSnackbarMessage("Task deleted successfully!"); // Set success message
-        setOpenSnackbar(true); // Show Snackbar
-        console.log("delete with success");
+      if (
+        row.row.businessUnit === undefined ||
+        row.row.businessUnit === null ||
+        row.row.businessUnit === ""
+      ) {
+        if (selectedBU === null) {
+          setConfirmError("You should assign this user to a business unit !");
+        } else {
+          setConfirmError(null);
+          const result = await dispatch(
+            editTeamMemberBu(row.row.id, { businessUnit: selectedBU._id })
+          );
+          if (result.success) {
+            console.log("Business unit modified with success");
+          }
+          const result2 = await dispatch(
+            editTeamMemberValidation(row.row.id, { Activated: true })
+          );
+          if (result2.success) {
+            console.log("This account is active now");
+          }
+        }
+      } else {
+        const result3 = await dispatch(
+          editTeamMemberValidation(row.row.id, { Activated: true })
+        );
+        if (result3.success) {
+          console.log("This account is active now");
+        }
       }
-      setOpenConfirm(false);
-      handleCloseMenu();
+      // const result = await dispatch(deleteTeamMember(row.id));
+      // if (result.success) {
+      //   setSnackbarMessage("Task deleted successfully!"); // Set success message
+      //   setOpenSnackbar(true); // Show Snackbar
+      //   console.log("delete with success");
+      // }
+      // setOpenConfirm(false);
+      // handleCloseMenu();
     };
     return (
       <>
@@ -282,25 +354,30 @@ const ReviewAccounts = () => {
             },
           }}
         >
-          <MenuItem onClick={() => handleClose("Validate")}>
-            <ListItemIcon>
-              <GridCheckCircleIcon fontSize="small" />
-            </ListItemIcon>
-            <ListItemText primary="Validate account" />
-          </MenuItem>
-          <MenuItem onClick={() => handleClose("Suspend")}>
-            <ListItemIcon>
-              <BlockIcon fontSize="small" />
-            </ListItemIcon>
-            <ListItemText primary="Suspend account" />
-          </MenuItem>
+          {" "}
+          {row.row.status !== "Confirmed" && (
+            <MenuItem onClick={() => handleClose("Validate")}>
+              <ListItemIcon>
+                <GridCheckCircleIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText primary="Validate account" />
+            </MenuItem>
+          )}
+          {row.row.status === "Confirmed" && (
+            <MenuItem onClick={() => handleClose("Suspend")}>
+              <ListItemIcon>
+                <BlockIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText primary="Suspend account" />
+            </MenuItem>
+          )}
           <MenuItem onClick={() => handleClose("Modify")}>
             {" "}
             <ListItemIcon>✏️</ListItemIcon>
-            <ListItemText primary="Modify account" />
+            <ListItemText primary="Modify business unit" />
           </MenuItem>
         </Menu>
-        <Dialog open={openConfirm} onClose={() => setOpenConfirm(false)} >
+        <Dialog open={openConfirm} onClose={() => setOpenConfirm(false)}>
           <DialogTitle>Confirm Account</DialogTitle>
           <DialogContent>
             <DialogContentText>
@@ -315,7 +392,11 @@ const ReviewAccounts = () => {
                 </DialogContentText>
               )}
             {row.row.status === "Waiting for validation" &&
-              row.row.role === "Manager" && (
+              (row.row.role === "Manager" || row.row.role === "BUDirector") &&
+              (!row.row.businessUnit ||
+                (typeof row.row.businessUnit === "object" &&
+                  Object.keys(row.row.businessUnit).length < 1) ||
+                row.row.businessUnit === "") && (
                 <DialogContentText>
                   Before confirmation, ensure that manager is assigned to a
                   business unit :{/* Project */}
@@ -323,7 +404,9 @@ const ReviewAccounts = () => {
                     fullWidth
                     options={businessUnits}
                     getOptionLabel={(option) =>
-                      typeof option === "string" ? option : option?.name || ""
+                      typeof option === "string"
+                        ? option
+                        : option?.code + " : " + option?.name || ""
                     }
                     isOptionEqualToValue={(option, value) =>
                       option?._id === value?._id
@@ -345,6 +428,51 @@ const ReviewAccounts = () => {
                     )}
                     sx={{ gridColumn: "span 2" }}
                   />
+                  {confirmError !== null && (
+                    <Box color={"red"}> {confirmError} </Box>
+                  )}
+                </DialogContentText>
+              )}
+            {row.row.status === "Waiting for validation" &&
+              row.row.role === "Consultant" &&
+              (!row.row.businessUnit ||
+                (typeof row.row.businessUnit === "object" &&
+                  Object.keys(row.row.businessUnit).length < 1) ||
+                row.row.businessUnit === "") && (
+                <DialogContentText>
+                  Before confirmation, ensure that the consultant is assigned to
+                  a business unit and a manager :{/* Project */}
+                  <Autocomplete
+                    fullWidth
+                    options={businessUnits}
+                    getOptionLabel={(option) =>
+                      typeof option === "string"
+                        ? option
+                        : option?.code + " : " + option?.name || ""
+                    }
+                    isOptionEqualToValue={(option, value) =>
+                      option?._id === value?._id
+                    }
+                    value={
+                      businessUnits.find((p) => p._id === selectedBU?._id) ||
+                      null
+                    }
+                    onChange={(event, newValue) => {
+                      setselectedBU(newValue);
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="BusinessUnit"
+                        name="BusinessUnit"
+                        variant="filled"
+                      />
+                    )}
+                    sx={{ gridColumn: "span 2" }}
+                  />
+                  {confirmError !== null && (
+                    <Box color={"red"}> {confirmError} </Box>
+                  )}
                 </DialogContentText>
               )}
           </DialogContent>

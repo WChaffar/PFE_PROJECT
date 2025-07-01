@@ -59,7 +59,7 @@ var userSchema = new mongoose.Schema(
     },
     profilePicture: {
       type: String,
-      default:""
+      default: "",
     },
     jobTitle: {
       type: String,
@@ -94,7 +94,7 @@ var userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    BusinessUnit:{
+    businessUnit: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "BusinessUnit", // Référence vers le modèle User
     },

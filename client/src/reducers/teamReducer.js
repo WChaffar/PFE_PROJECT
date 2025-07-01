@@ -76,6 +76,41 @@ const teamReducer = (state = initialState, action) => {
         team: [],
         error: null, // NEW: to store team-related errors
       };
+    case "EDIT_TEAM_MEMBER_BU_SUCCESS":
+      return {
+        ...state,
+        team: state.team.map((t) => {
+          if (t._id === action.payload.data.data._id) {
+            return action.payload.data.data;
+          } else {
+            return t;
+          }
+        }),
+        error: null, // NEW: to store project-related errors
+      };
+    case "EDIT_TEAM_MEMBER_BU_FAILURE":
+      return {
+        ...state,
+        error: action.payload, // store error message
+      };
+
+    case "EDIT_TEAM_MEMBER_VALIDATION_SUCCESS":
+      return {
+        ...state,
+        team: state.team.map((t) => {
+          if (t._id === action.payload.data.data._id) {
+            return action.payload.data.data;
+          } else {
+            return t;
+          }
+        }),
+        error: null, // NEW: to store project-related errors
+      };
+    case "EDIT_TEAM_MEMBER_VALIDATION_FAILURE":
+      return {
+        ...state,
+        error: action.payload, // store error message
+      };
     default:
       return state;
   }
