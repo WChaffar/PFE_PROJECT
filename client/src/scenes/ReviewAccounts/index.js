@@ -281,6 +281,9 @@ const ReviewAccounts = () => {
     const [selectedBU, setselectedBU] = useState(null);
     const [selectedManager, setselectedManager] = useState(null);
     const [confirmError, setConfirmError] = useState(null);
+    const [openModifyBUConfirm, setOpenModifyBUConfirm] = React.useState(false);
+    const [openModifyManagerConfirm, setOpenModifyManagerConfirm] =
+      React.useState(false);
 
     const handleClick = (event) => {
       setAnchorEl(event.currentTarget);
@@ -303,10 +306,42 @@ const ReviewAccounts = () => {
           console.log("This account is active now");
         }
       }
-      if (action === "Modify") {
+      if (action === "ModifyBU") {
         // handle details logic here
+        setOpenModifyBUConfirm(true);
+      }
+      if (action === "ModifyManager") {
+        setOpenModifyManagerConfirm(true);
       }
       setAnchorEl(null);
+    };
+
+    const handleModifyManagerConfirmation = async () => {
+      if (row.row.role === "Consultant") {
+        if (selectedManager === null) {
+          setConfirmError("You should assign this user to a Manager !");
+        } else {
+          const result = await dispatch(
+            editTeamMemberManager(row.row.id, { manager: selectedManager._id })
+          );
+          if (result.success) {
+            setselectedManager(null);
+          }
+        }
+      }
+    };
+
+    const handleModifyBUConfirmation = async () => {
+      if (selectedBU === null) {
+        setConfirmError("You should assign this user to a business unit !");
+      } else {
+        const result = await dispatch(
+          editTeamMemberBu(row.row.id, { businessUnit: selectedBU._id })
+        );
+        if (result.success) {
+          setselectedBU(null);
+        }
+      }
     };
 
     const handleConfirmation = async () => {
@@ -346,18 +381,18 @@ const ReviewAccounts = () => {
       ) {
         if (selectedBU === null) {
           setConfirmError("You should assign this user to a business unit !");
-        }else if (selectedManager === null) {
+        } else if (selectedManager === null) {
           setConfirmError("You should assign this user to a Manager !");
         } else {
           const result5 = await dispatch(
-            editTeamMemberManager(row.row.id, { manager: selectedManager })
+            editTeamMemberManager(row.row.id, { manager: selectedManager._id })
           );
           if (result5.success) {
             setselectedManager(null);
           }
 
           const result6 = await dispatch(
-            editTeamMemberBu(row.row.id, { businessUnit: selectedBU })
+            editTeamMemberBu(row.row.id, { businessUnit: selectedBU._id })
           );
           if (result6.success) {
             setselectedBU(null);
@@ -425,11 +460,18 @@ const ReviewAccounts = () => {
               <ListItemText primary="Suspend account" />
             </MenuItem>
           )}
-          <MenuItem onClick={() => handleClose("Modify")}>
+          <MenuItem onClick={() => handleClose("ModifyBU")}>
             {" "}
             <ListItemIcon>✏️</ListItemIcon>
             <ListItemText primary="Modify business unit" />
           </MenuItem>
+          {row.row.role === "Consultant" && (
+            <MenuItem onClick={() => handleClose("ModifyManager")}>
+              {" "}
+              <ListItemIcon>✏️</ListItemIcon>
+              <ListItemText primary="Modify manager" />
+            </MenuItem>
+          )}
         </Menu>
         <Dialog open={openConfirm} onClose={() => setOpenConfirm(false)}>
           <DialogTitle>Confirm Account</DialogTitle>
@@ -565,6 +607,124 @@ const ReviewAccounts = () => {
               variant="contained"
             >
               Confirm account
+            </Button>
+          </DialogActions>
+        </Dialog>
+        <Dialog
+          open={openModifyManagerConfirm}
+          onClose={() => setOpenModifyManagerConfirm(false)}
+        >
+          <DialogTitle>Modify manager</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              {" "}
+              You're about to update the consultant manager's information
+              <Autocomplete
+                fullWidth
+                options={teamManagers}
+                getOptionLabel={(option) =>
+                  typeof option === "string"
+                    ? option
+                    : "Manager id : " +
+                        option?._id +
+                        ", nom : " +
+                        option?.fullName || ""
+                }
+                isOptionEqualToValue={(option, value) =>
+                  option?._id === value?._id
+                }
+                value={
+                  teamManagers.find((p) => p._id === selectedManager?._id) ||
+                  null
+                }
+                onChange={(event, newValue) => {
+                  setselectedManager(newValue);
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Manager"
+                    name="Manager"
+                    variant="filled"
+                  />
+                )}
+                sx={{ gridColumn: "span 2" }}
+              />
+              {confirmError !== null && (
+                <Box color={"red"}> {confirmError} </Box>
+              )}
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={() => setOpenModifyManagerConfirm(false)}
+              color="secondary"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleModifyManagerConfirmation}
+              color="success"
+              variant="contained"
+            >
+              Confirm manager
+            </Button>
+          </DialogActions>
+        </Dialog>
+        <Dialog
+          open={openModifyBUConfirm}
+          onClose={() => setOpenModifyBUConfirm(false)}
+        >
+          <DialogTitle>Modify Business Unit</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              {" "}
+              You're about to update the consultant Business Unit's information
+              <Autocomplete
+                fullWidth
+                options={businessUnits}
+                getOptionLabel={(option) =>
+                  typeof option === "string"
+                    ? option
+                    : option?.code + " : " + option?.name || ""
+                }
+                isOptionEqualToValue={(option, value) =>
+                  option?._id === value?._id
+                }
+                value={
+                  businessUnits.find((p) => p._id === selectedBU?._id) || null
+                }
+                onChange={(event, newValue) => {
+                  setselectedBU(newValue);
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Business Unit"
+                    name="BusinessUnit"
+                    variant="filled"
+                  />
+                )}
+                sx={{ gridColumn: "span 2" }}
+              />
+              {confirmError !== null && (
+                <Box color={"red"}> {confirmError} </Box>
+              )}
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={() => setOpenModifyBUConfirm(false)}
+              color="secondary"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleModifyBUConfirmation}
+              color="success"
+              variant="contained"
+            >
+              Confirm business unit
             </Button>
           </DialogActions>
         </Dialog>
