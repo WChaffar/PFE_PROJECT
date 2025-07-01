@@ -132,6 +132,24 @@ export const editTeamMemberValidation = (id,valeurs) => async (dispatch) => {
     }
   };
 
+      // edit team member
+export const editTeamMemberManager = (id,valeurs) => async (dispatch) => {
+    try {
+      const data = await TeamService.editTeamMemberManager(id,valeurs);
+      dispatch({
+        type: 'EDIT_TEAM_MEMBER_MANAGER_SUCCESS',
+        payload: { data },
+      });
+      return { success: true }; // ✅ return success
+    } catch (error) {
+      dispatch({
+        type: 'EDIT_TEAM_MEMBER_MANAGER_FAILURE',
+        payload: error.response?.data?.message || "Edit team member's account validation failed",
+      });
+      return { success: false }; // ✅ return failure
+    }
+  };
+
 
   // create Project
 export const teamReset = () => async (dispatch) => {

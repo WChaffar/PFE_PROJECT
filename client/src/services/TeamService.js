@@ -73,6 +73,14 @@ const editTeamMemberValidation = (id, data) => {
     });
 };
 
+const editTeamMemberManager = (id, data) => {
+  return axios
+    .put(base_url + `team/editOne/manager/${id}`, data, getConfig())
+    .then((response) => {
+      return response.data;
+    });
+};
+
 
 const TeamService = {
   createTeamMember,
@@ -81,7 +89,8 @@ const TeamService = {
   deleteTeamMember,
   editTeamMember,
   editTeamMemberBU,
-  editTeamMemberValidation
+  editTeamMemberValidation,
+  editTeamMemberManager
 };
 
 export default TeamService;

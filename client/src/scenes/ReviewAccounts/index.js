@@ -36,6 +36,7 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   deleteTeamMember,
   editTeamMemberBu,
+  editTeamMemberManager,
   editTeamMemberValidation,
   getAllTeamMembers,
 } from "../../actions/teamAction";
@@ -123,6 +124,7 @@ const ReviewAccounts = () => {
   const [totalPending, setTotalPending] = useState("...");
   const [totalConfirmed, setTotalConfirmed] = useState("...");
   const [businessUnits, setBusinessUnits] = useState([]);
+  const [teamManagers, setTeamManagers] = useState([]);
   const selectedBusinessUnits = useSelector(
     (state) => state.businessUnit.businessUnit
   );
@@ -148,6 +150,7 @@ const ReviewAccounts = () => {
         status:
           member?.Activated === true ? "Confirmed" : "Waiting for validation",
         businessUnit: member?.businessUnit,
+        manager: member?.manager,
       }));
       setTeamMembers(teamMembersMap);
       // Count activated and deactivated members
@@ -159,6 +162,10 @@ const ReviewAccounts = () => {
       )?.length;
       setTotalPending(pendingCount);
       setTotalConfirmed(confirmedCount);
+      const teamManagersMap = selectedTeamMembers?.filter(
+        (member) => member.role === "Manager"
+      );
+      setTeamManagers(teamManagersMap);
     }
   }, [selectedTeamMembers]); // <== Écoute les changements de selectedProjects
 
@@ -247,6 +254,14 @@ const ReviewAccounts = () => {
       },
     },
     {
+      field: "manager",
+      headerName: "Manager",
+      flex: 1,
+      renderCell: ({ row }) => {
+        return <Box key={row?.id}>{row?.manager?.fullName}</Box>;
+      },
+    },
+    {
       field: "actions",
       headerName: "Actions",
       sortable: false,
@@ -296,9 +311,10 @@ const ReviewAccounts = () => {
 
     const handleConfirmation = async () => {
       if (
-        row.row.businessUnit === undefined ||
-        row.row.businessUnit === null ||
-        row.row.businessUnit === ""
+        (row.row.businessUnit === undefined ||
+          row.row.businessUnit === null ||
+          row.row.businessUnit === "") &&
+        (row.row.role === "Manager" || row.row.role === "BUDirector")
       ) {
         if (selectedBU === null) {
           setConfirmError("You should assign this user to a business unit !");
@@ -308,13 +324,50 @@ const ReviewAccounts = () => {
             editTeamMemberBu(row.row.id, { businessUnit: selectedBU._id })
           );
           if (result.success) {
+            setselectedBU(null);
             console.log("Business unit modified with success");
           }
           const result2 = await dispatch(
             editTeamMemberValidation(row.row.id, { Activated: true })
           );
           if (result2.success) {
+            setselectedBU(null);
             console.log("This account is active now");
+          }
+        }
+      } else if (
+        (row.row.businessUnit === undefined ||
+          row.row.businessUnit === null ||
+          row.row.businessUnit === "") &&
+        (row.row.manager === null ||
+          row.row.manager === undefined ||
+          row.row.manager === "") &&
+        row.row.role === "Consultant"
+      ) {
+        if (selectedBU === null) {
+          setConfirmError("You should assign this user to a business unit !");
+        }else if (selectedManager === null) {
+          setConfirmError("You should assign this user to a Manager !");
+        } else {
+          const result5 = await dispatch(
+            editTeamMemberManager(row.row.id, { manager: selectedManager })
+          );
+          if (result5.success) {
+            setselectedManager(null);
+          }
+
+          const result6 = await dispatch(
+            editTeamMemberBu(row.row.id, { businessUnit: selectedBU })
+          );
+          if (result6.success) {
+            setselectedBU(null);
+          }
+
+          const result7 = await dispatch(
+            editTeamMemberValidation(row.row.id, { Activated: true })
+          );
+          if (result7.success) {
+            setselectedBU(null);
           }
         }
       } else {
@@ -322,6 +375,7 @@ const ReviewAccounts = () => {
           editTeamMemberValidation(row.row.id, { Activated: true })
         );
         if (result3.success) {
+          setselectedBU(null);
           console.log("This account is active now");
         }
       }
@@ -385,13 +439,6 @@ const ReviewAccounts = () => {
               your confirmation.{" "}
             </DialogContentText>
             {row.row.status === "Waiting for validation" &&
-              row.row.role === "Collaborator" && (
-                <DialogContentText>
-                  Before confirmation, ensure that this collaborator is assigned
-                  to a business unit and has a designated manager :
-                </DialogContentText>
-              )}
-            {row.row.status === "Waiting for validation" &&
               (row.row.role === "Manager" || row.row.role === "BUDirector") &&
               (!row.row.businessUnit ||
                 (typeof row.row.businessUnit === "object" &&
@@ -421,7 +468,7 @@ const ReviewAccounts = () => {
                     renderInput={(params) => (
                       <TextField
                         {...params}
-                        label="BusinessUnit"
+                        label="Business Unit"
                         name="BusinessUnit"
                         variant="filled"
                       />
@@ -463,8 +510,40 @@ const ReviewAccounts = () => {
                     renderInput={(params) => (
                       <TextField
                         {...params}
-                        label="BusinessUnit"
+                        label="Business Unit"
                         name="BusinessUnit"
+                        variant="filled"
+                      />
+                    )}
+                    sx={{ gridColumn: "span 2" }}
+                  />
+                  <Autocomplete
+                    fullWidth
+                    options={teamManagers}
+                    getOptionLabel={(option) =>
+                      typeof option === "string"
+                        ? option
+                        : "Manager id : " +
+                            option?._id +
+                            ", nom : " +
+                            option?.fullName || ""
+                    }
+                    isOptionEqualToValue={(option, value) =>
+                      option?._id === value?._id
+                    }
+                    value={
+                      teamManagers.find(
+                        (p) => p._id === selectedManager?._id
+                      ) || null
+                    }
+                    onChange={(event, newValue) => {
+                      setselectedManager(newValue);
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Manager"
+                        name="Manager"
                         variant="filled"
                       />
                     )}

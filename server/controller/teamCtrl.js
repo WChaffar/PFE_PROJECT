@@ -41,7 +41,7 @@ const createTeamMember = [
 const getAllUsers = asyncHandler(async (req, res) => {
   const users = await User.find({ role: { $ne: "RH" } })
     .select("-password -refreshToken")
-    .populate("businessUnit");
+    .populate("businessUnit manager");
 
   if (users.length === 0) {
     res.status(404).json({ message: "No users found." });
@@ -140,7 +140,7 @@ const editTeamMemberBU = asyncHandler(async (req, res) => {
       { new: true }
     )
       .select("-password -refreshToken")
-      .populate("businessUnit");
+      .populate("businessUnit manager");
     if (!teamMember) {
       throw new Error(
         "Team member not found or you do not have permission to edit it."
@@ -166,7 +166,7 @@ const updateUserValidation = asyncHandler(async (req, res) => {
       { new: true }
     )
       .select("-password -refreshToken")
-      .populate("businessUnit");
+      .populate("businessUnit manager");
     if (!teamMember) {
       throw new Error(
         "Team member not found or you do not have permission to edit it."
@@ -188,7 +188,7 @@ const getUsersByRole = asyncHandler(async (req, res) => {
   const { role } = req.params;
   const users = await User.find({ role: role })
     .select("-password -refreshToken")
-    .populate("businessUnit");
+    .populate("businessUnit manager");
 
   if (users.length === 0) {
     res.status(404).json({ message: "No users found." });
@@ -198,6 +198,34 @@ const getUsersByRole = asyncHandler(async (req, res) => {
   res.status(200).json(users);
 });
 
+const updateUserManager = asyncHandler(async (req, res) => {
+  try {
+    const id = new mongoose.Types.ObjectId(req.params.id);
+    validateMongoDbId(id);
+    const teamMember = await User.findOneAndUpdate(
+      { _id: id },
+      { ...req.body },
+      { new: true }
+    )
+      .select("-password -refreshToken")
+      .populate("businessUnit manager");
+    if (!teamMember) {
+      throw new Error(
+        "Team member not found or you do not have permission to edit it."
+      );
+    }
+
+    res.status(200).json({
+      message:
+        "The team member's manager has been updated successfully.",
+      data: teamMember,
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+
 module.exports = {
   createTeamMember,
   getOneTeamMember,
@@ -206,5 +234,6 @@ module.exports = {
   getAllUsers,
   editTeamMemberBU,
   updateUserValidation,
-  getUsersByRole
+  getUsersByRole,
+  updateUserManager
 };
