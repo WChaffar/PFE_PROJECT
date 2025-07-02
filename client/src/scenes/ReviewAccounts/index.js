@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import {
   Alert,
   Autocomplete,
+  Avatar,
   Box,
   Dialog,
   DialogActions,
@@ -11,6 +12,7 @@ import {
   IconButton,
   ListItemIcon,
   ListItemText,
+  Stack,
   TextField,
   Typography,
   useTheme,
@@ -125,9 +127,47 @@ const ReviewAccounts = () => {
   const [totalConfirmed, setTotalConfirmed] = useState("...");
   const [businessUnits, setBusinessUnits] = useState([]);
   const [teamManagers, setTeamManagers] = useState([]);
+  const [confirmedAccounts,setConfirmedAccounts ] = useState([]);
+  const [pendingAccounts,setPendingAccounts ] = useState([]);
+
   const selectedBusinessUnits = useSelector(
     (state) => state.businessUnit.businessUnit
   );
+
+ const AccountsAvatars = ({ accounts }) => {
+  const visibleAccounts = accounts?.slice(0, 3) || [];
+
+  const getInitials = (fullName) => {
+    if (!fullName) return '';
+    return fullName
+      .split(' ')
+      .map((word) => word[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase();
+  };
+
+  return (
+    <Stack direction="row" spacing={-1}>
+      {visibleAccounts.map((member, index) => {
+        const hasPicture = member?.profilePicture?.trim();
+        const initials = getInitials(member?.fullName);
+
+        return (
+          <Avatar
+            key={index}
+            src={hasPicture || undefined}
+            alt={member?.fullName}
+            sx={{ width: 40, height: 40, fontWeight: 600 }}
+          >
+            {!hasPicture && initials}
+          </Avatar>
+        );
+      })}
+    </Stack>
+  );
+};
+
 
   useEffect(() => {
     if (selectedBusinessUnits.length !== 0) {
@@ -166,6 +206,15 @@ const ReviewAccounts = () => {
         (member) => member.role === "Manager"
       );
       setTeamManagers(teamManagersMap);
+        // activated and deactivated members
+      const confirmedC = selectedTeamMembers?.filter(
+        (member) => member?.Activated === true
+      );
+      const pendingC = selectedTeamMembers?.filter(
+        (member) => member?.Activated === false
+      );
+      setConfirmedAccounts(confirmedC);
+      setPendingAccounts(pendingC);
     }
   }, [selectedTeamMembers]); // <== Écoute les changements de selectedProjects
 
@@ -772,19 +821,8 @@ const ReviewAccounts = () => {
             {totalConfirmed}
           </Typography>
           <Typography>Confirmed accounts</Typography>
-          <Box mt={2} display="flex">
-            <img
-              src="https://i.pravatar.cc/40?img=1"
-              style={{ borderRadius: "50%" }}
-            />
-            <img
-              src="https://i.pravatar.cc/40?img=2"
-              style={{ borderRadius: "50%", marginLeft: -10 }}
-            />
-            <img
-              src="https://i.pravatar.cc/40?img=3"
-              style={{ borderRadius: "50%", marginLeft: -10 }}
-            />
+          <Box >
+            <AccountsAvatars accounts={confirmedAccounts} />
           </Box>
         </Box>
 
@@ -802,15 +840,8 @@ const ReviewAccounts = () => {
             {totalPending}
           </Typography>
           <Typography>Waiting for validation</Typography>
-          <Box mt={2} display="flex">
-            <img
-              src="https://i.pravatar.cc/40?img=4"
-              style={{ borderRadius: "50%" }}
-            />
-            <img
-              src="https://i.pravatar.cc/40?img=5"
-              style={{ borderRadius: "50%", marginLeft: -10 }}
-            />
+          <Box>
+            <AccountsAvatars accounts={pendingAccounts} />
           </Box>
         </Box>
       </Box>
