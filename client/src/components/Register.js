@@ -144,8 +144,8 @@ const RegisterForm = () => {
               <br />
               <div role="group" className="form-group">
                 <label>
-                  <Field type="radio" name="role" value="Consultant" />
-                  Consultant
+                  <Field type="radio" name="role" value="Employee" />
+                  Employee
                 </label>
                 <label>
                   <Field type="radio" name="role" value="Manager" />

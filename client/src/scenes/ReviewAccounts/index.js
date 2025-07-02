@@ -366,7 +366,7 @@ const ReviewAccounts = () => {
     };
 
     const handleModifyManagerConfirmation = async () => {
-      if (row.row.role === "Consultant") {
+      if (row.row.role === "Employee") {
         if (selectedManager === null) {
           setConfirmError("You should assign this user to a Manager !");
         } else {
@@ -426,7 +426,7 @@ const ReviewAccounts = () => {
         (row.row.manager === null ||
           row.row.manager === undefined ||
           row.row.manager === "") &&
-        row.row.role === "Consultant"
+        row.row.role === "Employee"
       ) {
         if (selectedBU === null) {
           setConfirmError("You should assign this user to a business unit !");
@@ -514,7 +514,7 @@ const ReviewAccounts = () => {
             <ListItemIcon>✏️</ListItemIcon>
             <ListItemText primary="Modify business unit" />
           </MenuItem>
-          {row.row.role === "Consultant" && (
+          {row.row.role === "Employee" && (
             <MenuItem onClick={() => handleClose("ModifyManager")}>
               {" "}
               <ListItemIcon>✏️</ListItemIcon>
@@ -572,7 +572,7 @@ const ReviewAccounts = () => {
                 </DialogContentText>
               )}
             {row.row.status === "Waiting for validation" &&
-              row.row.role === "Consultant" &&
+              row.row.role === "Employee" &&
               (!row.row.businessUnit ||
                 (typeof row.row.businessUnit === "object" &&
                   Object.keys(row.row.businessUnit).length < 1) ||
