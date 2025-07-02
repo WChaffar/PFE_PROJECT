@@ -13,7 +13,7 @@ const createBu = (data) => {
 };
 
 
-const getAllBu = (data) => {
+const getAllBu = () => {
   return axios
     .get(base_url + "BusinessUnit/getAllBu",
      getConfig()
@@ -23,9 +23,38 @@ const getAllBu = (data) => {
     })
 };
 
+
+const updateBu = (id, data) => {
+  return axios
+    .put(base_url + `BusinessUnit/updateBusinessUnit/${id}`,data,
+     getConfig()
+    )
+    .then((response) => {
+      return response.data;
+    })
+};
+
+const getBuById = (id) => {
+  return axios
+    .get(base_url + `BusinessUnit/getBuById/${id}`,getConfig())
+    .then((response) => {
+      return response.data;
+    })
+};
+const deleteBuById = (id) => {
+  return axios
+    .delete(base_url + `BusinessUnit/deleteBuById/${id}`,getConfig())
+    .then((response) => {
+      return response.data;
+    })
+};
+
 const BuService = {
     createBu,
-    getAllBu
+    getAllBu,
+    updateBu,
+    getBuById,
+    deleteBuById
   }
   
 

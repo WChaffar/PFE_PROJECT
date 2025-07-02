@@ -38,6 +38,7 @@ import AwaitingValidation from "./components/AwaitingValidation";
 import ReviewAccounts from "./scenes/ReviewAccounts";
 import ReviewBU from "./scenes/ReviewBU";
 import CreateBUForm from "./scenes/AddBuForm";
+import ModifyBUForm from "./scenes/ModifyBuForm";
 
 function PrivateRoute({ children }) {
   const isAuthenticated = useSelector((state) => state.auth?.isAuthenticated);
@@ -290,6 +291,16 @@ function AppContent() {
                   element={
                     <PrivateRoute>
                       <CreateBUForm />
+                    </PrivateRoute>
+                  }
+                />
+              )}
+              {user?.role === "RH" && (
+                <Route
+                  path="/modify-bu/:id"
+                  element={
+                    <PrivateRoute>
+                      <ModifyBUForm />
                     </PrivateRoute>
                   }
                 />

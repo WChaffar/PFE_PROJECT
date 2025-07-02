@@ -42,3 +42,59 @@ export const getBU = (values) => async (dispatch) => {
       return { success: false }; // ✅ return failure
     }
   };
+
+
+  // update Business Unit
+export const updateBu = (id,values) => async (dispatch) => {
+    try {
+      const data = await BuService.updateBu(id,values);
+      dispatch({
+        type: 'EDIT_BUSINESS_UNIT_SUCCESS',
+        payload: { data },
+      });
+      return { success: true }; // ✅ return success
+    } catch (error) {
+      dispatch({
+        type: 'EDIT_BUSINESS_UNIT_FAILURE',
+        payload: error.response?.data?.message || 'edit Business Unit failed',
+      });
+      return { success: false }; // ✅ return failure
+    }
+  };
+
+
+    // get Business Unit by id
+export const getBuById = (id,values) => async (dispatch) => {
+    try {
+      const data = await BuService.getBuById(id);
+      dispatch({
+        type: 'GET_BUSINESS_UNIT_BY_ID_SUCCESS',
+        payload: { data },
+      });
+      return { success: true }; // ✅ return success
+    } catch (error) {
+      dispatch({
+        type: 'GET_BUSINESS_UNIT_BY_ID_FAILURE',
+        payload: error.response?.data?.message || 'get Business Unit by id failed',
+      });
+      return { success: false }; // ✅ return failure
+    }
+  };
+
+      // get Business Unit by id
+export const deleteBuById = (id,values) => async (dispatch) => {
+    try {
+      const data = await BuService.deleteBuById(id);
+      dispatch({
+        type: 'DELETE_BUSINESS_UNIT_BY_ID_SUCCESS',
+        payload: { data },
+      });
+      return { success: true }; // ✅ return success
+    } catch (error) {
+      dispatch({
+        type: 'DELETE_BUSINESS_UNIT_BY_ID_FAILURE',
+        payload: error.response?.data?.message || 'delete Business Unit by id failed',
+      });
+      return { success: false }; // ✅ return failure
+    }
+  };

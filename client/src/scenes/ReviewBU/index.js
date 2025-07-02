@@ -18,7 +18,6 @@ import {
   GridCheckCircleIcon,
   renderActionsCell,
 } from "@mui/x-data-grid";
-import { teamMembersData } from "../../data/TeamData"; // <- Créez ce fichier
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { tokens } from "../../theme";
 import {
@@ -31,10 +30,13 @@ import {
 import { Menu, MenuItem, Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { deleteTeamMember, getAllTeamMembers } from "../../actions/teamAction";
 import { BACKEND_URL } from "../../config/ServerConfig";
 import BlockIcon from "@mui/icons-material/Block";
-import { getBU } from "../../actions/businessUnitAction";
+import {
+  deleteBuById,
+  getBU,
+  updateBu,
+} from "../../actions/businessUnitAction";
 import { format } from "date-fns";
 
 const NameCell = ({ row, theme }) => {
@@ -111,7 +113,7 @@ const ReviewBU = () => {
   const [businessUnits, setBusinessUnits] = useState([]);
   const [openSnackbar, setOpenSnackbar] = React.useState(false); // Snackbar state
   const [snackbarMessage, setSnackbarMessage] = React.useState(""); // Message for Snackbar
-  const error = useSelector((state) => state.team.error);
+  const error = useSelector((state) => state.businessUnit.error);
   const [errorState, setErrorState] = useState(null);
   const [totalPending, setTotalPending] = useState("...");
   const [totalConfirmed, setTotalConfirmed] = useState("...");
@@ -146,7 +148,6 @@ const ReviewBU = () => {
 
   useEffect(() => {
     if (error !== null) {
-      console.log("hey");
       setErrorState(error);
       setSnackbarMessage(error); // Set success message
       setOpenSnackbar(true); // Show Snackbar
@@ -186,14 +187,12 @@ const ReviewBU = () => {
     },
   ];
 
-  const filteredData = teamMembersData.filter((member) =>
-    member.name.toLowerCase().includes(search.toLowerCase())
-  );
-
   const ActionsMenu = ({ row }) => {
     const [anchorEl, setAnchorEl] = React.useState(null);
     const open = Boolean(anchorEl);
-    const [openConfirm, setOpenConfirm] = React.useState(false);
+    const [activateOpenConfirm, setActivateOpenConfirm] = React.useState(false);
+    const [disableOpenConfirm, setDisableOpenConfirm] = React.useState(false);
+    const [deleteOpenConfirm, setDeleteOpenConfirm] = React.useState(false);
 
     const handleClick = (event) => {
       setAnchorEl(event.currentTarget);
@@ -203,29 +202,52 @@ const ReviewBU = () => {
     };
 
     const handleClose = (action) => {
-      if (action === "Edit") {
+      if (action === "Modify") {
         // handle edit logic here
-        navigate(`/team/${row.id}/edit`);
+        navigate(`/modify-bu/${row.row.id}`);
+      }
+      if (action === "Activate") {
+        // handle delete logic here
+        setActivateOpenConfirm(true); // Show confirmation dialog
+      }
+      if (action === "Disable") {
+        // handle details logic here
+        setDisableOpenConfirm(true); // Show confirmation dialog
       }
       if (action === "Delete") {
-        // handle delete logic here
-        setOpenConfirm(true); // Show confirmation dialog
-      }
-      if (action === "Details") {
         // handle details logic here
-        navigate(`/team/${row.id}/profile`);
+        setDeleteOpenConfirm(true); // Show confirmation dialog
       }
       setAnchorEl(null);
     };
 
-    const handleConfirmDelete = async () => {
-      const result = await dispatch(deleteTeamMember(row.id));
+    const handleActivateConfirm = async () => {
+      const result = await dispatch(updateBu(row.row.id, { isActive: true }));
       if (result.success) {
-        setSnackbarMessage("Task deleted successfully!"); // Set success message
-        setOpenSnackbar(true); // Show Snackbar
-        console.log("delete with success");
+        setSnackbarMessage("Business unit successfully activated !"); // Set success message
+        setOpenSnackbar(true); // Show Snackbars
       }
-      setOpenConfirm(false);
+      setActivateOpenConfirm(false);
+      handleCloseMenu();
+    };
+
+    const handleDisableConfirm = async () => {
+      const result = await dispatch(updateBu(row.row.id, { isActive: false }));
+      if (result.success) {
+        setSnackbarMessage("Business unit successfully disabled !"); // Set success message
+        setOpenSnackbar(true); // Show Snackbars
+      }
+      setActivateOpenConfirm(false);
+      handleCloseMenu();
+    };
+
+    const handleConfirmDelete = async () => {
+      const result = await dispatch(deleteBuById(row.id));
+      if (result.success) {
+        setSnackbarMessage("Business Unit deleted successfully!"); // Set success message
+        setOpenSnackbar(true); // Show Snackbar
+      }
+      setDeleteOpenConfirm(false);
       handleCloseMenu();
     };
     return (
@@ -248,36 +270,99 @@ const ReviewBU = () => {
             },
           }}
         >
-          <MenuItem onClick={() => handleClose("Validate")}>
-            <ListItemIcon>
-              <GridCheckCircleIcon fontSize="small" />
-            </ListItemIcon>
-            <ListItemText primary="Validate account" />
-          </MenuItem>
-          <MenuItem onClick={() => handleClose("Suspend")}>
-            <ListItemIcon>
-              <BlockIcon fontSize="small" />
-            </ListItemIcon>
-            <ListItemText primary="Suspend account" />
-          </MenuItem>
-          <MenuItem onClick={() => handleClose("Validate")}>
-            {" "}
+          <MenuItem onClick={() => handleClose("Modify")}>
             <ListItemIcon>✏️</ListItemIcon>
-            <ListItemText primary="Modify account" />
+            <ListItemText primary="Modify business unit" />
           </MenuItem>
+          {!row.row.isActive && (
+            <MenuItem onClick={() => handleClose("Activate")}>
+              <ListItemIcon>
+                <GridCheckCircleIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText primary="Activate Business Unit" />
+            </MenuItem>
+          )}
+          {row.row.isActive && (
+            <MenuItem onClick={() => handleClose("Disable")}>
+              <ListItemIcon>
+                <BlockIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText primary="Disable the Business Unit" />
+            </MenuItem>
+          )}
+          <MenuItem onClick={() => handleClose("Delete")}>🗑️ Delete</MenuItem>
         </Menu>
-        <Dialog open={openConfirm} onClose={() => setOpenConfirm(false)}>
+        <Dialog
+          open={activateOpenConfirm}
+          onClose={() => setActivateOpenConfirm(false)}
+        >
           <DialogTitle>Confirm Deletion</DialogTitle>
           <DialogContent>
             <DialogContentText>
-              Are you sure you want to delete the team member{" "}
-              <strong>{row.name}</strong>?<br />
-              This action can have significant consequences, including affecting
-              team assignments, projects, and linked data. Proceed with caution.
+              Are you sure you want to activate the business unit ?
             </DialogContentText>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setOpenConfirm(false)} color="secondary">
+            <Button
+              onClick={() => setActivateOpenConfirm(false)}
+              color="secondary"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleActivateConfirm}
+              color="primary"
+              variant="contained"
+            >
+              Activate
+            </Button>
+          </DialogActions>
+        </Dialog>
+        <Dialog
+          open={disableOpenConfirm}
+          onClose={() => setDisableOpenConfirm(false)}
+        >
+          <DialogTitle>Confirm Deletion</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Are you sure you want to disbale the business unit ?
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={() => setDisableOpenConfirm(false)}
+              color="secondary"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleDisableConfirm}
+              color="primary"
+              variant="contained"
+            >
+              Disbale
+            </Button>
+          </DialogActions>
+        </Dialog>
+        <Dialog
+          open={deleteOpenConfirm}
+          onClose={() => setDeleteOpenConfirm(false)}
+        >
+          <DialogTitle>Confirm Deletion</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Are you sure you want to delete the business unit{" "}
+              <strong>{row.name}</strong>?<br />
+              This action can have significant consequences. All accounts
+              assigned to this business unit will be inaccessible until they are
+              assigned to a new business unit.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={() => setDeleteOpenConfirm(false)}
+              color="secondary"
+            >
               Cancel
             </Button>
             <Button
