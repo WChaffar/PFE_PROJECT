@@ -26,6 +26,8 @@ import SummarizeIcon from "@mui/icons-material/Summarize";
 import logo from "../../img/SopraHR_Noir.png";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../../actions/authAction";
+import EventBusyOutlinedIcon from "@mui/icons-material/EventBusyOutlined";
+import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
 
 const Item = ({ title, to, icon, selected, setSelected }) => {
   const theme = useTheme();
@@ -253,6 +255,42 @@ const Sidebar = () => {
                 title="Add and review BU "
                 to="/add-review-bu"
                 icon={<BusinessOutlinedIcon />}
+                selected={selected}
+                setSelected={setSelected}
+              />
+              {/* Logout */}
+              <MenuItem
+                onClick={logOut}
+                style={{
+                  color: colors.grey[100],
+                  marginTop: "20px",
+                }}
+                icon={<ExitToAppIcon />}
+              >
+                <Typography>Logout</Typography>
+              </MenuItem>
+            </Box>
+          )}
+          {user?.role === "Employee" && (
+            <Box paddingLeft={isCollapsed ? undefined : "10%"}>
+              <Typography
+                variant="h6"
+                color={colors.grey[300]}
+                sx={{ m: "15px 0 5px 20px" }}
+              >
+                Absences and Assignments
+              </Typography>
+              <Item
+                title="My absences"
+                to="/my-absences"
+                icon={<EventBusyOutlinedIcon />}
+                selected={selected}
+                setSelected={setSelected}
+              />
+              <Item
+                title="My assignments"
+                to="/my-assignments"
+                icon={<AssignmentOutlinedIcon />}
                 selected={selected}
                 setSelected={setSelected}
               />

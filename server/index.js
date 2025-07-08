@@ -14,6 +14,7 @@ const teamRouter = require("./routes/teamRoute");
 const taskRouter = require("./routes/taskRoute");
 const assignementRouter = require("./routes/assignementRoute");
 const BusinessUnitRouter = require("./routes/BusinessUnitRoute");
+const AbsenceRouter = require("./routes/absenceRoute");
 
 const path = require("path");
 
@@ -30,6 +31,7 @@ app.use("/api/team",teamRouter);
 app.use("/api/task",taskRouter);
 app.use("/api/assignement",assignementRouter);
 app.use("/api/BusinessUnit",BusinessUnitRouter);
+app.use("/api/Absence",AbsenceRouter);
 
 app.use(notFound); 
 app.use(errorHandler);

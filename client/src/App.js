@@ -39,6 +39,9 @@ import ReviewAccounts from "./scenes/ReviewAccounts";
 import ReviewBU from "./scenes/ReviewBU";
 import CreateBUForm from "./scenes/AddBuForm";
 import ModifyBUForm from "./scenes/ModifyBuForm";
+import MyAbsences from "./scenes/MyAbsences";
+import AddAbsence from "./scenes/AddAbsence";
+import EditAbsence from "./scenes/EditAbsence";
 
 function PrivateRoute({ children }) {
   const isAuthenticated = useSelector((state) => state.auth?.isAuthenticated);
@@ -301,6 +304,36 @@ function AppContent() {
                   element={
                     <PrivateRoute>
                       <ModifyBUForm />
+                    </PrivateRoute>
+                  }
+                />
+              )}
+              {user?.role === "Employee" && (
+                <Route
+                  path="/my-absences"
+                  element={
+                    <PrivateRoute>
+                      <MyAbsences />
+                    </PrivateRoute>
+                  }
+                />
+              )}
+              {user?.role === "Employee" && (
+                <Route
+                  path="/add-absence"
+                  element={
+                    <PrivateRoute>
+                      <AddAbsence />
+                    </PrivateRoute>
+                  }
+                />
+              )}
+              {user?.role === "Employee" && (
+                <Route
+                  path="/edit-my-absence/:id"
+                  element={
+                    <PrivateRoute>
+                      <EditAbsence />
                     </PrivateRoute>
                   }
                 />
