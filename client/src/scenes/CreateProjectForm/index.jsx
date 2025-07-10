@@ -5,9 +5,9 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import Header from "../../components/Header";
 import { tokens } from "../../theme";
 import { useDispatch, useSelector } from "react-redux";
-import { createProject } from "../../actions/projectAction";
+import { createProject, reset, resetProjectState } from "../../actions/projectAction";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const CreateProjectForm = () => {
   const isNonMobile = useMediaQuery("(min-width:600px)");
@@ -17,6 +17,11 @@ const CreateProjectForm = () => {
   const navigate = useNavigate();
   const error = useSelector((state) => state.projects.error);
   const [success, setSuccess] = useState(null);
+
+  useEffect(() => {
+    dispatch(resetProjectState())
+  }, [dispatch])
+  
 
   const handleFormSubmit = async (values) => {
     const result = await dispatch(createProject(values));

@@ -22,7 +22,7 @@ import isBetween from "dayjs/plugin/isBetween";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { BACKEND_URL } from "../../config/ServerConfig";
-import { getAllTeamMembers } from "../../actions/teamAction";
+import { getAllTeamMembers, getAllTeamMembersForManager } from "../../actions/teamAction";
 
 dayjs.extend(isBetween);
 
@@ -78,7 +78,7 @@ const StaffingCalendar = () => {
   }, [selectedTeamMembers]); // <== Écoute les changements de selectedProjects
 
   useEffect(() => {
-    dispatch(getAllTeamMembers());
+    dispatch(getAllTeamMembersForManager());
   }, [dispatch]); // <== Appelle une seule fois le fetch
 
   const daysToShow = 14; // 2 weeks

@@ -39,6 +39,24 @@ export const getAllTeamMembers = () => async (dispatch) => {
 };
 
 
+  // create Project
+export const getAllTeamMembersForManager = () => async (dispatch) => {
+  try {
+    const data = await TeamService.getTeamMembersForManager();
+    dispatch({
+      type: 'GET_TEAM_MEMBERS_SUCCESS',
+      payload: { data },
+    });
+    return { success: true }; // ✅ return success
+  } catch (error) {
+    dispatch({
+      type: 'GET_TEAM_MEMBERS_FAILURE',
+      payload: error.response?.data?.message || 'Get team members failed',
+    });
+    return { success: false }; // ✅ return failure
+  }
+};
+
 // get One TEAM Member
 export const getOneTeamMember = (id) => async (dispatch) => {
   try {

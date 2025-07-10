@@ -26,6 +26,12 @@ const getTeamMembers = () => {
   });
 };
 
+const getTeamMembersForManager = () => {
+  return axios.get(base_url + "team/getAll/forManager", getConfig()).then((response) => {
+    return response.data;
+  });
+};
+
 const getOneTeamMember = (id) => {
   return axios
     .get(base_url + `team/getOne/${id}`, getConfig())
@@ -90,7 +96,8 @@ const TeamService = {
   editTeamMember,
   editTeamMemberBU,
   editTeamMemberValidation,
-  editTeamMemberManager
+  editTeamMemberManager,
+  getTeamMembersForManager
 };
 
 export default TeamService;

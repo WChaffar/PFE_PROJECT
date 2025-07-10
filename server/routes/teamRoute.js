@@ -9,7 +9,8 @@ const {
   editTeamMemberBU,
   updateUserValidation,
   getUsersByRole,
-  updateUserManager
+  updateUserManager,
+  getAllTeamForManager
 } = require("../controller/teamCtrl");
 const { authMiddleware } = require("../middlewares/authMiddleware");
 const upload = require("../middlewares/upload");
@@ -23,6 +24,7 @@ router.post(
   createTeamMember
 );
 router.get("/getAll", authMiddleware, getAllUsers);
+router.get("/getAll/forManager", authMiddleware, getAllTeamForManager);
 router.get("/getOne/:id", authMiddleware, getOneTeamMember);
 router.delete("/deleteOne/:id", authMiddleware, deleteOneTeamMemeber);
 router.put(

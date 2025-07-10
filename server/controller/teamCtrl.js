@@ -51,6 +51,26 @@ const getAllUsers = asyncHandler(async (req, res) => {
   res.status(200).json(users);
 });
 
+// Get all users whose role is not "RH"
+const getAllTeamForManager = asyncHandler(async (req, res) => {
+     const users = await User.find({
+      role: { $nin: ["RH", "BUDirector", "Manager"] },
+      manager: req.user._id, // assuming req.user is populated via authentication middleware
+    })
+      .select("-password -refreshToken")
+      .populate("businessUnit manager");
+
+    if (!users || users.length === 0) {
+      return res.status(404).json({ message: "No users found." });
+    }
+  if (users.length === 0) {
+    res.status(404).json({ message: "No users found." });
+    return;
+  }
+
+  res.status(200).json(users);
+});
+
 // get One Project by ID ----------------------------------------------
 
 const getOneTeamMember = asyncHandler(async (req, res) => {
@@ -216,15 +236,13 @@ const updateUserManager = asyncHandler(async (req, res) => {
     }
 
     res.status(200).json({
-      message:
-        "The team member's manager has been updated successfully.",
+      message: "The team member's manager has been updated successfully.",
       data: teamMember,
     });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
 });
-
 
 module.exports = {
   createTeamMember,
@@ -235,5 +253,6 @@ module.exports = {
   editTeamMemberBU,
   updateUserValidation,
   getUsersByRole,
-  updateUserManager
+  updateUserManager,
+  getAllTeamForManager
 };

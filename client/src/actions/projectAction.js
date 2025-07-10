@@ -92,3 +92,10 @@ export const editProject = (id, values) => async (dispatch) => {
     return { success: false, error: error.response.data.message }; // ✅ return failure
   }
 };
+
+// reset
+export const resetProjectState = () => async (dispatch) => {
+    dispatch({
+      type: "RESET_PROJECT_STATE",
+    });
+}

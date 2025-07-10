@@ -71,7 +71,7 @@ const projectReducer = (state = initialState, action) => {
           ...state,
           error: action.payload, // store error message
         };
-    case "RESET":
+    case "RESET_PROJECT_STATE":
       return {
         ...state,
         activeProject: {},

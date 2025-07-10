@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   Alert,
+  Avatar,
   Box,
   Dialog,
   DialogActions,
@@ -8,6 +9,7 @@ import {
   DialogContentText,
   DialogTitle,
   IconButton,
+  Stack,
   Typography,
   useTheme,
 } from "@mui/material";
@@ -25,7 +27,11 @@ import {
 import { Menu, MenuItem, Button } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { deleteTeamMember, getAllTeamMembers } from "../../actions/teamAction";
+import {
+  deleteTeamMember,
+  getAllTeamMembers,
+  getAllTeamMembersForManager,
+} from "../../actions/teamAction";
 import { BACKEND_URL } from "../../config/ServerConfig";
 
 const CustomToolbar = () => {
@@ -72,14 +78,14 @@ const TeamManagement = () => {
   }, [selectedTeamMembers]); // <== Écoute les changements de selectedProjects
 
   useEffect(() => {
-    dispatch(getAllTeamMembers());
+    dispatch(getAllTeamMembersForManager());
   }, [dispatch]); // <== Appelle une seule fois le fetch
 
   useEffect(() => {
     if (openSnackbar) {
       const timer = setTimeout(() => {
         handleSnackbarClose();
-        setErrorState(null)
+        setErrorState(null);
       }, 6000); // 10 secondes
       return () => clearTimeout(timer);
     }
@@ -87,7 +93,7 @@ const TeamManagement = () => {
 
   useEffect(() => {
     if (error !== null) {
-      console.log("hey")
+      console.log("hey");
       setErrorState(error);
       setSnackbarMessage(error); // Set success message
       setOpenSnackbar(true); // Show Snackbar
@@ -100,21 +106,36 @@ const TeamManagement = () => {
       field: "name",
       headerName: "Name",
       flex: 1,
-      renderCell: ({ row }) => (
-        <Box display="flex" alignItems="center" gap={1}>
-          <img
-            src={row.avatar}
-            alt={row.name}
-            style={{ width: 32, height: 32, borderRadius: "50%" }}
-          />
-          <Typography
-            fontSize="0.9rem"
-            color={theme.palette.mode === "dark" ? "white" : "black"} // Couleur dynamique en fonction du mode
-          >
-            {row.name}
-          </Typography>
-        </Box>
-      ),
+      renderCell: ({ row }) => {
+        const getInitials = (fullName) => {
+          if (!fullName) return "";
+          return fullName
+            .split(" ")
+            .map((word) => word[0])
+            .join("")
+            .slice(0, 2)
+            .toUpperCase();
+        };
+        const initials = getInitials(row?.name);
+        return (
+          <Box display="flex" alignItems="center" gap={1}>
+            <Avatar
+              key={row.id}
+              src={row?.profilePicture || undefined}
+              alt={row?.name}
+              sx={{ width: 40, height: 40, fontWeight: 600 }}
+            >
+              {!row?.profilePicture && initials}
+            </Avatar>
+            <Typography
+              fontSize="0.9rem"
+              color={theme.palette.mode === "dark" ? "white" : "black"} // Couleur dynamique en fonction du mode
+            >
+              {row.name}
+            </Typography>
+          </Box>
+        );
+      },
     },
     { field: "role", headerName: "Role", flex: 1 },
     {
@@ -239,7 +260,7 @@ const TeamManagement = () => {
           }}
         >
           <MenuItem onClick={() => handleClose("Edit")}>✏️ Edit</MenuItem>
-          <MenuItem onClick={() => handleClose("Delete")}>🗑️ Delete</MenuItem>
+          {/* <MenuItem onClick={() => handleClose("Delete")}>🗑️ Delete</MenuItem> */}
           <MenuItem onClick={() => handleClose("Details")}>🔍 Details</MenuItem>
         </Menu>
         <Dialog open={openConfirm} onClose={() => setOpenConfirm(false)}>
@@ -273,6 +294,39 @@ const TeamManagement = () => {
     setOpenSnackbar(false); // Close the Snackbar
   };
 
+  const AccountsAvatars = ({ accounts }) => {
+    const visibleAccounts = accounts?.slice(0, 3) || [];
+    const getInitials = (fullName) => {
+      if (!fullName) return "";
+      return fullName
+        .split(" ")
+        .map((word) => word[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase();
+    };
+
+    return (
+      <Stack direction="row" spacing={-1}>
+        {visibleAccounts.map((member, index) => {
+          const hasPicture = member?.avatar?.trim();
+          const initials = getInitials(member?.name);
+
+          return (
+            <Avatar
+              key={index}
+              src={hasPicture || undefined}
+              alt={member?.name}
+              sx={{ width: 40, height: 40, fontWeight: 600 }}
+            >
+              {!hasPicture && initials}
+            </Avatar>
+          );
+        })}
+      </Stack>
+    );
+  };
+
   return (
     <Box p={3} bgcolor={theme.palette.background.default}>
       <Box display="flex" justifyContent="space-between" alignItems="center">
@@ -290,22 +344,6 @@ const TeamManagement = () => {
             Manage Team for better Collaboration.
           </Typography>
         </Box>
-        <Box>
-          <Button
-            sx={{
-              backgroundColor: colors.blueAccent[700],
-              color: colors.grey[100],
-              fontSize: "14px",
-              fontWeight: "bold",
-              padding: "10px 20px",
-            }}
-            onClick={() => {
-              navigate("/team/create");
-            }}
-          >
-            Add Team Member
-          </Button>
-        </Box>
       </Box>
 
       {/* Stat Cards */}
@@ -321,22 +359,11 @@ const TeamManagement = () => {
           alignItems="center"
         >
           <Typography variant="h5" fontWeight="bold">
-            45
+            {teamMemebers?.length}
           </Typography>
           <Typography>Team Members</Typography>
-          <Box mt={2} display="flex">
-            <img
-              src="https://i.pravatar.cc/40?img=1"
-              style={{ borderRadius: "50%" }}
-            />
-            <img
-              src="https://i.pravatar.cc/40?img=2"
-              style={{ borderRadius: "50%", marginLeft: -10 }}
-            />
-            <img
-              src="https://i.pravatar.cc/40?img=3"
-              style={{ borderRadius: "50%", marginLeft: -10 }}
-            />
+          <Box>
+            <AccountsAvatars accounts={teamMemebers} />
           </Box>
         </Box>
 

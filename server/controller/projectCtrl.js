@@ -147,6 +147,7 @@ const editOneProject =[validateProject, asyncHandler(async (req, res) => {
       });
     }
     const { id } = req.params;  // On récupère l'ID du projet dans les paramètres de la requête
+    console.log("project : "+id);
 
     // Validation de l'ID MongoDB
     validateMongoDbId(id);
