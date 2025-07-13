@@ -202,23 +202,36 @@ const StaffingCalendar = () => {
     );
 
     return weeks.map((week, index) => {
-      const taskCount: Record<string, number> = {};
-
+      const taskCount = [];
       // Count tasks per week
       week.forEach((assignment) => {
         const task = assignment.task;
         if (!taskCount[task]) {
           taskCount[task] = 1;
         } else {
-          taskCount[task]++;
+          taskCount[task] = taskCount[task] + 1;
+        }
+        if (assignment?.dayDetails?.length > 0) {
+          assignment?.dayDetails.forEach((day) => {
+            if (
+              format(assignment.date, "yyyy-mm-dd") ===
+              format(day.date, "yyyy-mm-dd")
+            ) {
+              taskCount[task] = taskCount[task] - 0.5;
+            }
+          });
         }
       });
+      let totalAssignedDays = 0;
 
+      for (let cle in taskCount) {
+        if (taskCount.hasOwnProperty(cle)) {
+          totalAssignedDays += taskCount[cle];
+        }
+      }
       return {
         week: `Week ${index + 1}`,
-        totalAssignedDays: new Set(
-          week.map((a) => dayjs(a.date).format("YYYY-MM-DD"))
-        ).size,
+        totalAssignedDays: totalAssignedDays,
         taskBreakdown: taskCount,
       };
     });
@@ -240,11 +253,27 @@ const StaffingCalendar = () => {
       } else {
         taskBreakdown[task]++;
       }
+      if (assignment?.dayDetails?.length > 0) {
+        assignment?.dayDetails.forEach((day) => {
+          if (
+            format(assignment.date, "yyyy-mm-dd") ===
+            format(day.date, "yyyy-mm-dd")
+          ) {
+            taskBreakdown[task] = taskBreakdown[task] - 0.5;
+          }
+        });
+      }
     });
+      let totalAssignedDaysMonth = 0;
 
+      for (let cle in taskBreakdown) {
+        if (taskBreakdown.hasOwnProperty(cle)) {
+          totalAssignedDaysMonth += taskBreakdown[cle];
+        }
+      }
     return {
-      totalAssignedDays,
-      taskBreakdown,
+      totalAssignedDays:totalAssignedDaysMonth,
+      taskBreakdown:taskBreakdown,
     };
   };
 
