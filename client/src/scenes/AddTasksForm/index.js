@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { tokens } from "../../theme";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllProjects } from "../../actions/projectAction";
-import { createTask } from "../../actions/taskAction";
+import { createTask, ResetTaskState } from "../../actions/taskAction";
 import { useNavigate } from "react-router-dom";
 
 const CreateTaskForm = () => {
@@ -34,6 +34,7 @@ const CreateTaskForm = () => {
   }, [selectedProjects]);
 
   useEffect(() => {
+    dispatch(ResetTaskState())
     dispatch(getAllProjects());
   }, [dispatch]);
 

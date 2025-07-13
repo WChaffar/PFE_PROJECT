@@ -22,11 +22,21 @@ const getEmployeeAssignement = (empId) => {
     })
 };
 
+const getAllEmployeesAssignements = () => {
+  return axios
+    .get(base_url + `assignement/getEmployeeAssignements/all`, 
+     getConfig()
+    )
+    .then((response) => {
+      return response.data;
+    })
+};
 
 
 const AssignementService = {
     createAssignement,
-    getEmployeeAssignement
+    getEmployeeAssignement,
+    getAllEmployeesAssignements
    }
    
  

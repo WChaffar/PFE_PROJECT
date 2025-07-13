@@ -13,6 +13,7 @@ import {
   IconButton,
   ToggleButton,
   ToggleButtonGroup,
+  Tooltip,
 } from "@mui/material";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
@@ -22,36 +23,72 @@ import isBetween from "dayjs/plugin/isBetween";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { BACKEND_URL } from "../../config/ServerConfig";
-import { getAllTeamMembers, getAllTeamMembersForManager } from "../../actions/teamAction";
+import {
+  getAllTeamMembers,
+  getAllTeamMembersForManager,
+} from "../../actions/teamAction";
+import { getAllEmployeeAssignements } from "../../actions/assignementsAction";
+import { format } from "date-fns";
 
 dayjs.extend(isBetween);
 
+// const assignments = [
+//   { memberId: "6863df8769346ca165b26978", date: "2025-06-22", task: "TMA" },
+//   {
+//     memberId: "6863df8769346ca165b26978",
+//     date: "2025-06-23",
+//     task: "Projet Client 1",
+//   },
+//   {
+//     memberId: "6863df8769346ca165b26978",
+//     date: "2025-06-24",
+//     task: "Client ee",
+//   },
+//   {
+//     memberId: "6863df8769346ca165b26978",
+//     date: "2025-06-25",
+//     task: "TMA Client 1",
+//   },
+//   {
+//     memberId: "6863df8769346ca165b26978",
+//     date: "2025-06-22",
+//     task: "TMA Client 2",
+//   },
+//   {
+//     memberId: "6863df8769346ca165b26978",
+//     date: "2025-06-23",
+//     task: "TMA Client 2",
+//   },
+//   {
+//     memberId: "6863df8769346ca165b26978",
+//     date: "2025-06-24",
+//     task: "Projet Client 2",
+//   },
+//   {
+//     memberId: "6863df8769346ca165b26978",
+//     date: "2025-06-22",
+//     task: "TMA Client 3",
+//   },
+//   {
+//     memberId: "6863df8769346ca165b26978",
+//     date: "2025-06-23",
+//     task: "TMA Client 2",
+//   },
+//   {
+//     memberId: "6863df8769346ca165b26978",
+//     date: "2025-06-24",
+//     task: "Projet Client 1",
+//   },
+// ];
 
+function getColor(taskName) {
+  if (!taskName) return "#ccc";
 
-const assignments = [
-  { memberId: "6820d9789f2baaeeb93fad6f", date: "2025-06-22", task: "TMA" },
-  { memberId: "6820d9789f2baaeeb93fad6f", date: "2025-06-23", task: "Projet Client 1" },
-  { memberId: "6820d9789f2baaeeb93fad6f", date: "2025-06-24", task: "Client ee" },
-  { memberId: "6820d9789f2baaeeb93fad6f", date: "2025-06-25", task: "TMA Client 1" },
-  { memberId: "6820db3af922822b3a40dbb6", date: "2025-06-22", task: "TMA Client 2" },
-  { memberId: "6820db3af922822b3a40dbb6", date: "2025-06-23", task: "TMA Client 2" },
-  { memberId: "6820db3af922822b3a40dbb6", date: "2025-06-24", task: "Projet Client 2" },
-  { memberId: "68324bd5b1925a8801633df6", date: "2025-06-22", task: "TMA Client 3" },
-  { memberId: "68324bd5b1925a8801633df6", date: "2025-06-23", task: "TMA Client 2" },
-  { memberId: "68324bd5b1925a8801633df6", date: "2025-06-24", task: "Projet Client 1" },
-];
-
-const getColor = (task: string) => {
-  if (task.includes("TMA")) return "#FFA500"; // orange
-  if (task.includes("Client ee")) return "#FFFF00"; // yellow
-  if (task.includes("Projet Client 1")) return "#00FF00"; // green
-  if (task.includes("Projet Client 2")) return "#00BFFF"; // light blue
-  if (task.includes("Projet Client 3")) return "#7C4DFF"; // purple
-  if (task.includes("TMA Client 1")) return "#FF9900"; // darker orange
-  if (task.includes("TMA Client 2")) return "#FF6600"; // red orange
-  if (task.includes("TMA Client 3")) return "#CCCCCC"; // gray
-  return "#E0E0E0"; // default gray
-};
+  // Convert to a number and spread hue over 360°
+  const hash = [...taskName].reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const hue = (hash * 37) % 360;
+  return `hsl(${hue}, 70%, 65%)`;
+}
 
 const StaffingCalendar = () => {
   const [startDate, setStartDate] = useState(dayjs("2025-06-22"));
@@ -65,6 +102,10 @@ const StaffingCalendar = () => {
   const [snackbarMessage, setSnackbarMessage] = React.useState(""); // Message for Snackbar
   const error = useSelector((state) => state.team.error);
   const [errorState, setErrorState] = useState(null);
+  const [assignments, setAssignements] = useState([]);
+  const selectedAssignements = useSelector(
+    (state) => state.assignements.assignements
+  );
 
   useEffect(() => {
     if (selectedTeamMembers.length !== 0) {
@@ -78,7 +119,37 @@ const StaffingCalendar = () => {
   }, [selectedTeamMembers]); // <== Écoute les changements de selectedProjects
 
   useEffect(() => {
+    if (selectedAssignements.length !== 0) {
+      const assignementsMap = selectedAssignements?.flatMap((assignment) => {
+        const memberId = assignment?.employee?._id;
+        const task = assignment?.taskId?.taskName;
+        const startDate = new Date(assignment?.startDate);
+        const endDate = new Date(assignment?.endDate);
+        const dayDetails = assignment?.dayDetails;
+        const result = [];
+        let currentDate = new Date(startDate);
+
+        while (currentDate <= endDate) {
+          result.push({
+            memberId,
+            date: currentDate.toISOString().split("T")[0], // YYYY-MM-DD format
+            task,
+            dayDetails,
+          });
+          currentDate.setDate(currentDate.getDate() + 1);
+        }
+        return result;
+      });
+      setAssignements(assignementsMap);
+    }
+  }, [selectedAssignements]); // <== Écoute les changements de selectedProjects
+
+  useEffect(() => {
     dispatch(getAllTeamMembersForManager());
+  }, [dispatch]); // <== Appelle une seule fois le fetch
+
+  useEffect(() => {
+    dispatch(getAllEmployeeAssignements());
   }, [dispatch]); // <== Appelle une seule fois le fetch
 
   const daysToShow = 14; // 2 weeks
@@ -266,7 +337,9 @@ const StaffingCalendar = () => {
                 <TableCell>
                   <Box display="flex" alignItems="center">
                     <IconButton
-                      onClick={() => navigate(`/assignements/${member._id}/edit`)} // Navigate to the edit assignments page
+                      onClick={() =>
+                        navigate(`/assignements/${member._id}/edit`)
+                      } // Navigate to the edit assignments page
                       sx={{
                         mr: 1,
                         width: 25,
@@ -283,28 +356,118 @@ const StaffingCalendar = () => {
                 </TableCell>
                 {viewMode === "perDay" &&
                   dates.map((date) => {
-                    const assignment = assignments.find(
+                    const dailyAssignments = assignments.filter(
                       (a) => a.memberId === member._id && a.date === date
                     );
+                    const morningAssignment = dailyAssignments.find((a) =>
+                      a.dayDetails?.some(
+                        (d) =>
+                          d.period === "Morning" &&
+                          format(
+                            new Date(d.date.$date || d.date),
+                            "yyyy-MM-dd"
+                          ) === format(new Date(date), "yyyy-MM-dd")
+                      )
+                    );
+
+                    const afternoonAssignment = dailyAssignments.find((a) =>
+                      a.dayDetails?.some(
+                        (d) =>
+                          d.period === "Afternoon" &&
+                          format(
+                            new Date(d.date.$date || d.date),
+                            "yyyy-MM-dd"
+                          ) === format(new Date(date), "yyyy-MM-dd")
+                      )
+                    );
+
+                    const fullDayAssignments =
+                      !morningAssignment && !afternoonAssignment
+                        ? dailyAssignments // fallback to first if full-day
+                        : null;
+
                     return (
                       <TableCell key={date} align="center">
-                        {assignment && (
-                          <Box
-                            sx={{
-                              backgroundColor: getColor(assignment.task),
-                              borderRadius: "20px",
-                              padding: "4px 8px",
-                              fontSize: "12px",
-                              fontWeight: "bold",
-                              color: "black",
-                            }}
-                          >
-                            {assignment.task}
+                        {morningAssignment || afternoonAssignment ? (
+                          <Box display="flex" flexDirection="column" gap={0.5}>
+                            {morningAssignment && (
+                              <Tooltip title="Morning">
+                                <Box
+                                  sx={{
+                                    backgroundColor: getColor(
+                                      morningAssignment.task
+                                    ),
+                                    borderRadius: "20px",
+                                    padding: "4px 6px",
+                                    fontSize: "12px",
+                                    fontWeight: "bold",
+                                    color: "black",
+                                    backgroundImage: `repeating-linear-gradient(45deg,${getColor(
+                                      morningAssignment.task
+                                    )} 0,${getColor(
+                                      morningAssignment.task
+                                    )} 4px,rgba(0,0,0,0.1) 4px,rgba(0,0,0,0.1) 8px)`,
+                                  }}
+                                >
+                                  {morningAssignment.task}
+                                </Box>
+                              </Tooltip>
+                            )}
+                            {afternoonAssignment && (
+                              <Tooltip title="Afternoon">
+                                <Box
+                                  sx={{
+                                    backgroundColor: getColor(
+                                      afternoonAssignment.task
+                                    ),
+                                    borderRadius: "20px",
+                                    padding: "4px 6px",
+                                    fontSize: "12px",
+                                    fontWeight: "bold",
+                                    color: "black",
+                                    backgroundImage: `repeating-linear-gradient(45deg,${getColor(
+                                      morningAssignment.task
+                                    )} 0,${getColor(
+                                      morningAssignment.task
+                                    )} 4px,rgba(0,0,0,0.1) 4px,rgba(0,0,0,0.1) 8px)`,
+                                  }}
+                                >
+                                  {afternoonAssignment.task}
+                                </Box>
+                              </Tooltip>
+                            )}
                           </Box>
+                        ) : (
+                          fullDayAssignments.length > 0 &&
+                          fullDayAssignments.map((fullDayAssignment) => (
+                            <Tooltip
+                              title="Full Day"
+                              key={
+                                fullDayAssignment.id || fullDayAssignment.task
+                              }
+                            >
+                              <Box
+                                sx={{
+                                  backgroundColor: getColor(
+                                    fullDayAssignment.task
+                                  ),
+                                  borderRadius: "20px",
+                                  padding: "4px 8px",
+                                  fontSize: "12px",
+                                  fontWeight: "bold",
+                                  color: "black",
+                                  margin: "3px 0px",
+                                }}
+                              >
+                                {fullDayAssignment.task}
+                              </Box>
+                            </Tooltip>
+                          ))
                         )}
                       </TableCell>
                     );
                   })}
+
                 {viewMode === "perWeek" && (
                   <TableCell>
                     {calculateAssignedDaysPerWeek(member._id).map((week) => (

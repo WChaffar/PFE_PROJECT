@@ -1,6 +1,7 @@
 const express = require("express");
 const {
-    createAssignment,updateAssignmentDates,deleteAssignment,getEmployeeAssignments
+    createAssignment,updateAssignmentDates,deleteAssignment,getEmployeeAssignments,
+    getAllEmployeesAssignments
 } = require("../controller/assignementCtrl");
 const { authMiddleware} = require("../middlewares/authMiddleware");
 
@@ -12,6 +13,6 @@ router.get("/getEmployeeAssignement/:employeeId",authMiddleware,getEmployeeAssig
 //router.get("/getOne/:id",authMiddleware,getOneProject);
 router.get("/deleteOne/:id",authMiddleware,deleteAssignment);
 router.put("/editOne/:id",authMiddleware,updateAssignmentDates);
-
+router.get("/getEmployeeAssignements/all",authMiddleware,getAllEmployeesAssignments);
 
 module.exports = router;

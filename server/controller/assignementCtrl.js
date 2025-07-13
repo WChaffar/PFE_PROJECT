@@ -1,5 +1,5 @@
 const Assignment = require("../models/AssignmentModel");
-const Team = require("../models/teamModel");
+const User = require("../models/userModel");
 const Project = require("../models/projectModel");
 const Task = require("../models/taskModel");
 const { check, body, validationResult } = require("express-validator");
@@ -44,9 +44,9 @@ const createAssignment = [
         });
       }
       // Validate employee exists
-      const employeeFound = await Team.findById(employee);
+      const employeeFound = await User.findById(employee);
       if (!employeeFound) {
-        throw new Error("Team member not found");
+        throw new Error("User member not found");
       }
 
       // Validate project exists
@@ -116,7 +116,7 @@ const getEmployeeAssignments = async (req, res) => {
     const assignments = await Assignment.find({ employee: employeeId })
       .populate("project", "client projectName requiredSkills")
       .populate("employee", "fullName keySkills")
-      .populate("taskId","taskName")
+      .populate("taskId", "taskName")
       .sort({ startDate: 1 });
 
     res.json(assignments);
@@ -166,7 +166,7 @@ const deleteAssignment = async (req, res) => {
     }
 
     // 2. Remove assignment reference from the employee
-    await Team.findByIdAndUpdate(
+    await User.findByIdAndUpdate(
       assignment.employee,
       { $pull: { assignments: assignmentId } },
       { new: true }
@@ -187,9 +187,25 @@ const deleteAssignment = async (req, res) => {
   }
 };
 
+// Get assignments for a specific employee (like Jeff Bezos in your screenshot)
+const getAllEmployeesAssignments = async (req, res) => {
+  try {
+    const assignments = await Assignment.find()
+      .populate("project", "client projectName requiredSkills")
+      .populate("employee", "fullName keySkills")
+      .populate("taskId", "taskName")
+      .sort({ startDate: 1 });
+
+    res.json(assignments);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   createAssignment,
   getEmployeeAssignments,
   updateAssignmentDates,
   deleteAssignment,
+  getAllEmployeesAssignments,
 };

@@ -64,8 +64,8 @@ const taskReducer = (state = initialState, action) => {
         ...state,
         error: action.payload, // store error message
       };
-
-    case "RESET":
+ 
+    case "RESET_TASKS_STATE":
       return {
         ...state,
         activeTask: {},

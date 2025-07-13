@@ -97,3 +97,10 @@ export const editTask = (id,values) => async (dispatch) => {
     return { success: false }; // ✅ return failure
   }
 };
+
+  // Reset task state
+export const ResetTaskState = () => async (dispatch) => {
+    dispatch({
+      type: 'RESET_TASKS_STATE',
+    });
+};

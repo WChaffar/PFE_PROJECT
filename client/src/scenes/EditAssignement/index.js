@@ -229,11 +229,12 @@ const EditStaffing = () => {
         ) : null}
       </Box>
     );
-  });
+  }); 
   const handleFormSubmit = async (data) => {
     setAssignementLoading(true);
     const result = await dispatch(createAssignement(data));
     if (result.success) {
+       dispatch(getEmployeeAssignement(id));
       dispatch(resetAssignementErros());
       setAssignementLoading(false);
       setSuccess("Assignement created with success.");
