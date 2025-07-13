@@ -447,7 +447,7 @@ const StaffingCalendar = () => {
                                 <Box
                                   sx={{
                                     backgroundColor: getColor(
-                                      afternoonAssignment.task
+                                      afternoonAssignment?.task
                                     ),
                                     borderRadius: "20px",
                                     padding: "4px 6px",
@@ -455,13 +455,13 @@ const StaffingCalendar = () => {
                                     fontWeight: "bold",
                                     color: "black",
                                     backgroundImage: `repeating-linear-gradient(45deg,${getColor(
-                                      morningAssignment.task
+                                      morningAssignment?.task
                                     )} 0,${getColor(
-                                      morningAssignment.task
+                                      morningAssignment?.task
                                     )} 4px,rgba(0,0,0,0.1) 4px,rgba(0,0,0,0.1) 8px)`,
                                   }}
                                 >
-                                  {afternoonAssignment.task}
+                                  {afternoonAssignment?.task}
                                 </Box>
                               </Tooltip>
                             )}

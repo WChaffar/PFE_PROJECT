@@ -65,3 +65,12 @@ export const resetAssignementErros = () => async (dispatch) => {
       type: "RESET_ASSIGNEMENT_ERROR",
     });
 };
+
+// create Assignement
+export const resetAssignementState = () => async (dispatch) => {
+    dispatch({
+      type: "RESET_ASSIGNEMENT",
+    });
+};
+
+

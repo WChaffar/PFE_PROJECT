@@ -48,7 +48,7 @@ const assignementReducer = (state = initialState, action) => {
         assignements: [],
         error: action.payload, // store error message
       };
-    case "RESET":
+    case "RESET_ASSIGNEMENT":
       return {
         ...state,
         activeAssignement: {},

@@ -29,6 +29,7 @@ import {
   createAssignement,
   getEmployeeAssignement,
   resetAssignementErros,
+  resetAssignementState,
 } from "../../actions/assignementsAction";
 import WarningIcon from "@mui/icons-material/Warning";
 
@@ -147,6 +148,7 @@ const EditStaffing = () => {
   }, [dispatch]);
 
   useEffect(() => {
+    resetAssignementState()
     dispatch(getEmployeeAssignement(id));
   }, [dispatch]);
 
