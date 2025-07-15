@@ -148,7 +148,7 @@ const EditStaffing = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    resetAssignementState()
+    dispatch(resetAssignementState());
     dispatch(getEmployeeAssignement(id));
   }, [dispatch]);
 
