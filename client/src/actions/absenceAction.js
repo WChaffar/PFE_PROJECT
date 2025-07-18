@@ -95,6 +95,23 @@ export const deleteAbsenceByID = (absenceId) => async (dispatch) => {
   }
 };
 
+// get Employee Absences By Id
+export const getEmployeeAbsenceById = (employeeId) => async (dispatch) => {
+  try {
+    const data = await AbsenceService.getEmployeeAbsencesById(employeeId);
+    dispatch({
+      type: "GET_EMPLOYEE_ABSENCES_BYID_SUCCESS",
+      payload: { data },
+    });
+    return { success: true }; // ✅ return success
+  } catch (error) {
+    dispatch({
+      type: "GET_EMPLOYEE_ABSENCES_BYID_FAILURE",
+      payload: error.response?.data?.message || "Get Absences failed",
+    });
+    return { success: false }; // ✅ return failure
+  }
+};
 
 // Reset
 export const resetAbsenceState = (values) => async (dispatch) => {

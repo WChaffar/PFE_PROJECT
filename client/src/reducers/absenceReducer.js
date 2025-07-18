@@ -60,13 +60,29 @@ const absenceReducer = (state = initialState, action) => {
     case "DELETE_ABSENCE_BY_ID_SUCCESS":
       return {
         ...state,
-        absences: state.absences.filter((a) => a._id !== action.payload.data._id),
+        absences: state.absences.filter(
+          (a) => a._id !== action.payload.data._id
+        ),
         error: null, // NEW: to store task-related errors
       };
     case "DELETE_ABSENCE_BY_ID_FAILURE":
       return {
         ...state,
         error: action.payload, // store error message
+      };
+    case "GET_EMPLOYEE_ABSENCES_BYID_SUCCESS":
+      return {
+        ...state,
+        activeAbsence: {},
+        absences: action.payload.data,
+        error: null, // NEW: to store team-related errors
+      };
+    case "GET_EMPLOYEE_ABSENCES_BYID_FAILURE":
+      return {
+        ...state,
+        activeAbsence: {},
+        absences: [],
+        error: action.payload, // store error messageP
       };
     case "RESET_ABSENCE_STATE":
       return {

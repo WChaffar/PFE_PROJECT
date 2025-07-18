@@ -4,7 +4,8 @@ createAbsence,
 getAllMyAbsences,
 getMyAbsenceById,
 editAbsenceById,
-deleteAbsenceByID
+deleteAbsenceByID,
+getAllEmployeeAbsences
 } = require("../controller/absenceCtrl");
 const { authMiddleware} = require("../middlewares/authMiddleware");
 
@@ -16,5 +17,6 @@ router.get("/getMyAbsences",authMiddleware,getAllMyAbsences);
 router.get("/getMyAbsenceByID/:absentId",authMiddleware,getMyAbsenceById);
 router.put("/updateAbsenceByID/:absentId",authMiddleware,editAbsenceById);
 router.delete("/deleteAbsenceByID/:absentId",authMiddleware,deleteAbsenceByID);
+router.get("/getEmployeeAbsenceByID/:employeeId",authMiddleware,getAllEmployeeAbsences);
 
 module.exports = router;

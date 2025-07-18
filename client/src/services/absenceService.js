@@ -41,12 +41,22 @@ const deleteAbsenceByID = (absenceId) => {
     });
 };
 
+const getEmployeeAbsencesById = (employeeId) => {
+  return axios
+    .get(base_url + `Absence/getEmployeeAbsenceByID/${employeeId}`, getConfig())
+    .then((response) => {
+      return response.data;
+    });
+};
+
+
 const AbsenceService = {
   createAbsence,
   getMyAbsences,
   getAbsenceByID,
   updateAbsenceByID,
-  deleteAbsenceByID
+  deleteAbsenceByID,
+  getEmployeeAbsencesById
 };
 
 export default AbsenceService;

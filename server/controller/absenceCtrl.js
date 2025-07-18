@@ -147,10 +147,31 @@ const deleteAbsenceByID = asyncHandler(async (req, res) => {
   }
 });
 
+
+// get all my absences ----------------------------------------------
+
+const getAllEmployeeAbsences = asyncHandler(async (req, res) => {
+  try {
+
+   const { employeeId } = req.params;  // Get the task ID from request parameters
+
+    const findAbs = await Absence.find({ employee: employeeId });
+    if (findAbs.length === 0) {
+      throw new Error("No absence found.");
+    }
+    res.status(200).json(findAbs);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+
+
 module.exports = {
   createAbsence,
   getAllMyAbsences,
   getMyAbsenceById,
   editAbsenceById,
-  deleteAbsenceByID
+  deleteAbsenceByID,
+  getAllEmployeeAbsences
 };

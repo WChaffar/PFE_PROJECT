@@ -32,30 +32,39 @@ import {
   resetAssignementState,
 } from "../../actions/assignementsAction";
 import WarningIcon from "@mui/icons-material/Warning";
+import { getEmployeeAbsenceById } from "../../actions/absenceAction";
 
 const transformAssignmentsToMissions = (assignments) => {
-  return assignments.map((assignment) => {
-    // Create mission object with basic info
-    const mission = {
-      id: assignment._id,
-      title: `${assignment.project?.projectName || "Unknown Project"} - ${
-        assignment.taskId?.taskName || "Unknown Task"
-      }`,
-      // Separate arrays for different date types
-      detailedDates: [], // From dayDetails (AM/PM periods)
-      fullRangeDates: [], // From startDate to endDate (FULL days)
-      assignmentData: assignment,
-    };
+  const grouped = {};
 
-    // 1. Process dayDetails (specific periods)
-    if (assignment.dayDetails && assignment.dayDetails.length > 0) {
-      mission.detailedDates = assignment.dayDetails.map((day) => ({
-        date: new Date(day.date).toISOString().split("T")[0],
-        period: day.period, // Keep original "Morning" or "Afternoon"
-      }));
+  assignments.forEach((assignment) => {
+    const projectId = assignment.project?._id;
+    const taskId = assignment.taskId?._id;
+    const key = `${projectId}_${taskId}`;
+
+    if (!grouped[key]) {
+      grouped[key] = {
+        id: key,
+        title: `${assignment.project?.projectName || "Unknown Project"} - ${assignment.taskId?.taskName || "Unknown Task"}`,
+        detailedDates: [],
+        fullRangeDates: [],
+        originalAssignments: [],
+      };
     }
 
-    // 2. Process full date range (startDate to endDate)
+    // Merge original assignment for optional use later
+    grouped[key].originalAssignments.push(assignment);
+
+    // Merge dayDetails
+    if (assignment.dayDetails && assignment.dayDetails.length > 0) {
+      const details = assignment.dayDetails.map((day) => ({
+        date: new Date(day.date).toISOString().split("T")[0],
+        period: day.period,
+      }));
+      grouped[key].detailedDates.push(...details);
+    }
+
+    // Merge full range
     if (assignment.startDate && assignment.endDate) {
       const start = new Date(assignment.startDate);
       const end = new Date(assignment.endDate);
@@ -63,20 +72,49 @@ const transformAssignmentsToMissions = (assignments) => {
 
       while (current <= end) {
         const dateStr = current.toISOString().split("T")[0];
-
-        // Only add to fullRangeDates if not already in detailedDates
-        if (!mission.detailedDates.some((d) => d.date === dateStr)) {
-          mission.fullRangeDates.push({
-            date: dateStr,
-            period: "FULL",
-          });
+        if (!grouped[key].detailedDates.some((d) => d.date === dateStr)) {
+          grouped[key].fullRangeDates.push({ date: dateStr, period: "FULL" });
         }
         current.setDate(current.getDate() + 1);
       }
     }
-
-    return mission;
   });
+
+  return Object.values(grouped);
+};
+
+const absenceColors = {
+  "Paid leave": "#b3e5fc", // Light Blue
+  "unpaid leave": "#e0e0e0", // Light Grey
+  "Alternating training days": "#c8e6c9", // Light Green
+};
+
+const mapAbsencesToDays = (absences) => {
+  const days = {};
+
+  absences.forEach((absence) => {
+    const start = new Date(absence.startDate);
+    const end = new Date(absence.endDate);
+    const current = new Date(start);
+
+    while (current <= end) {
+      const dateStr = current.toISOString().split("T")[0];
+
+      if (!days[dateStr]) {
+        days[dateStr] = [];
+      }
+
+      days[dateStr].push({
+        id: absence._id,
+        type: absence.type,
+        color: absenceColors[absence.type] || "#f5f5f5", // fallback
+      });
+
+      current.setDate(current.getDate() + 1);
+    }
+  });
+
+  return days;
 };
 
 const EditStaffing = () => {
@@ -110,11 +148,14 @@ const EditStaffing = () => {
   const selectedTasks = useSelector((state) => state.tasks.tasks);
   const [tasks, setTasks] = useState([]);
   const [assignementErrors, setAssignementErrors] = useState(null);
+  const selectedAbsences = useSelector((state) => state.absence.absences);
   const selectedAssignements = useSelector(
     (state) => state.assignements.assignements
   );
   // Add to your existing state
   const [assignments, setAssignments] = useState([]);
+  const [absences, setAbsences] = useState([]);
+  const [absenceDayMap, setAbsenceDayMap] = useState({});
 
   // // Add this useEffect to fetch assignments
   // useEffect(() => {
@@ -144,11 +185,20 @@ const EditStaffing = () => {
   }, [selectedProjects]);
 
   useEffect(() => {
+    if (selectedAbsences.length !== 0) {
+      setAbsences(selectedAbsences);
+      const mapped = mapAbsencesToDays(selectedAbsences);
+      setAbsenceDayMap(mapped);
+    }
+  }, [selectedAbsences]);
+
+  useEffect(() => {
     dispatch(getAllProjects());
   }, [dispatch]);
 
   useEffect(() => {
     dispatch(resetAssignementState());
+    dispatch(getEmployeeAbsenceById(id));
     dispatch(getEmployeeAssignement(id));
   }, [dispatch]);
 
@@ -231,12 +281,12 @@ const EditStaffing = () => {
         ) : null}
       </Box>
     );
-  }); 
+  });
   const handleFormSubmit = async (data) => {
     setAssignementLoading(true);
     const result = await dispatch(createAssignement(data));
     if (result.success) {
-       dispatch(getEmployeeAssignement(id));
+      dispatch(getEmployeeAssignement(id));
       dispatch(resetAssignementErros());
       setAssignementLoading(false);
       setSuccess("Assignement created with success.");
@@ -251,6 +301,7 @@ const EditStaffing = () => {
       setAssignementLoading(false);
     }
   };
+  const weekendColor = "#f0f0f0"; // Light gray
 
   return (
     <Box p={3}>
@@ -320,9 +371,45 @@ const EditStaffing = () => {
             <Typography width="200px" fontSize="14px">
               {mission.title}
             </Typography>
-
             {dates.map((date) => {
               const dateStr = date.format("YYYY-MM-DD");
+              const dayOfWeek = date.day(); // 0 = Sunday, 6 = Saturday
+              const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+              if (isWeekend) {
+                // Empty slot (but highlight weekends)
+                return (
+                  <Box
+                    key={`${mission.id}-empty-${dateStr}`}
+                    width="60px"
+                    height="20px"
+                    m="1px"
+                    border="1px solid #eee"
+                    bgcolor={isWeekend ? weekendColor : "transparent"}
+                  />
+                );
+              }
+              // Check for absence
+              if (absenceDayMap[dateStr]) {
+                return (
+                  <Box
+                    key={`${mission.id}-absence-${dateStr}`}
+                    width="60px"
+                    height="20px"
+                    m="1px"
+                    display="flex"
+                  >
+                    {absenceDayMap[dateStr].map((absence, idx) => (
+                      <Box
+                        key={absence.id + "-" + idx}
+                        flex={1}
+                        bgcolor={absence.color}
+                        title={absence.type}
+                        border="1px solid #ccc"
+                      />
+                    ))}
+                  </Box>
+                );
+              }
 
               // Check for detailed dates first (AM/PM)
               const detailedSlot = mission.detailedDates.find(
@@ -376,7 +463,7 @@ const EditStaffing = () => {
                 );
               }
 
-              // Empty slot
+              // Empty slot (but highlight weekends)
               return (
                 <Box
                   key={`${mission.id}-empty-${dateStr}`}
@@ -384,6 +471,7 @@ const EditStaffing = () => {
                   height="20px"
                   m="1px"
                   border="1px solid #eee"
+                  bgcolor="transparent"
                 />
               );
             })}
@@ -391,6 +479,38 @@ const EditStaffing = () => {
         ))}
 
         <Box mt={2}>
+          <Box display="flex" gap={2} mt={2}>
+            {Object.entries(absenceColors).map(([type, color]) => (
+              <Box key={type} display="flex" alignItems="center" gap={1}>
+                <Box
+                  width={16}
+                  height={16}
+                  bgcolor={color}
+                  border="1px solid #ccc"
+                />
+                <Typography fontSize="12px">{type}</Typography>
+              </Box>
+            ))}
+            <Box key={"Assigned"} display="flex" alignItems="center" gap={1}>
+              <Box
+                width={16}
+                height={16}
+                bgcolor="#FFA500"
+                border="1px solid #ccc"
+              />
+              <Typography fontSize="12px">Production</Typography>
+            </Box>
+            <Box display="flex" alignItems="center" gap={1}>
+              <Box
+                width={16}
+                height={16}
+                bgcolor={weekendColor}
+                border="1px solid #ccc"
+              />
+              <Typography fontSize="12px">Weekend</Typography>
+            </Box>
+          </Box>
+          <br />
           <Button
             variant="outlined"
             size="small"
