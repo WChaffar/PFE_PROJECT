@@ -113,6 +113,24 @@ export const getEmployeeAbsenceById = (employeeId) => async (dispatch) => {
   }
 };
 
+// get Employee Absences By Id
+export const getEmployeeAbsencesForManager = () => async (dispatch) => {
+  try {
+    const data = await AbsenceService.getEmployeesAbsencesForManager();
+    dispatch({
+      type: "GET_EMPLOYEE_ABSENCES_FOR_MANAGER_SUCCESS",
+      payload: { data },
+    });
+    return { success: true }; // ✅ return success
+  } catch (error) {
+    dispatch({
+      type: "GET_EMPLOYEE_ABSENCES_FOR_MANAGER_FAILURE",
+      payload: error.response?.data?.message || "Get Absences failed",
+    });
+    return { success: false }; // ✅ return failure
+  }
+};
+
 // Reset
 export const resetAbsenceState = (values) => async (dispatch) => {
   dispatch({

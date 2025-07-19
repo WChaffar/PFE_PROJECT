@@ -84,6 +84,20 @@ const absenceReducer = (state = initialState, action) => {
         absences: [],
         error: action.payload, // store error messageP
       };
+    case "GET_EMPLOYEE_ABSENCES_FOR_MANAGER_SUCCESS":
+      return {
+        ...state,
+        activeAbsence: {},
+        absences: action.payload.data,
+        error: null, // NEW: to store team-related errors
+      };
+    case "GET_EMPLOYEE_ABSENCES_FOR_MANAGER_FAILURE":
+      return {
+        ...state,
+        activeAbsence: {},
+        absences: [],
+        error: action.payload, // store error messageP
+      };
     case "RESET_ABSENCE_STATE":
       return {
         ...state,

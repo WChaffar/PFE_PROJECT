@@ -12,7 +12,7 @@ const validateAbsence = [
   check("endDate", "End date is required").isISO8601(),
   check("endDate", "End date must be after start date").custom(
     (value, { req }) => {
-      return new Date(value) > new Date(req.body.startDate);
+      return new Date(value) >= new Date(req.body.startDate);
     }
   ),
 ];
@@ -93,10 +93,9 @@ const getMyAbsenceById = asyncHandler(async (req, res) => {
   }
 });
 
-
 const editAbsenceById = asyncHandler(async (req, res) => {
   try {
-    const {absentId } = req.params;  // On récupère l'ID du projet dans les paramètres de la requête
+    const { absentId } = req.params; // On récupère l'ID du projet dans les paramètres de la requête
 
     // Validation de l'ID MongoDB
     validateMongoDbId(absentId);
@@ -104,18 +103,20 @@ const editAbsenceById = asyncHandler(async (req, res) => {
     // Chercher et mettre à jour le projet si l'utilisateur est le propriétaire
     const absence = await Absence.findOneAndUpdate(
       { _id: absentId }, // On s'assure que l'utilisateur est bien le propriétaire du projet
-      { ...req.body }, // Données à mettre à jour
+      { ...req.body } // Données à mettre à jour
     );
 
     // Si le projet n'est pas trouvé
     if (!absence) {
-      throw new Error("Absence not found or you do not have permission to edit it.");
+      throw new Error(
+        "Absence not found or you do not have permission to edit it."
+      );
     }
 
     // Réponse réussie avec le projet mis à jour
     res.status(200).json({
       message: "Absence updated successfully.",
-      data:absence
+      data: absence,
     });
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -124,36 +125,36 @@ const editAbsenceById = asyncHandler(async (req, res) => {
 
 const deleteAbsenceByID = asyncHandler(async (req, res) => {
   try {
-    const { absentId } = req.params;  // Get the task ID from request parameters
+    const { absentId } = req.params; // Get the task ID from request parameters
 
     // Validate MongoDB ID
     validateMongoDbId(absentId);
 
     // Attempt to find and delete the task that belongs to the logged-in user
-    const absence = await Absence.findOneAndDelete({ _id: absentId  });
+    const absence = await Absence.findOneAndDelete({ _id: absentId });
 
     // If no task is found, throw an error
     if (!absence) {
-      throw new Error("Absence not found or you do not have permission to delete it.");
+      throw new Error(
+        "Absence not found or you do not have permission to delete it."
+      );
     }
 
     // Send success response
     res.status(200).json({
       message: "Absence deleted successfully.",
-      _id:absentId
+      _id: absentId,
     });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
 });
 
-
 // get all my absences ----------------------------------------------
 
 const getAllEmployeeAbsences = asyncHandler(async (req, res) => {
   try {
-
-   const { employeeId } = req.params;  // Get the task ID from request parameters
+    const { employeeId } = req.params; // Get the task ID from request parameters
 
     const findAbs = await Absence.find({ employee: employeeId });
     if (findAbs.length === 0) {
@@ -165,7 +166,26 @@ const getAllEmployeeAbsences = asyncHandler(async (req, res) => {
   }
 });
 
+// get all my absences ----------------------------------------------
 
+const getAllEmployeesAbsencesForManager = asyncHandler(async (req, res) => {
+  try {
+    const findAbs = await Absence.find().populate({
+      path: "employee",
+      select: "manager", // Only include the 'manager' field from employee
+    });
+    const filtredAbsences = findAbs.filter(
+      (a) => a.employee.manager !== req.user._id
+    );
+
+    if (findAbs.length === 0) {
+      throw new Error("No absences found.");
+    }
+    res.status(200).json(filtredAbsences);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
 
 module.exports = {
   createAbsence,
@@ -173,5 +193,6 @@ module.exports = {
   getMyAbsenceById,
   editAbsenceById,
   deleteAbsenceByID,
-  getAllEmployeeAbsences
+  getAllEmployeeAbsences,
+  getAllEmployeesAbsencesForManager,
 };

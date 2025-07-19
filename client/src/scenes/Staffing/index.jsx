@@ -29,6 +29,11 @@ import {
 } from "../../actions/teamAction";
 import { getAllEmployeeAssignements } from "../../actions/assignementsAction";
 import { format } from "date-fns";
+import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+import { getEmployeeAbsencesForManager } from "../../actions/absenceAction";
+dayjs.extend(isSameOrAfter);
+dayjs.extend(isSameOrBefore);
 
 dayjs.extend(isBetween);
 
@@ -106,6 +111,8 @@ const StaffingCalendar = () => {
   const selectedAssignements = useSelector(
     (state) => state.assignements.assignements
   );
+  const selectedAbsences = useSelector((state) => state.absence.absences);
+  const [absences, setAbsences] = useState([]);
 
   useEffect(() => {
     if (selectedTeamMembers.length !== 0) {
@@ -152,10 +159,24 @@ const StaffingCalendar = () => {
     dispatch(getAllEmployeeAssignements());
   }, [dispatch]); // <== Appelle une seule fois le fetch
 
+  useEffect(() => {
+    dispatch(getEmployeeAbsencesForManager());
+  }, [dispatch]); // <== Appelle une seule fois le fetch
+
+  useEffect(() => {
+    if (selectedAbsences.length !== 0) {
+      setAbsences(selectedAbsences);
+    }
+  }, [selectedAbsences]); // <== Appelle une seule fois le fetch
+
   const daysToShow = 14; // 2 weeks
   const dates = Array.from({ length: daysToShow }).map((_, i) =>
     startDate.add(i, "day").format("YYYY-MM-DD")
   );
+  const visibleMonths =
+    viewMode === "perMonth"
+      ? [dayjs(startDate).startOf("month").format("YYYY-MM")]
+      : [...new Set(dates.map((date) => dayjs(date).format("YYYY-MM")))];
 
   const filteredMembers = teamMembers.filter((member) =>
     member.fullName.toLowerCase().includes(searchName.toLowerCase())
@@ -163,21 +184,25 @@ const StaffingCalendar = () => {
 
   const handlePrev = () => {
     if (viewMode === "perMonth") {
-      setStartDate(startDate.subtract(1, "month"));
-      console.log(format(startDate, "yyyy-MM-dd"));
+      setStartDate((prev) => dayjs(prev).subtract(1, "month").startOf("month"));
     } else {
-      setStartDate(startDate.subtract(daysToShow, "day"));
+      setStartDate((prev) => dayjs(prev).subtract(daysToShow, "day"));
     }
   };
 
   const handleNext = () => {
     if (viewMode === "perMonth") {
-      setStartDate(startDate.add(1, "month"));
-      console.log(format(startDate, "yyyy-MM-dd"));
+      setStartDate((prev) => dayjs(prev).add(1, "month").startOf("month"));
     } else {
-      setStartDate(startDate.add(daysToShow, "day"));
+      setStartDate((prev) => dayjs(prev).add(daysToShow, "day"));
     }
   };
+
+  useEffect(() => {
+    if (viewMode === "perMonth") {
+      setStartDate((prev) => dayjs(prev).startOf("month"));
+    }
+  }, [viewMode]);
 
   const handleViewChange = (
     event: React.MouseEvent<HTMLElement>,
@@ -188,7 +213,7 @@ const StaffingCalendar = () => {
     }
   };
 
-  const calculateAssignedDaysPerWeek = (memberId: number) => {
+  const calculateAssignedDaysPerWeek = (memberId) => {
     const memberAssignments = assignments.filter(
       (a) => a.memberId === memberId
     );
@@ -210,7 +235,9 @@ const StaffingCalendar = () => {
         const date = dayjs(assignment.date);
         const day = date.day(); // 0 = dimanche, 6 = samedi
 
-        if (day === 0 || day === 6) return; // ⛔ Ignore weekend
+        // ⛔ Ignore weekend + absence
+        if (day === 0 || day === 6 || isAbsent(memberId, assignment.date))
+          return;
 
         const task = assignment.task;
         if (!taskCount[task]) {
@@ -249,20 +276,16 @@ const StaffingCalendar = () => {
   };
 
   const calculateAssignedDaysPerMonth = (memberId) => {
-    // Get the start and end of the current month from startDate
     const monthStart = startDate.startOf("month");
     const monthEnd = startDate.endOf("month");
 
-    // Filter assignments for this member AND inside current month
     const memberAssignments = assignments.filter((a) => {
       if (a.memberId !== memberId) return false;
 
       const date = dayjs(a.date);
-      return date.isBetween(
-        monthStart.subtract(1, "day"),
-        monthEnd.add(1, "day"),
-        null,
-        "[]"
+      return (
+        date.isSameOrAfter(monthStart, "day") &&
+        date.isSameOrBefore(monthEnd, "day")
       );
     });
 
@@ -270,8 +293,10 @@ const StaffingCalendar = () => {
 
     memberAssignments.forEach((assignment) => {
       const date = dayjs(assignment.date);
-      const day = date.day(); // Sunday=0, Saturday=6
-      if (day === 0 || day === 6) return; // skip weekends
+      const day = date.day();
+
+      // ⛔ Skip weekend and absence
+      if (day === 0 || day === 6 || isAbsent(memberId, assignment.date)) return;
 
       const task = assignment.task;
       if (!taskBreakdown[task]) {
@@ -309,6 +334,28 @@ const StaffingCalendar = () => {
   const isWeekend = (date) => {
     const day = dayjs(date).day(); // 0 = Sunday, 6 = Saturday
     return day === 0 || day === 6;
+  };
+
+  const isAbsent = (memberId, date) => {
+    return absences.some((absence) => {
+      return (
+        absence.employee._id === memberId &&
+        dayjs(date).isSameOrAfter(dayjs(absence.startDate), "day") &&
+        dayjs(date).isSameOrBefore(dayjs(absence.endDate), "day")
+      );
+    });
+  };
+
+  const getAbsenceType = (memberId, date) => {
+    const absence = absences.find((absence) => {
+      return (
+        absence.employee._id === memberId &&
+        dayjs(date).isSameOrAfter(dayjs(absence.startDate), "day") &&
+        dayjs(date).isSameOrBefore(dayjs(absence.endDate), "day")
+      );
+    });
+
+    return absence?.type || null;
   };
 
   return (
@@ -390,7 +437,9 @@ const StaffingCalendar = () => {
                     key={date}
                     align="center"
                     sx={{
-                      backgroundColor: isWeekend(date) ? "#f5f5f5" : "inherit",
+                      backgroundColor: isWeekend(date)
+                        ? "#dcdadaff"
+                        : "inherit",
                       color: isWeekend(date) ? "#999" : "inherit",
                       fontWeight: isWeekend(date) ? "bold" : "normal",
                     }}
@@ -433,11 +482,34 @@ const StaffingCalendar = () => {
                       return day === 0 || day === 6;
                     };
 
+                    // 👉 check absence
+                    const absent = isAbsent(member._id, date);
+                    const absenceType = getAbsenceType(member._id, date);
+
+                    if (absent) {
+                      return (
+                        <TableCell
+                          key={date}
+                          align="center"
+                          sx={{
+                            backgroundColor: "#fce4ec", // light pink for absence
+                            color: "#c2185b",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          {absenceType}
+                        </TableCell>
+                      );
+                    }
+
+                    // sinon, afficher les assignements
                     const dailyAssignments = isWeekend(date)
                       ? [] // ignore les assignments le week-end
                       : assignments.filter(
                           (a) => a.memberId === member._id && a.date === date
                         );
+
+                    // ... (le reste reste inchangé : morningAssignment, afternoonAssignment, etc.)
 
                     const morningAssignment = dailyAssignments.find((a) =>
                       a.dayDetails?.some(
@@ -472,7 +544,7 @@ const StaffingCalendar = () => {
                         align="center"
                         sx={{
                           backgroundColor: isWeekend(date)
-                            ? "#fafafa"
+                            ? "#f0ededff"
                             : "inherit",
                           color: isWeekend(date) ? "#999" : "inherit",
                         }}

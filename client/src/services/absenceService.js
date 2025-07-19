@@ -49,6 +49,14 @@ const getEmployeeAbsencesById = (employeeId) => {
     });
 };
 
+const getEmployeesAbsencesForManager = () => {
+  return axios
+    .get(base_url + `Absence/getEmployeesAbsenceForManager`, getConfig())
+    .then((response) => {
+      return response.data;
+    });
+};
+
 
 const AbsenceService = {
   createAbsence,
@@ -56,7 +64,8 @@ const AbsenceService = {
   getAbsenceByID,
   updateAbsenceByID,
   deleteAbsenceByID,
-  getEmployeeAbsencesById
+  getEmployeeAbsencesById,
+  getEmployeesAbsencesForManager
 };
 
 export default AbsenceService;
