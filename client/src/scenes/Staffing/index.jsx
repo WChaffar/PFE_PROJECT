@@ -164,6 +164,7 @@ const StaffingCalendar = () => {
   const handlePrev = () => {
     if (viewMode === "perMonth") {
       setStartDate(startDate.subtract(1, "month"));
+      console.log(format(startDate, "yyyy-MM-dd"));
     } else {
       setStartDate(startDate.subtract(daysToShow, "day"));
     }
@@ -172,6 +173,7 @@ const StaffingCalendar = () => {
   const handleNext = () => {
     if (viewMode === "perMonth") {
       setStartDate(startDate.add(1, "month"));
+      console.log(format(startDate, "yyyy-MM-dd"));
     } else {
       setStartDate(startDate.add(daysToShow, "day"));
     }
@@ -203,78 +205,110 @@ const StaffingCalendar = () => {
 
     return weeks.map((week, index) => {
       const taskCount = [];
-      // Count tasks per week
+
       week.forEach((assignment) => {
+        const date = dayjs(assignment.date);
+        const day = date.day(); // 0 = dimanche, 6 = samedi
+
+        if (day === 0 || day === 6) return; // ⛔ Ignore weekend
+
         const task = assignment.task;
         if (!taskCount[task]) {
           taskCount[task] = 1;
         } else {
-          taskCount[task] = taskCount[task] + 1;
+          taskCount[task] += 1;
         }
+
         if (assignment?.dayDetails?.length > 0) {
-          assignment?.dayDetails.forEach((day) => {
+          assignment?.dayDetails.forEach((dayDetail) => {
+            const detailDay = dayjs(dayDetail.date?.$date || dayDetail.date);
             if (
-              format(assignment.date, "yyyy-mm-dd") ===
-              format(day.date, "yyyy-mm-dd")
+              detailDay.isSame(date, "day") &&
+              (dayDetail.period === "Morning" ||
+                dayDetail.period === "Afternoon")
             ) {
-              taskCount[task] = taskCount[task] - 0.5;
+              taskCount[task] -= 0.5;
             }
           });
         }
       });
-      let totalAssignedDays = 0;
 
-      for (let cle in taskCount) {
-        if (taskCount.hasOwnProperty(cle)) {
-          totalAssignedDays += taskCount[cle];
+      let totalAssignedDays = 0;
+      for (let task in taskCount) {
+        if (taskCount.hasOwnProperty(task)) {
+          totalAssignedDays += taskCount[task];
         }
       }
+
       return {
         week: `Week ${index + 1}`,
-        totalAssignedDays: totalAssignedDays,
+        totalAssignedDays,
         taskBreakdown: taskCount,
       };
     });
   };
 
-  const calculateAssignedDaysPerMonth = (memberId: number) => {
-    const memberAssignments = assignments.filter(
-      (a) => a.memberId === memberId
-    );
-    const totalAssignedDays = new Set(
-      memberAssignments.map((a) => dayjs(a.date).format("YYYY-MM-DD"))
-    ).size;
+  const calculateAssignedDaysPerMonth = (memberId) => {
+    // Get the start and end of the current month from startDate
+    const monthStart = startDate.startOf("month");
+    const monthEnd = startDate.endOf("month");
 
-    const taskBreakdown: Record<string, number> = {};
+    // Filter assignments for this member AND inside current month
+    const memberAssignments = assignments.filter((a) => {
+      if (a.memberId !== memberId) return false;
+
+      const date = dayjs(a.date);
+      return date.isBetween(
+        monthStart.subtract(1, "day"),
+        monthEnd.add(1, "day"),
+        null,
+        "[]"
+      );
+    });
+
+    const taskBreakdown = {};
+
     memberAssignments.forEach((assignment) => {
+      const date = dayjs(assignment.date);
+      const day = date.day(); // Sunday=0, Saturday=6
+      if (day === 0 || day === 6) return; // skip weekends
+
       const task = assignment.task;
       if (!taskBreakdown[task]) {
         taskBreakdown[task] = 1;
       } else {
         taskBreakdown[task]++;
       }
+
       if (assignment?.dayDetails?.length > 0) {
-        assignment?.dayDetails.forEach((day) => {
+        assignment.dayDetails.forEach((dayDetail) => {
+          const detailDay = dayjs(dayDetail.date?.$date || dayDetail.date);
           if (
-            format(assignment.date, "yyyy-mm-dd") ===
-            format(day.date, "yyyy-mm-dd")
+            detailDay.isSame(date, "day") &&
+            (dayDetail.period === "Morning" || dayDetail.period === "Afternoon")
           ) {
-            taskBreakdown[task] = taskBreakdown[task] - 0.5;
+            taskBreakdown[task] -= 0.5;
           }
         });
       }
     });
-      let totalAssignedDaysMonth = 0;
 
-      for (let cle in taskBreakdown) {
-        if (taskBreakdown.hasOwnProperty(cle)) {
-          totalAssignedDaysMonth += taskBreakdown[cle];
-        }
+    let totalAssignedDaysMonth = 0;
+    for (let task in taskBreakdown) {
+      if (taskBreakdown.hasOwnProperty(task)) {
+        totalAssignedDaysMonth += taskBreakdown[task];
       }
+    }
+
     return {
-      totalAssignedDays:totalAssignedDaysMonth,
-      taskBreakdown:taskBreakdown,
+      totalAssignedDays: totalAssignedDaysMonth,
+      taskBreakdown,
     };
+  };
+
+  const isWeekend = (date) => {
+    const day = dayjs(date).day(); // 0 = Sunday, 6 = Saturday
+    return day === 0 || day === 6;
   };
 
   return (
@@ -352,10 +386,19 @@ const StaffingCalendar = () => {
               <TableCell>Team Member</TableCell>
               {viewMode === "perDay" &&
                 dates.map((date) => (
-                  <TableCell key={date} align="center">
+                  <TableCell
+                    key={date}
+                    align="center"
+                    sx={{
+                      backgroundColor: isWeekend(date) ? "#f5f5f5" : "inherit",
+                      color: isWeekend(date) ? "#999" : "inherit",
+                      fontWeight: isWeekend(date) ? "bold" : "normal",
+                    }}
+                  >
                     {dayjs(date).format("DD/MM")}
                   </TableCell>
                 ))}
+
               {viewMode === "perWeek" && <TableCell>Summary</TableCell>}
               {viewMode === "perMonth" && <TableCell>Summary</TableCell>}
             </TableRow>
@@ -385,9 +428,17 @@ const StaffingCalendar = () => {
                 </TableCell>
                 {viewMode === "perDay" &&
                   dates.map((date) => {
-                    const dailyAssignments = assignments.filter(
-                      (a) => a.memberId === member._id && a.date === date
-                    );
+                    const isWeekend = (date) => {
+                      const day = dayjs(date).day(); // 0 = Sunday, 6 = Saturday
+                      return day === 0 || day === 6;
+                    };
+
+                    const dailyAssignments = isWeekend(date)
+                      ? [] // ignore les assignments le week-end
+                      : assignments.filter(
+                          (a) => a.memberId === member._id && a.date === date
+                        );
+
                     const morningAssignment = dailyAssignments.find((a) =>
                       a.dayDetails?.some(
                         (d) =>
@@ -416,7 +467,16 @@ const StaffingCalendar = () => {
                         : null;
 
                     return (
-                      <TableCell key={date} align="center">
+                      <TableCell
+                        key={date}
+                        align="center"
+                        sx={{
+                          backgroundColor: isWeekend(date)
+                            ? "#fafafa"
+                            : "inherit",
+                          color: isWeekend(date) ? "#999" : "inherit",
+                        }}
+                      >
                         {morningAssignment || afternoonAssignment ? (
                           <Box display="flex" flexDirection="column" gap={0.5}>
                             {morningAssignment && (
@@ -522,33 +582,34 @@ const StaffingCalendar = () => {
                     ))}
                   </TableCell>
                 )}
-                {viewMode === "perMonth" && (
-                  <TableCell>
-                    {calculateAssignedDaysPerMonth(member._id) && (
-                      <Box>
-                        <Typography variant="body2" fontWeight="bold">
-                          Total Assigned Days:{" "}
-                          {
-                            calculateAssignedDaysPerMonth(member._id)
-                              .totalAssignedDays
-                          }
-                        </Typography>
-                        {Object.entries(
-                          calculateAssignedDaysPerMonth(member._id)
-                            .taskBreakdown
-                        ).map(([task, count]) => (
-                          <Typography
-                            key={task}
-                            variant="caption"
-                            display="block"
-                          >
-                            {task}: {count} days
+                {viewMode === "perMonth" &&
+                  (() => {
+                    const monthSummary = calculateAssignedDaysPerMonth(
+                      member._id
+                    );
+
+                    return (
+                      <TableCell>
+                        <Box>
+                          <Typography variant="body2" fontWeight="bold">
+                            Total Assigned Days:{" "}
+                            {monthSummary.totalAssignedDays}
                           </Typography>
-                        ))}
-                      </Box>
-                    )}
-                  </TableCell>
-                )}
+                          {Object.entries(monthSummary.taskBreakdown).map(
+                            ([task, count]) => (
+                              <Typography
+                                key={task}
+                                variant="caption"
+                                display="block"
+                              >
+                                {task}: {count} days
+                              </Typography>
+                            )
+                          )}
+                        </Box>
+                      </TableCell>
+                    );
+                  })()}
               </TableRow>
             ))}
           </TableBody>
