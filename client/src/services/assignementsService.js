@@ -33,10 +33,22 @@ const getAllEmployeesAssignements = () => {
 };
 
 
+const getMyAssignements = () => {
+  return axios
+    .get(base_url + `assignement/getAssignementsForEmployee/all`, 
+     getConfig()
+    )
+    .then((response) => {
+      return response.data;
+    })
+};
+
+
 const AssignementService = {
     createAssignement,
     getEmployeeAssignement,
-    getAllEmployeesAssignements
+    getAllEmployeesAssignements,
+    getMyAssignements
    }
    
  

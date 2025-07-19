@@ -58,6 +58,24 @@ export const getAllEmployeeAssignements = () => async (dispatch) => {
   }
 };
 
+// get Employee Assignement
+export const getMyAssignements = () => async (dispatch) => {
+  try {
+    const data = await AssignementService.getMyAssignements();
+    dispatch({
+      type: "GET_EMP_ASSIGNEMENT_SUCCESS",
+      payload: { data },
+    });
+    return { success: true }; // ✅ return success
+  } catch (error) {
+    dispatch({
+      type: "GET_EMP_ASSIGNEMENT_FAILURE",
+      payload: error.response?.data?.message || "Get employee assignement failed",
+    });
+    return { success: false }; // ✅ return failure
+  }
+};
+
 
 // create Assignement
 export const resetAssignementErros = () => async (dispatch) => {
@@ -72,5 +90,7 @@ export const resetAssignementState = () => async (dispatch) => {
       type: "RESET_ASSIGNEMENT",
     });
 };
+
+
 
 

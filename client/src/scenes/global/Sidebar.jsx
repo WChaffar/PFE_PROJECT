@@ -289,7 +289,7 @@ const Sidebar = () => {
               />
               <Item
                 title="My assignments"
-                to="/my-assignments"
+                to="/my-assignments" 
                 icon={<AssignmentOutlinedIcon />}
                 selected={selected}
                 setSelected={setSelected}

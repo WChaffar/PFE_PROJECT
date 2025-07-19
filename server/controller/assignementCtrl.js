@@ -202,10 +202,27 @@ const getAllEmployeesAssignments = async (req, res) => {
   }
 };
 
+// Get assignments for a specific employee (like Jeff Bezos in your screenshot)
+const getAssignmentsForEmployee = async (req, res) => {
+  try {
+
+    const assignments = await Assignment.find({ employee: req.user._id })
+      .populate("project", "client projectName requiredSkills")
+      .populate("employee", "fullName keySkills")
+      .populate("taskId", "taskName")
+      .sort({ startDate: 1 });
+
+    res.json(assignments);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   createAssignment,
   getEmployeeAssignments,
   updateAssignmentDates,
   deleteAssignment,
   getAllEmployeesAssignments,
+  getAssignmentsForEmployee
 };

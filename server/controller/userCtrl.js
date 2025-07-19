@@ -83,7 +83,10 @@ const loginUserCtrl = [
           token: generateToken(findUser?._id),
           Activated: findUser?.Activated,
           profileCompleted: findUser?.profileCompleted,
-          role:findUser?.role,
+          role: findUser?.role,
+          profilePicture: findUser?.profilePicture
+            ? findUser?.profilePicture
+            : "",
         });
       } else {
         res.json({
@@ -91,7 +94,7 @@ const loginUserCtrl = [
           fullName: findUser?.fullName,
           Activated: findUser?.Activated,
           profileCompleted: findUser?.profileCompleted,
-          role:findUser?.role,
+          role: findUser?.role,
         });
       }
     } else {

@@ -42,6 +42,7 @@ import ModifyBUForm from "./scenes/ModifyBuForm";
 import MyAbsences from "./scenes/MyAbsences";
 import AddAbsence from "./scenes/AddAbsence";
 import EditAbsence from "./scenes/EditAbsence";
+import AssignementsViewEmployee from "./scenes/AssignementsViewEmployee";
 
 function PrivateRoute({ children }) {
   const isAuthenticated = useSelector((state) => state.auth?.isAuthenticated);
@@ -334,6 +335,16 @@ function AppContent() {
                   element={
                     <PrivateRoute>
                       <EditAbsence />
+                    </PrivateRoute>
+                  }
+                />
+              )}
+                          {user?.role === "Employee" && (
+                <Route
+                  path="/my-assignments"
+                  element={
+                    <PrivateRoute>
+                      <AssignementsViewEmployee />
                     </PrivateRoute>
                   }
                 />
