@@ -20,7 +20,7 @@ const CreateTaskForm = () => {
   const [projects, setProjects] = useState([]);
   const dispatch = useDispatch();
   const [success, setSuccess] = useState(null);
-   const error = useSelector((state) => state.tasks.error);
+  const error = useSelector((state) => state.tasks.error);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -34,13 +34,15 @@ const CreateTaskForm = () => {
   }, [selectedProjects]);
 
   useEffect(() => {
-    dispatch(ResetTaskState())
+    dispatch(ResetTaskState());
     dispatch(getAllProjects());
   }, [dispatch]);
 
   const handleFormSubmit = async (values) => {
     console.log("Form Values on Submit:", values); // Debugging: Check if values are submitted correctly
-    const result = await dispatch(createTask({...values, project: values.project.id}));
+    const result = await dispatch(
+      createTask({ ...values, project: values.project.id })
+    );
     if (result.success) {
       setSuccess("Task created with success.");
       setTimeout(() => {
@@ -173,8 +175,7 @@ const CreateTaskForm = () => {
                   !!errors.RequiredyearsOfExper
                 }
                 helperText={
-                  touched.RequiredyearsOfExper &&
-                  errors.RequiredyearsOfExper
+                  touched.RequiredyearsOfExper && errors.RequiredyearsOfExper
                 }
                 sx={{ gridColumn: "span 2" }}
               />
@@ -208,6 +209,19 @@ const CreateTaskForm = () => {
                 onBlur={handleBlur}
                 error={!!touched.endDate && !!errors.endDate}
                 helperText={touched.endDate && errors.endDate}
+                sx={{ gridColumn: "span 2" }}
+              />
+              <TextField
+                fullWidth
+                variant="filled"
+                type="number"
+                label="Budget"
+                name="budget"
+                value={values.budget}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                error={!!touched.budget && !!errors.budget}
+                helperText={touched.budget && errors.budget}
                 sx={{ gridColumn: "span 2" }}
               />
 
@@ -288,31 +302,31 @@ const CreateTaskForm = () => {
               </Button>
             </Box>
             {error && (
-          <Box
-            mt={2}
-            mb={2}
-            p={2}
-            borderRadius="5px"
-            bgcolor={colors.redAccent[500]}
-            color="white"
-            fontWeight="bold"
-          >
-            {error}
-          </Box>
-        )}
-          {success && (
-          <Box
-            mt={2}
-            mb={2}
-            p={2}
-            borderRadius="5px"
-            bgcolor={colors.greenAccent[500]}
-            color="white"
-            fontWeight="bold"
-          >
-            {success}
-          </Box>
-        )}
+              <Box
+                mt={2}
+                mb={2}
+                p={2}
+                borderRadius="5px"
+                bgcolor={colors.redAccent[500]}
+                color="white"
+                fontWeight="bold"
+              >
+                {error}
+              </Box>
+            )}
+            {success && (
+              <Box
+                mt={2}
+                mb={2}
+                p={2}
+                borderRadius="5px"
+                bgcolor={colors.greenAccent[500]}
+                color="white"
+                fontWeight="bold"
+              >
+                {success}
+              </Box>
+            )}
           </form>
         )}
       </Formik>
@@ -329,7 +343,7 @@ const taskSchema = yup.object().shape({
     .string()
     .oneOf(["Design", "Development", "Testing"])
     .required("Required"),
-    RequiredyearsOfExper: yup
+  RequiredyearsOfExper: yup
     .number()
     .min(0, "Experience must be a non-negative number")
     .required("Required"),
@@ -350,6 +364,7 @@ const taskSchema = yup.object().shape({
     .array()
     .of(yup.string().required("Certification cannot be empty"))
     .min(1, "At least one certification is required"),
+  budget: yup.number().required("Required").positive("Must be positive").min(1,"Budget must be greater than zero."),
 });
 
 // Initial values
@@ -361,6 +376,7 @@ const initialValues = {
   RequiredyearsOfExper: 0,
   startDate: "",
   endDate: "",
+  budget : 0 ,
   requiredSkills: [],
   languagesSpoken: [],
   requiredCertifications: [],

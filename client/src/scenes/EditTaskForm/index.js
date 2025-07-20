@@ -1,4 +1,11 @@
-import { Box, Button, TextField, MenuItem, Autocomplete, CircularProgress } from "@mui/material";
+import {
+  Box,
+  Button,
+  TextField,
+  MenuItem,
+  Autocomplete,
+  CircularProgress,
+} from "@mui/material";
 import { Formik } from "formik";
 import * as yup from "yup";
 import useMediaQuery from "@mui/material/useMediaQuery";
@@ -61,10 +68,10 @@ const EditTaskForm = () => {
 
   useEffect(() => {
     dispatch(getTaskById(id));
-  }, [dispatch,id]); // <== Appelle une seule fois le fetch
+  }, [dispatch, id]); // <== Appelle une seule fois le fetch
 
   const initialValues = {
-    _id:task?._id || "",
+    _id: task?._id || "",
     taskName: task?.taskName || "",
     description: task?.description || "",
     project: task?.project || "",
@@ -75,36 +82,37 @@ const EditTaskForm = () => {
     requiredSkills: task?.requiredSkills || [],
     languagesSpoken: task?.languagesSpoken || [],
     requiredCertifications: task?.requiredCertifications || [],
+    budget: task?.budget || 0,
   };
 
-    if ((Object.keys(task).length < 1 || !task.project) && !error) {
-      return (
-        <Box
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          height="100vh"
-        >
-          <CircularProgress />
-        </Box>
-      );
-    }
-  
-    if (error && !Object.keys(task).length < 1) {
-      return (
-        <Box
-          mt={2}
-          mb={2}
-          p={2}
-          borderRadius="5px"
-          bgcolor={colors.redAccent[500]}
-          color="white"
-          fontWeight="bold"
-        >
-          {error}
-        </Box>
-      );
-    }
+  if ((Object.keys(task).length < 1 || !task.project) && !error) {
+    return (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error && !Object.keys(task).length < 1) {
+    return (
+      <Box
+        mt={2}
+        mb={2}
+        p={2}
+        borderRadius="5px"
+        bgcolor={colors.redAccent[500]}
+        color="white"
+        fontWeight="bold"
+      >
+        {error}
+      </Box>
+    );
+  }
 
   return (
     <Box m="20px">
@@ -257,6 +265,19 @@ const EditTaskForm = () => {
                 helperText={touched.endDate && errors.endDate}
                 sx={{ gridColumn: "span 2" }}
               />
+              <TextField
+                fullWidth
+                variant="filled"
+                type="number"
+                label="Budget"
+                name="budget"
+                value={values.budget}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                error={!!touched.budget && !!errors.budget}
+                helperText={touched.budget && errors.budget}
+                sx={{ gridColumn: "span 2" }}
+              />
 
               <TextField
                 fullWidth
@@ -330,7 +351,7 @@ const EditTaskForm = () => {
                 Save Changes
               </Button>
             </Box>
-                       {error && (
+            {error && (
               <Box
                 mt={2}
                 mb={2}
@@ -393,6 +414,11 @@ const taskSchema = yup.object().shape({
     .array()
     .of(yup.string().required("Certification cannot be empty"))
     .min(1, "At least one certification is required"),
+  budget: yup
+    .number()
+    .required("Required")
+    .positive("Must be positive")
+    .min(1, "Budget must be greater than zero."),
 });
 
 export default EditTaskForm;

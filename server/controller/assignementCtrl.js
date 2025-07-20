@@ -192,7 +192,7 @@ const getAllEmployeesAssignments = async (req, res) => {
   try {
     const assignments = await Assignment.find()
       .populate("project", "client projectName requiredSkills")
-      .populate("employee", "fullName keySkills")
+      .populate("employee", "fullName keySkills profilePicture")
       .populate("taskId", "taskName")
       .sort({ startDate: 1 });
 
