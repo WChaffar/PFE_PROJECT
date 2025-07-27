@@ -33,6 +33,10 @@ import {
 } from "../../actions/assignementsAction";
 import WarningIcon from "@mui/icons-material/Warning";
 import { getEmployeeAbsenceById } from "../../actions/absenceAction";
+import { startOfWeek } from "date-fns";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 
 const transformAssignmentsToMissions = (assignments) => {
   const grouped = {};
@@ -45,7 +49,9 @@ const transformAssignmentsToMissions = (assignments) => {
     if (!grouped[key]) {
       grouped[key] = {
         id: key,
-        title: `${assignment.project?.projectName || "Unknown Project"} - ${assignment.taskId?.taskName || "Unknown Task"}`,
+        title: `${assignment.project?.projectName || "Unknown Project"} - ${
+          assignment.taskId?.taskName || "Unknown Task"
+        }`,
         detailedDates: [],
         fullRangeDates: [],
         originalAssignments: [],
@@ -118,7 +124,9 @@ const mapAbsencesToDays = (absences) => {
 };
 
 const EditStaffing = () => {
-  const [startDate, setStartDate] = useState(dayjs("2025-01-01"));
+  const [startDate, setStartDate] = useState(
+    dayjs(startOfWeek(new Date(), { weekStartsOn: 1 }))
+  );
   const [showAssignmentForm, setShowAssignmentForm] = useState(false);
   const daysToShow = 14;
   const theme = useTheme();
@@ -311,16 +319,43 @@ const EditStaffing = () => {
       <Typography variant="subtitle2" color="gray" mb={3}>
         Optimize Your Workforce, Maximize Your Potential
       </Typography>
-
       <Paper sx={{ p: 2, mb: 2 }}>
-        <Box display="flex" alignItems="center" mb={2}>
-          <Avatar
-            src={BACKEND_URL + teamMember?.profilePicture}
-            sx={{ width: 56, height: 56, mr: 2 }}
-          />
-          <Typography variant="h6">{teamMember?.fullName}</Typography>
+        <Box display="flex" flexWrap="wrap" justifyContent="space-between">
+          <Box display="flex" alignItems="center" mb={3}>
+            <Avatar
+              src={BACKEND_URL + teamMember?.profilePicture}
+              sx={{ width: 56, height: 56, mr: 2 }}
+            />
+            <Typography variant="h6">{teamMember?.fullName}</Typography>
+          </Box>
+          <Box display="flex" alignItems="center" gap={2}>
+            {/* 🎯 Ajout du DatePicker */}
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <DatePicker
+                label="Aller à une date"
+                value={dayjs(startDate)}
+                inputFormat="YYYY-MM-DD"
+                disableMaskedInput
+                onChange={(newValue) => {
+                  const dateObj =
+                    newValue instanceof dayjs ? newValue : dayjs(newValue);
+                  if (dateObj.isValid()) {
+                    setStartDate(
+                      dayjs(startOfWeek(dateObj.toDate(), { weekStartsOn: 1 }))
+                    );
+                  }
+                }}
+                slotProps={{
+                  textField: {
+                    size: "small",
+                    sx: { marginBottom: "-30px" },
+                  },
+                }}
+                renderInput={(params) => <TextField {...params} fullWidth />}
+              />
+            </LocalizationProvider>
+          </Box>
         </Box>
-
         <Box
           display="flex"
           alignItems="center"

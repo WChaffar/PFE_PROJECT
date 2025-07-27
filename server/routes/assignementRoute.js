@@ -3,7 +3,8 @@ const {
     createAssignment,updateAssignmentDates,deleteAssignment,getEmployeeAssignments,
     getAllEmployeesAssignments,
     getAssignmentsForEmployee,
-    updateAssignmentTimeEntry
+    updateAssignmentTimeEntry,
+    updateAssignmentTimeEntries
 } = require("../controller/assignementCtrl");
 const { authMiddleware} = require("../middlewares/authMiddleware");
 
@@ -17,7 +18,8 @@ router.get("/deleteOne/:id",authMiddleware,deleteAssignment);
 router.put("/editOne/:id",authMiddleware,updateAssignmentDates);
 router.get("/getEmployeeAssignements/all",authMiddleware,getAllEmployeesAssignments);
 router.get("/getAssignementsForEmployee/all",authMiddleware,getAssignmentsForEmployee);
-router.put("/updateAssignement/:assignmentId",authMiddleware,updateAssignmentTimeEntry);
+router.put("/updateAssignementTimeEntry/:assignmentId",authMiddleware,updateAssignmentTimeEntry);
+router.put("/updateAssignementTimeEntries/:assignmentId",authMiddleware,updateAssignmentTimeEntries);
 
 
 module.exports = router;

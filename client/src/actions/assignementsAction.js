@@ -21,9 +21,8 @@ export const createAssignement = (values) => async (dispatch) => {
   }
 };
 
-
 // get Employee Assignement
-export const getEmployeeAssignement = (empId,values) => async (dispatch) => {
+export const getEmployeeAssignement = (empId, values) => async (dispatch) => {
   try {
     const data = await AssignementService.getEmployeeAssignement(empId);
     dispatch({
@@ -34,7 +33,8 @@ export const getEmployeeAssignement = (empId,values) => async (dispatch) => {
   } catch (error) {
     dispatch({
       type: "GET_EMP_ASSIGNEMENT_FAILURE",
-      payload: error.response?.data?.message || "Get employee assignement failed",
+      payload:
+        error.response?.data?.message || "Get employee assignement failed",
     });
     return { success: false }; // ✅ return failure
   }
@@ -52,7 +52,8 @@ export const getAllEmployeeAssignements = () => async (dispatch) => {
   } catch (error) {
     dispatch({
       type: "GET_ALL_EMP_ASSIGNEMENTS_FAILURE",
-      payload: error.response?.data?.message || "Get employee assignements failed",
+      payload:
+        error.response?.data?.message || "Get employee assignements failed",
     });
     return { success: false }; // ✅ return failure
   }
@@ -70,45 +71,70 @@ export const getMyAssignements = () => async (dispatch) => {
   } catch (error) {
     dispatch({
       type: "GET_EMP_ASSIGNEMENT_FAILURE",
-      payload: error.response?.data?.message || "Get employee assignement failed",
+      payload:
+        error.response?.data?.message || "Get employee assignement failed",
     });
     return { success: false }; // ✅ return failure
   }
 };
 
 // get Employee Assignement
-export const updateAssignementTimeEntry = (assignementId,date,timeType) => async (dispatch) => {
-  try {
-    const data = await AssignementService.updateAssignementTimeEntry(assignementId,date,timeType);
-    dispatch({
-      type: "UPDATE_ASSIGNEMENT_ENTRY_SUCCESS",
-      payload: { data },
-    });
-    return { success: true }; // ✅ return success
-  } catch (error) {
-    dispatch({
-      type: "UPDATE_ASSIGNEMENT_ENTRY_FAILURE",
-      payload: error.response?.data?.message || "Update assignement entry failed",
-    });
-    return { success: false }; // ✅ return failure
-  }
-};
+export const updateAssignementTimeEntry =
+  (assignementId, date, timeType) => async (dispatch) => {
+    try {
+      const data = await AssignementService.updateAssignementTimeEntry(
+        assignementId,
+        date,
+        timeType
+      );
+      dispatch({
+        type: "UPDATE_ASSIGNEMENT_TIME_ENTRY_SUCCESS",
+        payload: { data },
+      });
+      return { success: true }; // ✅ return success
+    } catch (error) {
+      dispatch({
+        type: "UPDATE_ASSIGNEMENT_TIME_ENTRY_FAILURE",
+        payload:
+          error.response?.data?.message || "Update assignement entry failed",
+      });
+      return { success: false }; // ✅ return failure
+    }
+  };
 
+// get Employee Assignement
+export const updateAssignementTimeEntries =
+  (assignementId, entries) => async (dispatch) => {
+    try {
+      const data = await AssignementService.updateAssignementTimeEntries(
+        assignementId,
+        entries
+      );
+      dispatch({
+        type: "UPDATE_ASSIGNEMENT_TIME_ENTRIES_SUCCESS",
+        payload: { data },
+      });
+      return { success: true }; // ✅ return success
+    } catch (error) {
+      dispatch({
+        type: "UPDATE_ASSIGNEMENT_TIME_ENTRIES_FAILURE",
+        payload:
+          error.response?.data?.message || "Update assignement entry failed",
+      });
+      return { success: false }; // ✅ return failure
+    }
+  };
 
 // create Assignement
 export const resetAssignementErros = () => async (dispatch) => {
-    dispatch({
-      type: "RESET_ASSIGNEMENT_ERROR",
-    });
+  dispatch({
+    type: "RESET_ASSIGNEMENT_ERROR",
+  });
 };
 
 // create Assignement
 export const resetAssignementState = () => async (dispatch) => {
-    dispatch({
-      type: "RESET_ASSIGNEMENT",
-    });
+  dispatch({
+    type: "RESET_ASSIGNEMENT",
+  });
 };
-
-
-
-

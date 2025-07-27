@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@date-io/dayjs": "^2.16.0",
     "@emotion/react": "^11.10.4",
     "@emotion/styled": "^11.10.4",
     "@fullcalendar/core": "^5.11.3",
@@ -14,6 +15,7 @@
     "@mui/icons-material": "^5.10.3",
     "@mui/material": "^5.10.5",
     "@mui/x-data-grid": "^5.17.2",
+    "@mui/x-date-pickers": "^5.0.13",
     "@nivo/annotations": "^0.88.0",
     "@nivo/axes": "^0.88.0",
     "@nivo/bar": "^0.88.0",

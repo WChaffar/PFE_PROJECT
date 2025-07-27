@@ -31,6 +31,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { getAllProjects } from "../../actions/projectAction";
 import {
   getAllEmployeeAssignements,
+  updateAssignementTimeEntries,
   updateAssignementTimeEntry,
 } from "../../actions/assignementsAction";
 import { editTask, getTasksByProjectId } from "../../actions/taskAction";
@@ -38,6 +39,9 @@ import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 import { getEmployeeAbsencesForManager } from "../../actions/absenceAction";
 import dayjs from "dayjs";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 
 const timeStatusColors = {
   billable: "#4CAF50",
@@ -176,7 +180,7 @@ export default function TimeTracking() {
   const [searchTask, setSearchTask] = useState("");
   const [searchEmployer, setSearchEmployer] = useState("");
   const [startDate, setStartDate] = useState(
-    startOfWeek(new Date(), { weekStartsOn: 1 })
+    dayjs(startOfWeek(new Date(), { weekStartsOn: 1 }))
   );
   const [viewMode, setViewMode] = useState("Cost");
   const [entries, setEntries] = useState([]);
@@ -365,7 +369,7 @@ export default function TimeTracking() {
   const getStatus = (assignmentId, date) => {
     const formattedDate = format(date, "yyyy-MM-dd");
 
-    const entry = entries.find(
+    const entry = entries?.find(
       (e) =>
         String(e.assignmentId).trim() === String(assignmentId).trim() &&
         String(e.date).trim() === formattedDate
@@ -402,8 +406,8 @@ export default function TimeTracking() {
     });
   };
 
-  const updateWeekStatus = (assignmentId, newStatus) => {
-    const mergeEntries = (entries, newEntries) => {
+  const updateWeekStatus = async (assignmentId, newStatus) => {
+    const mergeEntries = async (entries, newEntries) => {
       const newAssignmentIds = new Set(
         newEntries.map((entry) => entry.assignmentId)
       );
@@ -422,9 +426,24 @@ export default function TimeTracking() {
       const dateStr = format(date, "yyyy-MM-dd");
       newEntries.push({ assignmentId, date: dateStr, status: newStatus });
     }
+    let newEntriesUpdate = newEntries?.map((e) => {
+      return {
+        date: e.date,
+        timeType: e.status,
+        durationInDays: 1,
+      };
+    });
 
-    const updatedEntries = mergeEntries(entries, newEntries);
-    setEntries(updatedEntries);
+    let result = await dispatch(
+      updateAssignementTimeEntries(assignmentId, newEntriesUpdate)
+    );
+    if (result.success) {
+      const updatedEntries = await mergeEntries(entries, newEntries);
+      setEntries(updatedEntries);
+      setSuccess("Time status updated successfully.");
+    } else {
+      setError("Time status update has failed.");
+    }
   };
 
   const projectColumns = [
@@ -459,9 +478,9 @@ export default function TimeTracking() {
     };
 
     let barColor = "#2196f3";
-    if (value >= 90) barColor = "#4caf50" ;
+    if (value >= 90) barColor = "#4caf50";
     else if (value >= 70) barColor = "#ff9800";
-    else if (value >= 40) barColor ="#f44336";
+    else if (value >= 40) barColor = "#f44336";
     else barColor = "#9e9e9e";
 
     return (
@@ -773,6 +792,39 @@ export default function TimeTracking() {
                 >
                   <ArrowForward />
                 </IconButton>
+                <Box display="flex" alignItems="center" gap={2}>
+                  {/* 🎯 Ajout du DatePicker */}
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <DatePicker
+                      label="Aller à une date"
+                      value={dayjs(startDate)}
+                      inputFormat="YYYY-MM-DD"
+                      disableMaskedInput
+                      onChange={(newValue) => {
+                        const dateObj =
+                          newValue instanceof dayjs
+                            ? newValue
+                            : dayjs(newValue);
+                        if (dateObj.isValid()) {
+                          setStartDate(
+                            dayjs(
+                              startOfWeek(dateObj.toDate(), { weekStartsOn: 1 })
+                            )
+                          );
+                        }
+                      }}
+                      slotProps={{
+                        textField: {
+                          size: "small",
+                          sx: { marginBottom: "-30px" },
+                        },
+                      }}
+                      renderInput={(params) => (
+                        <TextField {...params} fullWidth />
+                      )}
+                    />
+                  </LocalizationProvider>
+                </Box>
               </Box>
             )}
           </Box>

@@ -14,6 +14,7 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   Tooltip,
+  TextField,
 } from "@mui/material";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
@@ -28,10 +29,13 @@ import {
   getAllTeamMembersForManager,
 } from "../../actions/teamAction";
 import { getAllEmployeeAssignements } from "../../actions/assignementsAction";
-import { format } from "date-fns";
+import { format, startOfWeek } from "date-fns";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import { getEmployeeAbsencesForManager } from "../../actions/absenceAction";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
 
@@ -96,7 +100,9 @@ function getColor(taskName) {
 }
 
 const StaffingCalendar = () => {
-  const [startDate, setStartDate] = useState(dayjs("2025-06-22"));
+  const [startDate, setStartDate] = useState(
+    dayjs(startOfWeek(new Date(), { weekStartsOn: 1 }))
+  );
   const [searchName, setSearchName] = useState("");
   const [viewMode, setViewMode] = useState("perDay");
   const navigate = useNavigate();
@@ -112,7 +118,7 @@ const StaffingCalendar = () => {
     (state) => state.assignements.assignements
   );
   const selectedAbsences = useSelector((state) => state.absence.absences);
-  const [absences, setAbsences] = useState([]); 
+  const [absences, setAbsences] = useState([]);
 
   useEffect(() => {
     if (selectedTeamMembers.length !== 0) {
@@ -411,6 +417,29 @@ const StaffingCalendar = () => {
         >
           <ArrowForwardIosIcon />
         </IconButton>
+        {/* 🎯 Ajout du DatePicker */}
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <DatePicker
+            label="Aller à une date"
+            value={dayjs(startDate)}
+            inputFormat="YYYY-MM-DD"
+            disableMaskedInput
+            onChange={(newValue) => {
+              if (newValue) {
+                setStartDate(
+                  dayjs(startOfWeek(new Date(newValue), { weekStartsOn: 1 }))
+                );
+              }
+            }}
+            slotProps={{
+              textField: {
+                size: "small",
+                sx: { marginBottom: "-30px" },
+              },
+            }}
+            renderInput={(params) => <TextField {...params} fullWidth />}
+          />
+        </LocalizationProvider>
       </Box>
 
       <Box mb={2}>

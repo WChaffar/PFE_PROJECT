@@ -195,6 +195,50 @@ const updateAssignmentTimeEntry = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
+const updateAssignmentTimeEntries = async (req, res) => {
+  try {
+    const { assignmentId } = req.params;
+    const entries = req.body; // Expecting array of { date, durationInDays, timeType }
+  
+
+    const assignment = await Assignment.findById(assignmentId);
+
+    if (!assignment) {
+      return res.status(404).json({ error: "Assignment not found" });
+    }
+
+    entries.forEach(({ date, durationInDays = 1, timeType }) => {
+      const normalizedDate = new Date(date).toISOString().split("T")[0];
+
+      const entryIndex = assignment.timeEntries.findIndex(
+        (entry) => entry.date.toISOString().split("T")[0] === normalizedDate
+      );
+
+      if (entryIndex !== -1) {
+        // Update existing entry
+        assignment.timeEntries[entryIndex].durationInDays = durationInDays;
+        assignment.timeEntries[entryIndex].timeType = timeType;
+      } else {
+        // Add new entry
+        assignment.timeEntries.push({
+          date: new Date(date),
+          durationInDays,
+          timeType,
+        });
+      }
+    });
+
+    await assignment.save();
+
+    res.status(200).json({
+      message: "Time entries updated successfully",
+      assignment,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(400).json({ error: error.message });
+  }
+};
 
 // Delete an assignment
 const deleteAssignment = async (req, res) => {
@@ -267,4 +311,5 @@ module.exports = {
   getAllEmployeesAssignments,
   getAssignmentsForEmployee,
   updateAssignmentTimeEntry,
+  updateAssignmentTimeEntries,
 };
