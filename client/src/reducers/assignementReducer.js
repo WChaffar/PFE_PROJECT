@@ -48,6 +48,15 @@ const assignementReducer = (state = initialState, action) => {
         assignements: [],
         error: action.payload, // store error message
       };
+    case "UPDATE_ASSIGNEMENT_ENTRY_SUCCESS":
+      return {
+        ...state,
+      };
+    case "UPDATE_ASSIGNEMENT_ENTRY_FAILURE":
+      return {
+        ...state,
+        error: action.payload, // store error message
+      };
     case "RESET_ASSIGNEMENT":
       return {
         ...state,

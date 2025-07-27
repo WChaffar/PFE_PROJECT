@@ -43,12 +43,26 @@ const getMyAssignements = () => {
     })
 };
 
+const updateAssignementTimeEntry = (assignementId,date,timeType) => {
+  return axios
+    .put(base_url + `assignement/updateAssignement/${assignementId}`,
+      { date, durationInDays: 1, timeType }
+    , 
+     getConfig()
+    )
+    .then((response) => {
+      return response.data;
+    })
+};
+
+
 
 const AssignementService = {
     createAssignement,
     getEmployeeAssignement,
     getAllEmployeesAssignements,
-    getMyAssignements
+    getMyAssignements,
+    updateAssignementTimeEntry
    }
    
  

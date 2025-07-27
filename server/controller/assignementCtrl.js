@@ -154,6 +154,48 @@ const updateAssignmentDates = async (req, res) => {
   }
 };
 
+const updateAssignmentTimeEntry = async (req, res) => {
+  try {
+    const { assignmentId } = req.params;
+    const { date, durationInDays = 1, timeType } = req.body;
+
+    const assignment = await Assignment.findById(assignmentId);
+
+    if (!assignment) {
+      return res.status(404).json({ error: "Assignment not found" });
+    }
+    // Check if an entry already exists for the given date
+    const entryIndex = assignment.timeEntries.findIndex(
+      (entry) =>
+        entry.date.toISOString().split("T")[0] ===
+        new Date(date).toISOString().split("T")[0]
+    );
+
+    if (entryIndex !== -1) {
+      // Entry exists, update it
+      assignment.timeEntries[entryIndex].durationInDays = durationInDays;
+      assignment.timeEntries[entryIndex].timeType = timeType;
+    } else {
+      // Entry does not exist, create new
+      const newTimeEntry = {
+        date: new Date(date),
+        durationInDays,
+        timeType,
+      };
+      assignment.timeEntries.push(newTimeEntry);
+    }
+    console.log(assignment);
+    await assignment.save();
+
+    res
+      .status(200)
+      .json({ message: "Time entry updated successfully", assignment });
+  } catch (error) {
+    console.error(error);
+    res.status(400).json({ error: error.message });
+  }
+};
+
 // Delete an assignment
 const deleteAssignment = async (req, res) => {
   try {
@@ -205,7 +247,6 @@ const getAllEmployeesAssignments = async (req, res) => {
 // Get assignments for a specific employee (like Jeff Bezos in your screenshot)
 const getAssignmentsForEmployee = async (req, res) => {
   try {
-
     const assignments = await Assignment.find({ employee: req.user._id })
       .populate("project", "client projectName requiredSkills")
       .populate("employee", "fullName keySkills")
@@ -224,5 +265,6 @@ module.exports = {
   updateAssignmentDates,
   deleteAssignment,
   getAllEmployeesAssignments,
-  getAssignmentsForEmployee
+  getAssignmentsForEmployee,
+  updateAssignmentTimeEntry,
 };

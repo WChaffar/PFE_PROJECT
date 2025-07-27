@@ -29,8 +29,11 @@ import { tokens } from "../../theme";
 import { addDays, format, startOfWeek, endOfWeek } from "date-fns";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllProjects } from "../../actions/projectAction";
-import { getAllEmployeeAssignements } from "../../actions/assignementsAction";
-import { getTasksByProjectId } from "../../actions/taskAction";
+import {
+  getAllEmployeeAssignements,
+  updateAssignementTimeEntry,
+} from "../../actions/assignementsAction";
+import { editTask, getTasksByProjectId } from "../../actions/taskAction";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 
@@ -174,12 +177,14 @@ export default function TimeTracking() {
     startOfWeek(new Date(), { weekStartsOn: 1 })
   );
   const [viewMode, setViewMode] = useState("Cost");
-  const [entries, setEntries] = useState(taskTimeEntries);
+  const [entries, setEntries] = useState([]);
   const selectedProjects = useSelector((state) => state.projects.projects);
   const [projects, setProjects] = useState([]);
   const dispatch = useDispatch();
   const [loadingProjects, setLoadingProjects] = useState(false);
   const [getProjectsError, setGetProjectsError] = useState(null);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
   const [assignments, setAssignements] = useState([]);
   const selectedAssignements = useSelector(
     (state) => state.assignements.assignements
@@ -207,6 +212,13 @@ export default function TimeTracking() {
   useEffect(() => {
     dispatch(getAllEmployeeAssignements());
   }, [dispatch]); // <== Appelle une seule fois le fetch
+
+  useEffect(() => {
+    setTimeout(() => {
+      setSuccess(null);
+      setError(null);
+    }, 5000);
+  }, [success, error]);
 
   useEffect(() => {
     if (selectedAssignements.length !== 0) {
@@ -237,9 +249,29 @@ export default function TimeTracking() {
           projectId: assignment?.project?._id,
           startDate: assignment?.startDate,
           endDate: assignment?.endDate,
+          timeEntries: assignment?.timeEntries,
         };
       });
       setAssignements(assignementsMap);
+      const dynamicEntries = [];
+
+      assignementsMap.forEach((assignment) => {
+        assignment.dates.forEach((dateObj) => {
+          const dateStr = dateObj.dates;
+          const matchingEntry = assignment.timeEntries?.find(
+            (entry) =>
+              format(entry.date, "yyyy-MM-dd") === format(dateStr, "yyyy-MM-dd")
+          );
+
+          dynamicEntries.push({
+            assignmentId: assignment.id,
+            date: dateStr,
+            status: matchingEntry ? matchingEntry.timeType : "none",
+          });
+        });
+      });
+
+      setEntries(dynamicEntries);
     }
   }, [selectedAssignements]); // <== Écoute les changements de selectedProjects
 
@@ -281,58 +313,67 @@ export default function TimeTracking() {
     "MMM dd, yyyy"
   )}`;
 
-  const getStatus = (taskId, date) => {
+  const getStatus = (assignmentId, date) => {
     const formattedDate = format(date, "yyyy-MM-dd");
 
     const entry = entries.find(
       (e) =>
-        String(e.taskId).trim() === String(taskId).trim() &&
+        String(e.assignmentId).trim() === String(assignmentId).trim() &&
         String(e.date).trim() === formattedDate
     );
 
-    if (entry) return entry ? entry.status : "none";
+    return entry ? entry.status : "none";
   };
 
-  const updateStatus = (taskId, date, newStatus) => {
+  const updateStatus = async (assignmentId, date, newStatus) => {
     const dateStr = format(date, "yyyy-MM-dd");
+    let result = await dispatch(
+      updateAssignementTimeEntry(assignmentId, date, newStatus)
+    );
+
+    if (result.success) {
+      setSuccess("Time status updated successfully.");
+    } else {
+      setError("Time status update has failed.");
+    }
+
     setEntries((prev) => {
       const exists = prev.find(
-        (e) => e.taskId === taskId && e.date === dateStr
+        (e) => e.assignmentId === assignmentId && e.date === dateStr
       );
       if (exists) {
         return prev.map((e) =>
-          e.taskId === taskId && e.date === dateStr
+          e.assignmentId === assignmentId && e.date === dateStr
             ? { ...e, status: newStatus }
             : e
         );
       } else {
-        return [...prev, { taskId, date: dateStr, status: newStatus }];
+        return [...prev, { assignmentId, date: dateStr, status: newStatus }];
       }
     });
   };
 
-  const updateWeekStatus = (taskId, newStatus) => {
+  const updateWeekStatus = (assignmentId, newStatus) => {
     const mergeEntries = (entries, newEntries) => {
-      // Extraire les taskIds uniques des newEntries
-      const newTaskIds = new Set(newEntries.map((entry) => entry.taskId));
-
-      // Filtrer les anciennes entrées pour supprimer celles avec un taskId présent dans newEntries
-      const filteredOldEntries = entries.filter(
-        (entry) => !newTaskIds.has(entry.taskId)
+      const newAssignmentIds = new Set(
+        newEntries.map((entry) => entry.assignmentId)
       );
 
-      // Combiner les anciennes filtrées avec les nouvelles
+      const filteredOldEntries = entries.filter(
+        (entry) => !newAssignmentIds.has(entry.assignmentId)
+      );
+
       return [...newEntries, ...filteredOldEntries];
     };
 
     let newEntries = [];
 
     for (let i = 0; i < visibleDays.length; i++) {
-      const dayIndex = i;
-      const date = addDays(startDate, dayIndex);
+      const date = addDays(startDate, i);
       const dateStr = format(date, "yyyy-MM-dd");
-      newEntries.push({ taskId, date: dateStr, status: newStatus });
+      newEntries.push({ assignmentId, date: dateStr, status: newStatus });
     }
+
     const updatedEntries = mergeEntries(entries, newEntries);
     setEntries(updatedEntries);
   };
@@ -455,14 +496,23 @@ export default function TimeTracking() {
         flex: 0.5,
         sortable: false,
         renderCell: (params) => {
-          const taskId = params.row.id;
+          const assignmentId = params.row.id;
           const date = addDays(startDate, dayIndex);
-          const status = getStatus(taskId, date);
+          const status = getStatus(assignmentId, date);
+          const dateStr = format(addDays(startDate, dayIndex), "yyyy-MM-dd");
+          const assignmentDates = params.row.dates.map((d) => d.dates);
+
+          if (!assignmentDates.includes(dateStr)) {
+            return null; // Pas de cellule pour cette date
+          }
+
           return (
             <StatusCell
               status={status}
-              onChange={(newStatus) => updateStatus(taskId, date, newStatus)}
-              key={taskId}
+              onChange={(newStatus) => {
+                updateStatus(assignmentId, dateStr, newStatus);
+              }}
+              key={assignmentId}
             />
           );
         },
@@ -473,10 +523,10 @@ export default function TimeTracking() {
       headerName: "Update throughout the week",
       flex: 1.5,
       renderCell: (params) => {
-        const taskId = params.row.id;
+        const assignmentId = params.row.id;
         return (
           <WeekStatusCell
-            onChange={(newStatus) => updateWeekStatus(taskId, newStatus)}
+            onChange={(newStatus) => updateWeekStatus(assignmentId, newStatus)}
           />
         );
       },
@@ -505,6 +555,7 @@ export default function TimeTracking() {
           onChange={(id, newVal) => {
             // Mets à jour le state global ou fais un appel API ici
             console.log("Update workload", id, newVal);
+            dispatch(editTask(id, { workload: newVal }));
           }}
         />
       ),
@@ -592,6 +643,33 @@ export default function TimeTracking() {
       </Box>
       {selectedProject && (
         <Box>
+          {" "}
+          {error && (
+            <Box
+              mt={2}
+              mb={2}
+              p={2}
+              borderRadius="5px"
+              bgcolor={colors.redAccent[500]}
+              color="white"
+              fontWeight="bold"
+            >
+              {error}
+            </Box>
+          )}
+          {success && (
+            <Box
+              mt={2}
+              mb={2}
+              p={2}
+              borderRadius="5px"
+              bgcolor={colors.greenAccent[500]}
+              color="white"
+              fontWeight="bold"
+            >
+              {success}
+            </Box>
+          )}
           <Box
             mb={2}
             display="flex"
@@ -609,7 +687,6 @@ export default function TimeTracking() {
               <MenuItem value="Workload">Workload</MenuItem>
               <MenuItem value="Cost">Cost</MenuItem>
             </TextField>
-
             {viewMode === "Cost" && (
               <Box display="flex" alignItems="center" gap={2}>
                 <IconButton
@@ -630,7 +707,6 @@ export default function TimeTracking() {
               </Box>
             )}
           </Box>
-
           <Box
             height="35vh"
             sx={{
@@ -689,7 +765,6 @@ export default function TimeTracking() {
               pagination
             />
           </Box>
-
           {viewMode === "Cost" && (
             <Box
               display="flex"

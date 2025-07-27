@@ -139,7 +139,5 @@ const editOneTask = asyncHandler(async (req, res) => {
   }
 });
 
-  
-
 
   module.exports = {createTask,getAllTasks, getOneTask,deleteOneTask,editOneTask,getTasksByPorjectID};

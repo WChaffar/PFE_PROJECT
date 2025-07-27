@@ -2,14 +2,7 @@ const mongoose = require("mongoose"); // Erase if already required
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 
-// Déclaration du schéma de TimeEntry si nécessaire
-const timeEntrySchema = new mongoose.Schema(
-  {
-    date: { type: Date, required: true },
-    durationInDays: {type :Number, required: true},
-    timeType: { type: String , required: true },
-  },
-);
+
 
 // Declare the Schema of the Mongo model
 var taskSchema = new mongoose.Schema(
@@ -65,9 +58,6 @@ var taskSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
-    timeEntries:{
-      type:[timeEntrySchema],
-    },
     workload :{
        type : Number,
        default : 0
@@ -76,7 +66,7 @@ var taskSchema = new mongoose.Schema(
   {
     timestamps: true,
   }
-);
+); 
 
 // Middleware pour valider les dates avant l'enregistrement
 taskSchema.pre("save", function (next) {

@@ -76,6 +76,24 @@ export const getMyAssignements = () => async (dispatch) => {
   }
 };
 
+// get Employee Assignement
+export const updateAssignementTimeEntry = (assignementId,date,timeType) => async (dispatch) => {
+  try {
+    const data = await AssignementService.updateAssignementTimeEntry(assignementId,date,timeType);
+    dispatch({
+      type: "UPDATE_ASSIGNEMENT_ENTRY_SUCCESS",
+      payload: { data },
+    });
+    return { success: true }; // ✅ return success
+  } catch (error) {
+    dispatch({
+      type: "UPDATE_ASSIGNEMENT_ENTRY_FAILURE",
+      payload: error.response?.data?.message || "Update assignement entry failed",
+    });
+    return { success: false }; // ✅ return failure
+  }
+};
+
 
 // create Assignement
 export const resetAssignementErros = () => async (dispatch) => {
