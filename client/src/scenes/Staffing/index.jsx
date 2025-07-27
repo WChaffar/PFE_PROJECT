@@ -112,7 +112,7 @@ const StaffingCalendar = () => {
     (state) => state.assignements.assignements
   );
   const selectedAbsences = useSelector((state) => state.absence.absences);
-  const [absences, setAbsences] = useState([]);
+  const [absences, setAbsences] = useState([]); 
 
   useEffect(() => {
     if (selectedTeamMembers.length !== 0) {

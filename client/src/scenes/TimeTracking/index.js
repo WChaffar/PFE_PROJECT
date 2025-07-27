@@ -36,6 +36,8 @@ import {
 import { editTask, getTasksByProjectId } from "../../actions/taskAction";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
+import { getEmployeeAbsencesForManager } from "../../actions/absenceAction";
+import dayjs from "dayjs";
 
 const timeStatusColors = {
   billable: "#4CAF50",
@@ -191,6 +193,18 @@ export default function TimeTracking() {
   );
   const selectedTasks = useSelector((state) => state.tasks.tasks);
   const [tasks, setTasks] = useState([]);
+  const selectedAbsences = useSelector((state) => state.absence.absences);
+  const [absences, setAbsences] = useState([]);
+
+  useEffect(() => {
+    dispatch(getEmployeeAbsencesForManager());
+  }, [dispatch]); // <== Appelle une seule fois le fetch
+
+  useEffect(() => {
+    if (selectedAbsences.length !== 0) {
+      setAbsences(selectedAbsences);
+    }
+  }, [selectedAbsences]); // <== Appelle une seule fois le fetch
 
   const getTasksOfSelectedProject = (params) => {
     dispatch(getTasksByProjectId(params.row.id));
@@ -304,10 +318,45 @@ export default function TimeTracking() {
     fetchData();
   }, [dispatch]);
 
+  const isAbsent = (memberId, date) => {
+    return absences.some((absence) => {
+      return (
+        absence.employee._id === memberId &&
+        dayjs(date).isSameOrAfter(dayjs(absence.startDate), "day") &&
+        dayjs(date).isSameOrBefore(dayjs(absence.endDate), "day")
+      );
+    });
+  };
+
+  const getAbsenceType = (memberId, date) => {
+    const absence = absences.find((absence) => {
+      return (
+        absence.employee._id === memberId &&
+        dayjs(date).isSameOrAfter(dayjs(absence.startDate), "day") &&
+        dayjs(date).isSameOrBefore(dayjs(absence.endDate), "day")
+      );
+    });
+
+    return absence?.type || null;
+  };
+
+  const absenceColors = {
+    "Paid leave": "#42a5f5",
+    "Unpaid leave": "#ef5350",
+    "Alternating training days": "#ab47bc",
+  };
+
   const daysToShow = 7;
-  const visibleDays = Array.from({ length: daysToShow }, (_, i) =>
-    format(addDays(startDate, i), "EE dd")
-  );
+
+  const visibleDays = [];
+  for (let i = 0; i < 7; i++) {
+    const day = addDays(startDate, i);
+    const dayIndex = day.getDay();
+    if (dayIndex !== 0 && dayIndex !== 6) {
+      visibleDays.push(format(day, "EE dd"));
+    }
+  }
+
   const weekRange = `${format(startDate, "MMM dd, yyyy")} - ${format(
     endOfWeek(startDate, { weekStartsOn: 1 }),
     "MMM dd, yyyy"
@@ -410,9 +459,9 @@ export default function TimeTracking() {
     };
 
     let barColor = "#2196f3";
-    if (value >= 90) barColor = "#f44336";
+    if (value >= 90) barColor = "#4caf50" ;
     else if (value >= 70) barColor = "#ff9800";
-    else if (value >= 40) barColor = "#4caf50";
+    else if (value >= 40) barColor ="#f44336";
     else barColor = "#9e9e9e";
 
     return (
@@ -488,37 +537,57 @@ export default function TimeTracking() {
         </Box>
       ),
     },
-    ...visibleDays.map((day, i) => {
-      const dayIndex = i;
-      return {
-        field: day,
-        headerName: day,
-        flex: 0.5,
-        sortable: false,
-        renderCell: (params) => {
-          const assignmentId = params.row.id;
-          const date = addDays(startDate, dayIndex);
-          const status = getStatus(assignmentId, date);
-          const dateStr = format(addDays(startDate, dayIndex), "yyyy-MM-dd");
-          const assignmentDates = params.row.dates.map((d) => d.dates);
+    ...Array.from({ length: 7 }, (_, i) => addDays(startDate, i))
+      .filter((date) => {
+        const day = date.getDay();
+        return day !== 0 && day !== 6; // Skip Sunday(0) and Saturday(6)
+      })
+      .map((date) => {
+        const dayLabel = format(date, "EE dd");
+        return {
+          field: dayLabel,
+          headerName: dayLabel,
+          flex: 0.5,
+          sortable: false,
+          renderCell: (params) => {
+            const assignmentId = params.row.id;
+            const status = getStatus(assignmentId, date);
+            const dateStr = format(date, "yyyy-MM-dd");
+            const assignmentDates = params.row.dates.map((d) => d.dates);
+            const memberId = params.row.memberId;
 
-          if (!assignmentDates.includes(dateStr)) {
-            return null; // Pas de cellule pour cette date
-          }
+            if (!assignmentDates.includes(dateStr)) return null;
 
-          return (
-            <StatusCell
-              status={status}
-              onChange={(newStatus) => {
-                updateStatus(assignmentId, dateStr, newStatus);
-              }}
-              key={assignmentId}
-            />
-          );
-        },
-      };
-    }),
+            if (isAbsent(memberId, dateStr)) {
+              const absenceType = getAbsenceType(memberId, dateStr);
+              const bgColor = absenceColors[absenceType] || "#9e9e9e";
 
+              return (
+                <Tooltip title={absenceType}>
+                  <Box
+                    width={28}
+                    height={28}
+                    borderRadius="4px"
+                    sx={{
+                      backgroundColor: bgColor,
+                      border: "1px solid #ccc",
+                    }}
+                  />
+                </Tooltip>
+              );
+            }
+
+            return (
+              <StatusCell
+                status={status}
+                onChange={(newStatus) =>
+                  updateStatus(assignmentId, dateStr, newStatus)
+                }
+              />
+            );
+          },
+        };
+      }),
     {
       headerName: "Update throughout the week",
       flex: 1.5,
@@ -792,6 +861,20 @@ export default function TimeTracking() {
                   }}
                 />
                 <Typography variant="body2">Inactive</Typography>
+              </Box>
+              <Box display="flex" alignItems="center" gap={1}>
+                <Box width={12} height={12} bgcolor="#42a5f5" />
+                <Typography variant="body2">Paid Leave</Typography>
+              </Box>
+              <Box display="flex" alignItems="center" gap={1}>
+                <Box width={12} height={12} bgcolor="#ef5350" />
+                <Typography variant="body2">Unpaid Leave</Typography>
+              </Box>
+              <Box display="flex" alignItems="center" gap={1}>
+                <Box width={12} height={12} bgcolor="#ab47bc" />
+                <Typography variant="body2">
+                  Alternating Training Days
+                </Typography>
               </Box>
             </Box>
           )}
