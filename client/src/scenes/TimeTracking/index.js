@@ -533,7 +533,7 @@ export default function TimeTracking() {
     },
     {
       field: "assignedTo",
-      headerName: "Assigned To / From - To",
+      headerName: "Assigned To",
       flex: 1.2,
       renderCell: (params) => (
         <Box display="flex" alignItems="center" gap={1} width="100%">
@@ -543,17 +543,27 @@ export default function TimeTracking() {
                 <Avatar src={params.row.avatar} sx={{ marginRight: "10px" }} />
                 <Box>{params.row.assignedTo || "Unassigned"}</Box>
               </Box>
-              <Box
-                sx={{ marginTop: "-10px", textAlign: "right", width: "100%" }}
-              >
-                From : {format(params?.row?.startDate, "yyyy-MM-dd")} To :{" "}
-                {format(params?.row?.endDate, "yyyy-MM-dd")}
-              </Box>
             </Box>
           ) : (
             <Avatar>?</Avatar>
           )}
         </Box>
+      ),
+    },
+    {
+      field: "startDate",
+      headerName: "From",
+      flex: 1,
+      renderCell: (params) => (
+        <Box>{format(params?.row?.startDate, "dd-MM-yyyy")}</Box>
+      ),
+    },
+    {
+      field: "endDate",
+      headerName: "To",
+      flex: 1,
+      renderCell: (params) => (
+        <Box> {format(params?.row?.endDate, "dd-MM-yyyy")}</Box>
       ),
     },
     ...Array.from({ length: 7 }, (_, i) => addDays(startDate, i))
