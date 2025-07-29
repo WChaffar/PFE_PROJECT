@@ -34,6 +34,9 @@ import {
 } from "../../actions/teamAction";
 import { BACKEND_URL } from "../../config/ServerConfig";
 
+import { getAllEmployeeAssignements } from "../../actions/assignementsAction";
+import { format, getDate } from "date-fns";
+
 const CustomToolbar = () => {
   return (
     <GridToolbarContainer>
@@ -54,11 +57,16 @@ const TeamManagement = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const selectedTeamMembers = useSelector((state) => state.team.team);
-  const [teamMemebers, setTeamMembers] = useState([]);
+  const [teamMembers, setTeamMembers] = useState([]);
   const [openSnackbar, setOpenSnackbar] = React.useState(false); // Snackbar state
   const [snackbarMessage, setSnackbarMessage] = React.useState(""); // Message for Snackbar
   const error = useSelector((state) => state.team.error);
   const [errorState, setErrorState] = useState(null);
+  const selectedAssignements = useSelector(
+    (state) => state.assignements.assignements
+  );
+  const [availableTeamMemebers, setAvailableTeamMembers] = useState([]);
+  const [onProjectTeamMemebers, setOnProjectTeamMembers] = useState([]);
 
   useEffect(() => {
     if (selectedTeamMembers.length !== 0) {
@@ -80,6 +88,39 @@ const TeamManagement = () => {
   useEffect(() => {
     dispatch(getAllTeamMembersForManager());
   }, [dispatch]); // <== Appelle une seule fois le fetch
+
+  useEffect(() => {
+    dispatch(getAllEmployeeAssignements());
+  }, [dispatch]); // <== Appelle une seule fois le fetch
+
+  useEffect(() => {
+    if (teamMembers?.length > 0 && selectedAssignements?.length > 0) {
+      const onProject = [];
+      const available = [];
+
+      teamMembers.forEach((member) => {
+        const hasActiveAssignment = selectedAssignements.some((a) => {
+          return (
+            a.employee._id === member.id &&
+            format(a?.endDate, "yyyy-MM-dd") >
+              format(new Date(), "yyyy-MM-dd") &&
+            format(a?.startDate, "yyyy-MM-dd") <=
+              format(new Date(), "yyyy-MM-dd")
+          );
+        });
+        if (hasActiveAssignment) {
+          onProject.push(member);
+        } else {
+          available.push(member);
+        }
+      });
+
+      setOnProjectTeamMembers(onProject);
+      setAvailableTeamMembers(available);
+      console.log("On Project:", onProject.length);
+      console.log("Available:", available.length);
+    }
+  }, [teamMembers, selectedAssignements]);
 
   useEffect(() => {
     if (openSnackbar) {
@@ -359,11 +400,11 @@ const TeamManagement = () => {
           alignItems="center"
         >
           <Typography variant="h5" fontWeight="bold">
-            {teamMemebers?.length}
+            {teamMembers?.length}
           </Typography>
           <Typography>Team Members</Typography>
           <Box>
-            <AccountsAvatars accounts={teamMemebers} />
+            <AccountsAvatars accounts={teamMembers} />
           </Box>
         </Box>
 
@@ -378,18 +419,11 @@ const TeamManagement = () => {
           alignItems="center"
         >
           <Typography variant="h5" fontWeight="bold">
-            3
+            {availableTeamMemebers?.length}
           </Typography>
-          <Typography>Available Now</Typography>
+          <Typography>Available Now </Typography>
           <Box mt={2} display="flex">
-            <img
-              src="https://i.pravatar.cc/40?img=4"
-              style={{ borderRadius: "50%" }}
-            />
-            <img
-              src="https://i.pravatar.cc/40?img=5"
-              style={{ borderRadius: "50%", marginLeft: -10 }}
-            />
+            <AccountsAvatars accounts={availableTeamMemebers} />
           </Box>
         </Box>
 
@@ -404,18 +438,11 @@ const TeamManagement = () => {
           alignItems="center"
         >
           <Typography variant="h5" fontWeight="bold">
-            20
+            {onProjectTeamMemebers?.length}
           </Typography>
           <Typography>On Project</Typography>
           <Box mt={2} display="flex">
-            <img
-              src="https://i.pravatar.cc/40?img=6"
-              style={{ borderRadius: "50%" }}
-            />
-            <img
-              src="https://i.pravatar.cc/40?img=7"
-              style={{ borderRadius: "50%", marginLeft: -10 }}
-            />
+            <AccountsAvatars accounts={onProjectTeamMemebers} />
           </Box>
         </Box>
       </Box>
@@ -441,7 +468,7 @@ const TeamManagement = () => {
           </Alert>
         )}
         <DataGrid
-          rows={teamMemebers}
+          rows={teamMembers}
           columns={columns}
           pageSize={5}
           rowsPerPageOptions={[5]}

@@ -26,6 +26,8 @@ const LoginForm = () => {
       if (isActivated === true) {
         if (role === "RH") {
           navigate("/review-accounts");
+        }else if(role === "Employee"){
+         navigate("/my-absences");
         } else {
           navigate("/Dashboard");
         }

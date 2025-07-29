@@ -57,7 +57,7 @@ function AuthRedirect({ children }) {
     isActivated === true ? (
       role === "RH" ? (
         <Navigate to="/review-accounts" replace />
-      ) : (
+      ) : role === "Employee" ? (<Navigate to="/my-absences" replace />) :(
         <Navigate to="/dashboard" replace />
       )
     ) : (
