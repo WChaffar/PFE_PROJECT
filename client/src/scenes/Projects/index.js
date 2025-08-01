@@ -45,6 +45,8 @@ import {
   DialogActions,
 } from "@mui/material";
 import { Snackbar, Alert } from "@mui/material";
+import { getAllEmployeeAssignements } from "../../actions/assignementsAction";
+import { getTasksByProjectId } from "../../actions/taskAction";
 
 const CustomToolbar = () => {
   return (
@@ -68,8 +70,61 @@ const Projects = () => {
   const [projects, setProjects] = useState([]);
   const [openSnackbar, setOpenSnackbar] = React.useState(false); // Snackbar state
   const [snackbarMessage, setSnackbarMessage] = React.useState(""); // Message for Snackbar
-  const [loadingProjects,setLoadingProjects] = useState(false);
-  const [getProjectsError, setGetProjectsError ] = useState(null);
+  const [loadingProjects, setLoadingProjects] = useState(false);
+  const [getProjectsError, setGetProjectsError] = useState(null);
+  const [assignments, setAssignements] = useState([]);
+  const selectedAssignements = useSelector(
+    (state) => state.assignements.assignements
+  );
+
+  const selectedTasks = useSelector((state) => state.tasks.tasks);
+  const [tasks, setTasks] = useState([]);
+  const [tasksLoading, setTasksLoading] = useState(false);
+  useEffect(() => {
+    if (selectedAssignements.length !== 0) {
+      setAssignements(selectedAssignements);
+    }
+  }, [selectedAssignements]); // <== Écoute les changements de selectedProjects
+
+  useEffect(() => {
+    let selectTasks = selectedTasks.map((task) => {
+      // Récupère les noms sans doublons
+      let uniqueEmployees = [
+        ...new Map(
+          assignments
+            .filter((a) => a.taskId._id === task?._id)
+            .map((a) => [a.employee.fullName, a.employee])
+        ).values(),
+      ];
+
+      // Transforme chaque employé unique en <Box>
+      let assigned = uniqueEmployees.map((employee) => (
+        <Box key={employee._id}>{employee.fullName}</Box>
+      ));
+      return {
+        id: task?._id,
+        Task: task?.taskName,
+        skills: task?.requiredSkills,
+        assignedTo: assigned,
+        experience: task?.RequiredyearsOfExper,
+        phase: task?.projectPhase,
+        projectId: task?.projectId,
+        Deadline: format(task?.endDate, "dd-MM-yyyy"),
+        workload: task?.workload,
+      };
+    });
+    setTasks(selectTasks);
+    setTasksLoading(false);
+  }, [selectedTasks]);
+
+  const getTasksOfSelectedProject = async (params) => {
+    setTasksLoading(true);
+    const result = await dispatch(getTasksByProjectId(params.row.id));
+  };
+
+  useEffect(() => {
+    dispatch(getAllEmployeeAssignements());
+  }, [dispatch]); // <== Appelle une seule fois le fetch
 
   useEffect(() => {
     if (selectedProjects.length !== 0) {
@@ -92,14 +147,14 @@ const Projects = () => {
   }, [selectedProjects]); // <== Écoute les changements de selectedProjects
 
   useEffect(() => {
-    setLoadingProjects(true)
+    setLoadingProjects(true);
     async function fetchData(params) {
       const result = await dispatch(getAllProjects());
       if (result.success) {
         setLoadingProjects(false);
-      }else {
-         setLoadingProjects(false);
-        setGetProjectsError(result.error)
+      } else {
+        setLoadingProjects(false);
+        setGetProjectsError(result.error);
       }
     }
     fetchData();
@@ -260,10 +315,14 @@ const Projects = () => {
 
   const projectTasksDeadlineColumns = [
     {
-      field: "Overdue",
-      headerName: "Overdue",
+      field: "assignedTo",
+      headerName: "Assigned To",
       flex: 1,
       cellClassName: "name-column--cell",
+      renderCell: (params) => {
+        const value = params.row.assignedTo;
+        return <Box>{value}</Box>;
+      },
     },
     {
       field: "Task",
@@ -282,7 +341,7 @@ const Projects = () => {
       headerName: "Workload",
       flex: 1.5,
       renderCell: (params) => {
-        const value = params.value;
+        const value = params.row.workload;
         return (
           <Box display="flex" alignItems="center" width="100%">
             <Box width="100%" mr={1}>
@@ -481,6 +540,7 @@ const Projects = () => {
           rowsPerPageOptions={[5, 10, 25, 50, 100]}
           pagination
           loading={loadingProjects && !getProjectsError}
+          onRowClick={(params) => getTasksOfSelectedProject(params)}
         />
       </Box>
       <Box>
@@ -623,7 +683,7 @@ const Projects = () => {
                 }}
               >
                 <DataGrid
-                  rows={projectTasksDeadlineData}
+                  rows={tasks}
                   columns={projectTasksDeadlineColumns}
                   hideFooter
                 />
