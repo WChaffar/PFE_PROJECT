@@ -31,6 +31,19 @@ const taskReducer = (state = initialState, action) => {
         ...state,
         error: action.payload, // store error message
       };
+
+    case "GET_TASKS_BYMANAGERID_SUCCESS":
+      return {
+        ...state,
+        activeTask: {},
+        tasks: action.payload.data,
+        error: null, // NEW: to store task-related errors
+      };
+    case "GET_TASKS_BYMANAGERID_FAILURE":
+      return {
+        ...state,
+        error: action.payload, // store error message
+      };
     case "GET_TASK_By_ID_SUCCESS":
       return {
         ...state,
@@ -64,7 +77,7 @@ const taskReducer = (state = initialState, action) => {
         ...state,
         error: action.payload, // store error message
       };
- 
+
     case "RESET_TASKS_STATE":
       return {
         ...state,

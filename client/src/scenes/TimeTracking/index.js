@@ -674,7 +674,7 @@ export default function TimeTracking() {
     <Box p={3}>
       {" "}
       <Typography variant="h4" fontWeight="bold">
-        Time Tracking{" "}
+        Time and Workload Tracking{" "}
       </Typography>{" "}
       <Typography variant="body2" color="textSecondary" mb={2}>
         Track employee time per project for efficient planning.{" "}

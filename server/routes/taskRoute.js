@@ -6,6 +6,7 @@ const {
     deleteOneTask,
     editOneTask,
     getTasksByPorjectID,
+    getTasksByManagerID,
 } = require("../controller/taskCtrl");
 const { authMiddleware} = require("../middlewares/authMiddleware");
 
@@ -18,6 +19,7 @@ router.get("/getOne/:id",authMiddleware,getOneTask);
 router.delete("/deleteOne/:id",authMiddleware,deleteOneTask);
 router.put("/editOne/:id",authMiddleware,editOneTask);
 router.get("/getTaskByProjectID/:projectId",authMiddleware,getTasksByPorjectID);
+router.get("/getTaskByManagerID",authMiddleware,getTasksByManagerID);
 
 
 module.exports = router;

@@ -20,7 +20,7 @@ const data = [
   { project: "Lambda", progress: 65 },
 ];
 
-const ProjectBarChart = ({ isDashboard = false }) => {
+const ProjectBarChart = ({ isDashboard = false, projectWorkload }) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const containerRef = useRef(null);
@@ -89,7 +89,7 @@ const ProjectBarChart = ({ isDashboard = false }) => {
       >
         <Box sx={{ width: `${data.length * 90}px`, height: "200px" }}>
           <ResponsiveBar
-            data={data}
+            data={projectWorkload}
             keys={["progress"]}
             indexBy="project"
             margin={{ top: 20, right: 20, bottom: 60, left: 50 }}

@@ -24,6 +24,17 @@ const getTaskByProjectID = (projectId) => {
 };
 
 
+const getTaskByManagerID = () => {
+  return axios
+    .get(base_url + `task/getTaskByManagerID`, 
+     getConfig()
+    )
+    .then((response) => {
+      return response.data;
+    })
+};
+
+
 const getTaskById = (taskId) => {
   return axios
     .get(base_url + `task/getOne/${taskId}`, 
@@ -61,7 +72,8 @@ const TaskService = {
     getTaskByProjectID,
     getTaskById,
     deleteTaskById,
-    editTask
+    editTask,
+    getTaskByManagerID
    }
    
  

@@ -98,6 +98,26 @@ export const editTask = (id,values) => async (dispatch) => {
   }
 };
 
+
+  // get Tasks by project id
+export const getTasksByManagerId = () => async (dispatch) => {
+  try {
+    const data = await TaskService.getTaskByManagerID();
+    dispatch({
+      type: 'GET_TASKS_BYMANAGERID_SUCCESS',
+      payload: { data },
+    });
+    return { success: true }; // ✅ return success
+  } catch (error) {
+    dispatch({
+      type: 'GET_TASKS_BYMANAGERID_FAILURE',
+      payload: error.response?.data?.message || 'Get tasks by manager id failed',
+    });
+    return { success: false }; // ✅ return failure
+  }
+};
+
+
   // Reset task state
 export const ResetTaskState = () => async (dispatch) => {
     dispatch({

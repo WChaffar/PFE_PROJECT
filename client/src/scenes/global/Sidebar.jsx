@@ -194,7 +194,7 @@ const Sidebar = () => {
                 setSelected={setSelected}
               />
               <Item
-                title="Time Tracking"
+                title="Time & Workload"
                 to="/timeTraking"
                 icon={<WorkHistoryIcon />}
                 selected={selected}
