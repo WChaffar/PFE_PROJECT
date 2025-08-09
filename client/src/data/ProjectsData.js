@@ -116,9 +116,9 @@ export const projectsData = [
 
   export const budgetProjectDataPie = [
   {
-    id: "60",
+    id: "100",
     label: "Budget Amount Used",
-    value: 60,
+    value: 100,
     color: "#00FF00", // bright green
   },
   {
@@ -132,6 +132,12 @@ export const projectsData = [
     label: "Additional Funding",
     value: 10,
     color: "#FFFF00", // yellow
+  },
+    {
+    id: "10",
+    label: "Exceeding the initial budget",
+    value: 10,
+    color: "red", // yellow
   },
 ];
 

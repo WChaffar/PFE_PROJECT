@@ -79,7 +79,7 @@ const ProjectWorkLoadBarChart = ({
         }}
       >
         <Box
-          sx={{ width: `${TasksWorkloadData?.length * 90}px`, height: "200px" }}
+          sx={{ width: `${TasksWorkloadData?.length * 200}px`, height: "200px" }}
         >
           <ResponsiveBar
             data={TasksWorkloadData}
@@ -111,9 +111,10 @@ const ProjectWorkLoadBarChart = ({
               tickSize: 5,
               tickPadding: 5,
               tickRotation: 0,
-              legend: "Project",
+              legend: "Tasks",
               legendPosition: "middle",
               legendOffset: 40,
+              format: (value) => value.length > 25 ? `${value.slice(0, 25)}…` : value, // truncate at 8 chars
             }}
             axisLeft={{
               tickSize: 5,

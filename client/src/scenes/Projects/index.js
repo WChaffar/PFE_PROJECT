@@ -48,6 +48,7 @@ import { Snackbar, Alert } from "@mui/material";
 import { getAllEmployeeAssignements } from "../../actions/assignementsAction";
 import { getTasksByProjectId } from "../../actions/taskAction";
 import { parse, isAfter, isBefore, addDays } from "date-fns";
+import { useRef } from "react";
 
 const CustomToolbar = () => {
   return (
@@ -85,12 +86,79 @@ const Projects = () => {
   const [openedProject, setOpenedProject] = useState(null);
   const [projectWorkload, setProjectWorkload] = useState([]);
   const [overdueTask, setOverdueTask] = useState([]);
+  const detailsRef = useRef(null);
+  const [projectsBudgetDays, setProjectsBudgetDays] = useState([]);
 
   useEffect(() => {
     if (selectedAssignements.length !== 0) {
       setAssignements(selectedAssignements);
     }
   }, [selectedAssignements]); // <== Écoute les changements de selectedProjects
+
+  useEffect(() => {
+    if (
+      selectedProjects.length > 0 &&
+      selectedAssignements.length > 0 &&
+      projectsBudgetDays.length === 0
+    ) {
+      const aggregatedProjectsConsumedDays = selectedAssignements.reduce(
+        (acc, assignment) => {
+          const projectId = assignment.project._id;
+
+          // Calculer le total des jours pour cet assignment
+          const daysForAssignment = assignment.timeEntries.reduce(
+            (sum, entry) => {
+              return sum + (entry.durationInDays || 0);
+            },
+            0
+          );
+
+          // Chercher si le projet existe déjà dans l'accumulateur
+          const existingProject = acc.find((p) => p._id === projectId);
+
+          if (existingProject) {
+            existingProject.daysConsumed += daysForAssignment;
+          } else {
+            acc.push({
+              _id: projectId,
+              daysConsumed: daysForAssignment,
+            });
+          }
+
+          return acc;
+        },
+        []
+      );
+      // Exemple de sortie : [ { _id: "686ebf6a40e1b4d1b7e1bebe", daysConsumed: 8 } ]
+      //////////////////////
+      const aggregatedProjectsBudgetDays = aggregatedProjectsConsumedDays.map(
+        (p) => {
+          const matchedProject = selectedProjects?.find(
+            (pr) => pr._id === p._id
+          );
+          return {
+            _id: matchedProject._id,
+            budgetAmountUsed:
+              p?.daysConsumed >= matchedProject?.budget
+                ? matchedProject?.budget
+                : p?.daysConsumed,
+            remainingBudget:
+              p?.daysConsumed >= matchedProject?.budget
+                ? 0
+                : matchedProject?.budget - p?.daysConsumed,
+            additionalFunding: matchedProject?.additionalFunding,
+            exceedingInitialBudget:
+              p?.daysConsumed > matchedProject?.budget
+                ? p?.daysConsumed - matchedProject?.budget
+                : 0,
+            fullBudget: matchedProject?.budget,
+          };
+        }
+      );
+      console.log(aggregatedProjectsBudgetDays);
+      setProjectsBudgetDays(aggregatedProjectsBudgetDays);
+    }
+  }, [selectedProjects, selectedAssignements]);
 
   useEffect(() => {
     let selectTasks = selectedTasks.map((task) => {
@@ -585,13 +653,19 @@ const Projects = () => {
           pagination
           loading={loadingProjects && !getProjectsError}
           onRowClick={(params) => {
+            setTasks([]);
+            setAllTasks([]);
+            setOverdueTask([]);
             getTasksOfSelectedProject(params);
             setOpenedProject(params.row.id);
+            setTimeout(() => {
+              detailsRef.current?.scrollIntoView({ behavior: "smooth" });
+            }, 100); // slight delay so details section renders first
           }}
         />
       </Box>
       {openedProject && (
-        <Box>
+        <Box ref={detailsRef}>
           <Box>
             <br />
             <h5>HR project 1 :</h5>
@@ -616,7 +690,11 @@ const Projects = () => {
                   Project Budget
                 </Typography>
                 <Box display="flex" flexDirection="column" alignItems="center">
-                  <ProjectBudgetProgressPie />
+                  <ProjectBudgetProgressPie
+                    projectBudgetDays={projectsBudgetDays?.find(
+                      (p) => p._id === openedProject
+                    )}
+                  />
                   <Typography
                     variant="h5"
                     color={colors.greenAccent[500]}
