@@ -23,6 +23,7 @@ const validateProject = [
   check("startDate").isISO8601().withMessage("Start date is required"),
   check("endDate").isISO8601().withMessage("End date is required"),
   check("deliveryDate").isISO8601().withMessage("Delivery date is required"),
+  check("additionalFunding").isNumeric().withMessage("Budget must be a number"),
 
   // Custom validator for date logic
   body().custom((body) => {

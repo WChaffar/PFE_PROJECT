@@ -26,7 +26,7 @@ const EditProjectForm = () => {
   const selectedProject = useSelector((state) => state.projects.activeProject);
   const error = useSelector((state) => state.projects.error);
   const [success, setSuccess] = useState(null);
-  const navigate=useNavigate();
+  const navigate = useNavigate();
   const [project, setProject] = useState({
     projectName: "",
     description: "",
@@ -38,6 +38,7 @@ const EditProjectForm = () => {
     startDate: "",
     endDate: "",
     deliveryDate: "",
+    additionalFunding: 0,
   });
 
   useEffect(() => {
@@ -56,7 +57,7 @@ const EditProjectForm = () => {
   }, [dispatch]); // <== Appelle une seule fois le fetch
 
   const handleFormSubmit = async (values) => {
-    const result = await dispatch(editProject(values._id,values));
+    const result = await dispatch(editProject(values._id, values));
     if (result.success) {
       setSuccess("Project edited with success.");
       setTimeout(() => {
@@ -64,7 +65,7 @@ const EditProjectForm = () => {
       }, 1500);
     }
   };
- 
+
   if ((Object.keys(project).length < 1 || !project.projectName) && !error) {
     return (
       <Box
@@ -238,6 +239,24 @@ const EditProjectForm = () => {
                 helperText={touched.budget && errors.budget}
                 sx={{ gridColumn: "span 2" }}
               />
+              {/* additional Funding */}
+              <TextField
+                fullWidth
+                variant="filled"
+                type="number"
+                label="Additional Funding"
+                name="additionalFunding"
+                value={values.additionalFunding}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                error={
+                  !!touched.additionalFunding && !!errors.additionalFunding
+                }
+                helperText={
+                  touched.additionalFunding && errors.additionalFunding
+                }
+                sx={{ gridColumn: "span 2" }}
+              />
 
               {/* Start Date */}
               <TextField
@@ -349,6 +368,10 @@ const projectSchema = yup.object().shape({
   startDate: yup.date().required("Required"),
   endDate: yup.date().required("Required"),
   deliveryDate: yup.date().required("Required"),
+  additionalFunding: yup
+    .number()
+    .required("Required")
+    .positive("Must be positive"),
 });
 
 export default EditProjectForm;

@@ -5,22 +5,10 @@ import { ResponsiveBar } from "@nivo/bar";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 
-// Sample projects with varying progress
-const data = [
-  { project: "Alpha", progress: 90 },
-  { project: "Beta", progress: 70 },
-  { project: "Gamma", progress: 45 },
-  { project: "Delta", progress: 30 },
-  { project: "Epsilon", progress: 85 },
-  { project: "Zeta", progress: 60 },
-  { project: "Eta", progress: 15 },
-  { project: "Theta", progress: 50 },
-  { project: "Iota", progress: 95 },
-  { project: "Kappa", progress: 20 },
-  { project: "Lambda", progress: 65 },
-];
-
-const ProjectWorkLoadBarChart = ({ isDashboard = false }) => {
+const ProjectWorkLoadBarChart = ({
+  isDashboard = false,
+  TasksWorkloadData,
+}) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const containerRef = useRef(null);
@@ -30,7 +18,10 @@ const ProjectWorkLoadBarChart = ({ isDashboard = false }) => {
 
   const scrollLeft = () => {
     if (containerRef.current) {
-      containerRef.current.scrollBy({ left: -scrollAmount, behavior: "smooth" });
+      containerRef.current.scrollBy({
+        left: -scrollAmount,
+        behavior: "smooth",
+      });
       setScrollPos((pos) => Math.max(0, pos - scrollAmount));
     }
   };
@@ -44,16 +35,16 @@ const ProjectWorkLoadBarChart = ({ isDashboard = false }) => {
 
   // Color logic based on progress
   const getBarColor = (bar) => {
-    const progress = bar.data.progress;
-    if (progress >= 75) return "#4caf50"; // Green
-    if (progress >= 40) return "#ffb300"; // Amber
+    const workload = bar.data.workload;
+    if (workload >= 75) return "#4caf50"; // Green
+    if (workload >= 40) return "#ffb300"; // Amber
     return "#e53935"; // Red
   };
 
   return (
     <Box>
-       {/* Arrows for navigation */}
-       <Stack direction="row" justifyContent="center" spacing={2} >
+      {/* Arrows for navigation */}
+      <Stack direction="row" justifyContent="center" spacing={2}>
         <IconButton
           onClick={scrollLeft}
           sx={{
@@ -87,11 +78,13 @@ const ProjectWorkLoadBarChart = ({ isDashboard = false }) => {
           width: "100%",
         }}
       >
-        <Box sx={{ width: `${data.length * 90}px`, height: "200px" }}>
+        <Box
+          sx={{ width: `${TasksWorkloadData?.length * 90}px`, height: "200px" }}
+        >
           <ResponsiveBar
-            data={data}
-            keys={["progress"]}
-            indexBy="project"
+            data={TasksWorkloadData}
+            keys={["workload"]}
+            indexBy="Task"
             margin={{ top: 20, right: 20, bottom: 60, left: 50 }}
             padding={0.3}
             valueScale={{ type: "linear" }}

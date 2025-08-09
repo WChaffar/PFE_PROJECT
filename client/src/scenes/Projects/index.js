@@ -36,7 +36,7 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
 import { deleteProject, getAllProjects } from "../../actions/projectAction";
-import { format } from "date-fns";
+import { differenceInCalendarDays, format } from "date-fns";
 import {
   Dialog,
   DialogTitle,
@@ -80,9 +80,11 @@ const Projects = () => {
 
   const selectedTasks = useSelector((state) => state.tasks.tasks);
   const [tasks, setTasks] = useState([]);
+  const [allTasks, setAllTasks] = useState([]);
   const [tasksLoading, setTasksLoading] = useState(false);
   const [openedProject, setOpenedProject] = useState(null);
   const [projectWorkload, setProjectWorkload] = useState([]);
+  const [overdueTask, setOverdueTask] = useState([]);
 
   useEffect(() => {
     if (selectedAssignements.length !== 0) {
@@ -124,36 +126,25 @@ const Projects = () => {
       const taskDate = parse(t.Deadline, "dd-MM-yyyy", new Date());
       return isAfter(taskDate, today) && isBefore(taskDate, in15Days);
     });
-    // project progress calculation
-    const projectProgressMap = {};
-
-    selectedTasks.forEach((task) => {
-      const projectId = task.project._id;
-      if (!projectProgressMap[projectId]) {
-        projectProgressMap[projectId] = {
-          totalWorkload: 0,
-          taskCount: 0,
-          projectName: task.project?.projectName || "Unnamed Project", // si c'est un objet
-        };
-      }
-
-      projectProgressMap[projectId].totalWorkload += task.workload;
-      projectProgressMap[projectId].taskCount += 1;
+    //////////////////////////////////////////////////////
+    //Overdue tasks
+    let overdueProjectTasks = selectTasks.filter((t) => {
+      const taskDate = parse(t.Deadline, "dd-MM-yyyy", new Date());
+      return isBefore(taskDate, today) && t.workload < 100;
+    });
+    let overdueProjectTasksMap = overdueProjectTasks.map((task) => {
+      const taskDate = parse(task.Deadline, "dd-MM-yyyy", new Date());
+      const overdueDays = differenceInCalendarDays(today, taskDate);
+      return {
+        ...task,
+        overdueDays,
+      };
     });
 
-    // Convertir en tableau [{ project: "Alpha", progress: 70 }, ...]
-    const projectWorkloadData = Object.values(projectProgressMap).map(
-      (entry) => ({
-        project: entry.projectName,
-        progress: Math.round(entry.totalWorkload / entry.taskCount),
-      })
-    );
-
-    console.log(projectWorkloadData);
-    setProjectWorkload(projectWorkloadData);
-
-    ////////////////////////////////
+    //////////////////////////////////////////////////////
+    setAllTasks(selectTasks);
     setTasks(filteredTasks);
+    setOverdueTask(overdueProjectTasksMap);
     setTasksLoading(false);
   }, [selectedTasks]);
 
@@ -323,16 +314,20 @@ const Projects = () => {
   const projectTasksColumns = [
     {
       field: "Overdue",
-      headerName: "Overdue",
+      headerName: "Overdue days",
       flex: 1,
       renderCell: (params) => {
-        const days = parseInt(params.value);
+        const days = parseInt(params.row.overdueDays);
         let color = "black";
         if (days <= 4) color = "blue";
         else if (days > 4) color = "red";
 
         return (
-          <span style={{ color, fontWeight: "bold" }}>{params.value}</span>
+          <span style={{ color, fontWeight: "bold" }}>
+            {params.row.overdueDays > 1
+              ? params.row.overdueDays + " days"
+              : params.row.overdueDays + " day"}
+          </span>
         );
       },
     },
@@ -380,38 +375,38 @@ const Projects = () => {
       headerName: "Deadline",
       flex: 1,
     },
-    {
-      field: "Workload",
-      headerName: "Workload",
-      flex: 1.5,
-      renderCell: (params) => {
-        const value = params.row.workload;
-        return (
-          <Box display="flex" alignItems="center" width="100%">
-            <Box width="100%" mr={1}>
-              <LinearProgress
-                variant="determinate"
-                value={value}
-                sx={{
-                  height: 8,
-                  borderRadius: 5,
-                  backgroundColor: "#e0e0e0",
-                  "& .MuiLinearProgress-bar": {
-                    backgroundColor: "#000066", // dark blue
-                  },
-                }}
-              />
-            </Box>
-            <Typography
-              variant="body2"
-              sx={{ color: "#0000FF", fontWeight: 600 }}
-            >
-              {`${value}%`}
-            </Typography>
-          </Box>
-        );
-      },
-    },
+    // {
+    //   field: "Workload",
+    //   headerName: "Workload",
+    //   flex: 1.5,
+    //   renderCell: (params) => {
+    //     const value = params.row.workload;
+    //     return (
+    //       <Box display="flex" alignItems="center" width="100%">
+    //         <Box width="100%" mr={1}>
+    //           <LinearProgress
+    //             variant="determinate"
+    //             value={value}
+    //             sx={{
+    //               height: 8,
+    //               borderRadius: 5,
+    //               backgroundColor: "#e0e0e0",
+    //               "& .MuiLinearProgress-bar": {
+    //                 backgroundColor: "#000066", // dark blue
+    //               },
+    //             }}
+    //           />
+    //         </Box>
+    //         <Typography
+    //           variant="body2"
+    //           sx={{ color: "#0000FF", fontWeight: 600 }}
+    //         >
+    //           {`${value}%`}
+    //         </Typography>
+    //       </Box>
+    //     );
+    //   },
+    // },
   ];
 
   const ActionsMenu = ({ row }) => {
@@ -452,7 +447,12 @@ const Projects = () => {
 
     return (
       <>
-        <IconButton onClick={handleClick}>
+        <IconButton
+          onClick={(event) => {
+            event.stopPropagation(); // Prevent click from bubbling
+            handleClick(event);
+          }}
+        >
           <MoreVertIcon />
         </IconButton>
         <Menu anchorEl={anchorEl} open={open} onClose={handleCloseMenu}>
@@ -677,7 +677,7 @@ const Projects = () => {
                     }}
                   >
                     <DataGrid
-                      rows={projectTasksData}
+                      rows={overdueTask}
                       columns={projectTasksColumns}
                       hideFooter
                     />
@@ -747,7 +747,7 @@ const Projects = () => {
                 padding="10px"
               >
                 <Typography variant="h5" fontWeight="300">
-                  Workload
+                  Tasks Workload
                 </Typography>
                 <Box
                   mt="25px"
@@ -760,7 +760,10 @@ const Projects = () => {
                 </Box>
 
                 <Box height="250px" mt="-40px">
-                  <ProjectWorkLoadBarChart isDashboard={true} />
+                  <ProjectWorkLoadBarChart
+                    isDashboard={true}
+                    TasksWorkloadData={allTasks}
+                  />
                 </Box>
               </Box>
             </Box>

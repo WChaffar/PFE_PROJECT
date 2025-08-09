@@ -21,37 +21,41 @@ var projectSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    projectType:{
+    projectType: {
       type: String,
       enum: ["internal", "external"], // Define the project types here
       required: true,
     },
     projectCategory: {
-        type: String,
-        enum: ["Web Development", "Mobile App", "Software", "Database", "Design"], // define the allowed project types here
-        required: true,
-      },
+      type: String,
+      enum: ["Web Development", "Mobile App", "Software", "Database", "Design"], // define the allowed project types here
+      required: true,
+    },
     projectPriority: {
-        type: String,
-        enum: ["low", "medium", "high", "critical"], // Project priority enumeration
-        required: true,
-      },
-      budget:{
-        type:Number,
-        required:true
-      },
-     startDate:{
-        type:Date,
-        required:true
-     },
-     endDate:{
-        type:Date,
-        required:true
-     },
-     deliveryDate:{
-        type:Date,
-        required:true
-     }
+      type: String,
+      enum: ["low", "medium", "high", "critical"], // Project priority enumeration
+      required: true,
+    },
+    budget: {
+      type: Number,
+      required: true,
+    },
+    additionalFunding: {
+      type: Number,
+      default: 0,
+    },
+    startDate: {
+      type: Date,
+      required: true,
+    },
+    endDate: {
+      type: Date,
+      required: true,
+    },
+    deliveryDate: {
+      type: Date,
+      required: true,
+    },
   },
   {
     timestamps: true,
@@ -68,7 +72,6 @@ projectSchema.pre("save", function (next) {
   }
   next();
 });
-
 
 //Export the model
 module.exports = mongoose.model("Project", projectSchema);

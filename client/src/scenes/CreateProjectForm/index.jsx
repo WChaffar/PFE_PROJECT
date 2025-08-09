@@ -5,7 +5,11 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import Header from "../../components/Header";
 import { tokens } from "../../theme";
 import { useDispatch, useSelector } from "react-redux";
-import { createProject, reset, resetProjectState } from "../../actions/projectAction";
+import {
+  createProject,
+  reset,
+  resetProjectState,
+} from "../../actions/projectAction";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 
@@ -19,9 +23,8 @@ const CreateProjectForm = () => {
   const [success, setSuccess] = useState(null);
 
   useEffect(() => {
-    dispatch(resetProjectState())
-  }, [dispatch])
-  
+    dispatch(resetProjectState());
+  }, [dispatch]);
 
   const handleFormSubmit = async (values) => {
     const result = await dispatch(createProject(values));
@@ -30,10 +33,9 @@ const CreateProjectForm = () => {
       setTimeout(() => {
         navigate("/projects"); // ✅ Only navigate on success
       }, 1500);
-
     }
   };
- 
+
   return (
     <Box m="20px">
       <Header
@@ -222,34 +224,33 @@ const CreateProjectForm = () => {
               </Button>
             </Box>
             {error && (
-          <Box
-            mt={2}
-            mb={2}
-            p={2}
-            borderRadius="5px"
-            bgcolor={colors.redAccent[500]}
-            color="white"
-            fontWeight="bold"
-          >
-            {error}
-          </Box>
-        )}
-          {success && (
-          <Box
-            mt={2}
-            mb={2}
-            p={2}
-            borderRadius="5px"
-            bgcolor={colors.greenAccent[500]}
-            color="white"
-            fontWeight="bold"
-          >
-            {success}
-          </Box>
-        )}
+              <Box
+                mt={2}
+                mb={2}
+                p={2}
+                borderRadius="5px"
+                bgcolor={colors.redAccent[500]}
+                color="white"
+                fontWeight="bold"
+              >
+                {error}
+              </Box>
+            )}
+            {success && (
+              <Box
+                mt={2}
+                mb={2}
+                p={2}
+                borderRadius="5px"
+                bgcolor={colors.greenAccent[500]}
+                color="white"
+                fontWeight="bold"
+              >
+                {success}
+              </Box>
+            )}
           </form>
         )}
-
       </Formik>
     </Box>
   );
@@ -279,6 +280,7 @@ const initialValues = {
   startDate: "",
   endDate: "",
   deliveryDate: "",
+  additionalFunding: 0,
 };
 
 export default CreateProjectForm;
