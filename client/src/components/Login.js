@@ -16,6 +16,9 @@ const LoginForm = () => {
   const error = useSelector((state) => state.auth.error); // from authReducer
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated); // optional for redirect
   const isActivated = useSelector((state) => state.auth.user?.Activated);
+  const profileCompleted = useSelector(
+    (state) => state.auth.user?.profileCompleted
+  );
   const role = useSelector((state) => state.auth.user?.role);
 
   const [message, setMessage] = useState("");
@@ -26,8 +29,12 @@ const LoginForm = () => {
       if (isActivated === true) {
         if (role === "RH") {
           navigate("/review-accounts");
-        }else if(role === "Employee"){
-         navigate("/my-absences");
+        } else if (role === "Employee") {
+          if (profileCompleted === true) {
+            navigate("/my-absences");
+          } else {
+            navigate("/complete-my-profile");
+          }
         } else {
           navigate("/Dashboard");
         }

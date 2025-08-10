@@ -55,6 +55,9 @@ const Sidebar = () => {
   const navigate = useNavigate(); // Navigate to other routes
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user); // optional for redirect
+  const profileCompleted = useSelector(
+    (state) => state.auth.user?.profileCompleted
+  );
 
   const logOut = () => {
     // Redirect user to the login page after logging out
@@ -271,7 +274,7 @@ const Sidebar = () => {
               </MenuItem>
             </Box>
           )}
-          {user?.role === "Employee" && (
+          {user?.role === "Employee" && profileCompleted && (
             <Box paddingLeft={isCollapsed ? undefined : "10%"}>
               <Typography
                 variant="h6"
@@ -289,8 +292,37 @@ const Sidebar = () => {
               />
               <Item
                 title="My assignments"
-                to="/my-assignments" 
+                to="/my-assignments"
                 icon={<AssignmentOutlinedIcon />}
+                selected={selected}
+                setSelected={setSelected}
+              />
+              {/* Logout */}
+              <MenuItem
+                onClick={logOut}
+                style={{
+                  color: colors.grey[100],
+                  marginTop: "20px",
+                }}
+                icon={<ExitToAppIcon />}
+              >
+                <Typography>Logout</Typography>
+              </MenuItem>
+            </Box>
+          )}
+          {user?.role === "Employee" && !profileCompleted && (
+            <Box paddingLeft={isCollapsed ? undefined : "10%"}>
+              <Typography
+                variant="h6"
+                color={colors.grey[300]}
+                sx={{ m: "15px 0 5px 20px" }}
+              >
+                Profile
+              </Typography>
+              <Item
+                title="Complete my profile"
+                to="/complete-my-profile"
+                icon={<PersonOutlinedIcon />}
                 selected={selected}
                 setSelected={setSelected}
               />

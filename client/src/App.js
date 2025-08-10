@@ -43,6 +43,7 @@ import MyAbsences from "./scenes/MyAbsences";
 import AddAbsence from "./scenes/AddAbsence";
 import EditAbsence from "./scenes/EditAbsence";
 import AssignementsViewEmployee from "./scenes/AssignementsViewEmployee";
+import CompleteEmployeeProfile from "./scenes/CompleteEmployeeProfile";
 
 function PrivateRoute({ children }) {
   const isAuthenticated = useSelector((state) => state.auth?.isAuthenticated);
@@ -53,11 +54,20 @@ function AuthRedirect({ children }) {
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
   const isActivated = useSelector((state) => state.auth.user?.Activated);
   const role = useSelector((state) => state.auth.user?.role);
+  const profileCompleted = useSelector(
+    (state) => state.auth.user?.profileCompleted
+  );
   return isAuthenticated ? (
     isActivated === true ? (
       role === "RH" ? (
         <Navigate to="/review-accounts" replace />
-      ) : role === "Employee" ? (<Navigate to="/my-absences" replace />) :(
+      ) : role === "Employee" ? (
+        profileCompleted === true ? (
+          <Navigate to="/my-absences" replace />
+        ) : (
+          <Navigate to="/complete-my-profile" replace />
+        )
+      ) : (
         <Navigate to="/dashboard" replace />
       )
     ) : (
@@ -74,7 +84,9 @@ function AppContent() {
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
   const isActivated = useSelector((state) => state.auth.user?.Activated);
   const user = useSelector((state) => state.auth.user);
-
+  const profileCompleted = useSelector(
+    (state) => state.auth.user?.profileCompleted
+  );
   return (
     <ColorModeContext.Provider value={colorMode}>
       <ThemeProvider theme={theme}>
@@ -309,7 +321,7 @@ function AppContent() {
                   }
                 />
               )}
-              {user?.role === "Employee" && (
+              {user?.role === "Employee" && profileCompleted && (
                 <Route
                   path="/my-absences"
                   element={
@@ -319,7 +331,7 @@ function AppContent() {
                   }
                 />
               )}
-              {user?.role === "Employee" && (
+              {user?.role === "Employee" && profileCompleted && (
                 <Route
                   path="/add-absence"
                   element={
@@ -329,7 +341,7 @@ function AppContent() {
                   }
                 />
               )}
-              {user?.role === "Employee" && (
+              {user?.role === "Employee" && profileCompleted && (
                 <Route
                   path="/edit-my-absence/:id"
                   element={
@@ -339,12 +351,23 @@ function AppContent() {
                   }
                 />
               )}
-                          {user?.role === "Employee" && (
+              {user?.role === "Employee" && profileCompleted && (
                 <Route
                   path="/my-assignments"
                   element={
                     <PrivateRoute>
                       <AssignementsViewEmployee />
+                    </PrivateRoute>
+                  }
+                />
+              )}
+
+              {user?.role === "Employee" && !profileCompleted && (
+                <Route
+                  path="/complete-my-profile"
+                  element={
+                    <PrivateRoute>
+                      <CompleteEmployeeProfile />
                     </PrivateRoute>
                   }
                 />

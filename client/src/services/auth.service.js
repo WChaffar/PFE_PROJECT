@@ -1,5 +1,5 @@
 import axios from "axios";
-import {base_url} from "../config/axiosConfig"
+import {base_url, getConfig} from "../config/axiosConfig"
 
 const register = (data) => {
   console.log(data)
@@ -37,11 +37,27 @@ const getCurrentUser = () => {
   return JSON.parse(localStorage.getItem("user"));
 };
 
+const completeMyProfile = ( data) => {
+  return axios
+    .put(base_url + `team/completeMyProfile`, data, {
+      ...getConfig(),
+      headers: {
+        // Let Axios set the correct multipart boundaries
+        ...getConfig().headers,
+        "Content-Type": "multipart/form-data",
+      },
+    })
+    .then((response) => {
+      return response.data;
+    });
+};
+
 const AuthService = {
   register,
   login,
   logout,
   getCurrentUser,
+  completeMyProfile
 }
 
 export default AuthService;

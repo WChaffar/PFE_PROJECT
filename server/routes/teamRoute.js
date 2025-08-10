@@ -10,7 +10,8 @@ const {
   updateUserValidation,
   getUsersByRole,
   updateUserManager,
-  getAllTeamForManager
+  getAllTeamForManager,
+  completeMyProfile
 } = require("../controller/teamCtrl");
 const { authMiddleware } = require("../middlewares/authMiddleware");
 const upload = require("../middlewares/upload");
@@ -37,5 +38,12 @@ router.put("/editOne/BU/:id", authMiddleware, editTeamMemberBU);
 router.put("/editOne/accountState/:id", authMiddleware, updateUserValidation);
 router.get("/getUsersByRole/:role", authMiddleware, getUsersByRole);
 router.put("/editOne/manager/:id", authMiddleware, updateUserManager);
+
+router.put(
+  "/completeMyProfile",
+  authMiddleware,
+  upload.single("profilePicture"),
+  completeMyProfile
+);
 
 module.exports = router;

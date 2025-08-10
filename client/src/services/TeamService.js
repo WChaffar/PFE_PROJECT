@@ -88,6 +88,7 @@ const editTeamMemberManager = (id, data) => {
 };
 
 
+
 const TeamService = {
   createTeamMember,
   getTeamMembers,
@@ -97,7 +98,7 @@ const TeamService = {
   editTeamMemberBU,
   editTeamMemberValidation,
   editTeamMemberManager,
-  getTeamMembersForManager
+  getTeamMembersForManager,
 };
 
 export default TeamService;

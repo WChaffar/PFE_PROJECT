@@ -50,3 +50,22 @@ export const register = (userData) => async (dispatch) => {
     });
   }
 };
+
+
+//Complete my profile
+export const completeMyProfile = (formDat) => async (dispatch) => {
+    try {
+      const data = await authService.completeMyProfile(formDat);
+      dispatch({
+        type: 'COMPLETE_MY_PROFILE_SUCCESS',
+        payload: { data },
+      });
+      return { success: true }; // ✅ return success
+    } catch (error) {
+      dispatch({
+        type: 'COMPLETE_MY_PROFILE_FAILURE',
+        payload: error.response?.data?.message || 'Complete profile failed',
+      });
+      return { success: false }; // ✅ return failure
+    }
+  };

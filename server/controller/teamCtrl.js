@@ -118,7 +118,7 @@ const deleteOneTeamMemeber = asyncHandler(async (req, res) => {
   }
 });
 
-8;
+
 const editOneTeamMember = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
@@ -244,6 +244,40 @@ const updateUserManager = asyncHandler(async (req, res) => {
   }
 });
 
+const completeMyProfile = asyncHandler(async (req, res) => {
+  try {
+    console.log(req.file);
+
+    // Si une nouvelle photo est uploadée, on la rajoute au corps de la requête
+    if (req.file) {
+      req.body.profilePicture = `/uploads/profile-pictures/${req.file.filename}`;
+    }
+
+    const teamMember = await User.findOneAndUpdate(
+      { _id: req.user._id },
+      { ...req.body , profileCompleted: true },
+      { new: true }
+    );
+    console.log(teamMember);
+
+    if (!teamMember) {
+      throw new Error(
+        "You do not have permission to edit this informations."
+      );
+    }
+
+    res.status(200).json({
+      message: "Profile completed successfully.",
+      data: teamMember,
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+
+
+
 module.exports = {
   createTeamMember,
   getOneTeamMember,
@@ -254,5 +288,6 @@ module.exports = {
   updateUserValidation,
   getUsersByRole,
   updateUserManager,
-  getAllTeamForManager
+  getAllTeamForManager,
+  completeMyProfile
 };
