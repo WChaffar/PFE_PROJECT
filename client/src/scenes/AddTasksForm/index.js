@@ -155,6 +155,7 @@ const CreateTaskForm = () => {
                 helperText={touched.projectPhase && errors.projectPhase}
                 sx={{ gridColumn: "span 2" }}
               >
+                <MenuItem value="Planning">Planning</MenuItem>
                 <MenuItem value="Design">Design</MenuItem>
                 <MenuItem value="Development">Development</MenuItem>
                 <MenuItem value="Testing">Testing</MenuItem>
@@ -341,7 +342,7 @@ const taskSchema = yup.object().shape({
   project: yup.object().required("Required"), // project is an object now
   projectPhase: yup
     .string()
-    .oneOf(["Design", "Development", "Testing"])
+    .oneOf(["Planning","Design", "Development", "Testing"])
     .required("Required"),
   RequiredyearsOfExper: yup
     .number()

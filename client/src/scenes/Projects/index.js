@@ -155,10 +155,27 @@ const Projects = () => {
           };
         }
       );
-      console.log(aggregatedProjectsBudgetDays);
       setProjectsBudgetDays(aggregatedProjectsBudgetDays);
     }
   }, [selectedProjects, selectedAssignements]);
+
+  useEffect(() => {
+    if (openedProject !== null && selectedProjects.length > 0) {
+      const findProjectBudgetsUsed = projectsBudgetDays?.find(
+        (p) => p._id === openedProject
+      );
+      if (findProjectBudgetsUsed === undefined) {
+        setProjectsBudgetDays([
+          ...projectsBudgetDays,
+          {
+            _id: openedProject,
+            fullBudget: selectedProjects?.find((p) => p._id === openedProject)
+              ?.budget,
+          },
+        ]);
+      }
+    }
+  }, [openedProject]);
 
   useEffect(() => {
     let selectTasks = selectedTasks.map((task) => {
@@ -219,6 +236,7 @@ const Projects = () => {
   const getTasksOfSelectedProject = async (params) => {
     setTasksLoading(true);
     const result = await dispatch(getTasksByProjectId(params.row.id));
+    setTasksLoading(false);
   };
 
   useEffect(() => {
@@ -232,7 +250,8 @@ const Projects = () => {
         name: project.projectName,
         status: "in progress",
         daysUsed: 45,
-        budgetDays: project.budget,
+        budget: project.budget,
+        startDate: format(project.startDate, "yyyy-MM-dd"),
         deadline: format(project.endDate, "yyyy-MM-dd"),
         team: [
           "/avatars/avatar1.png",
@@ -283,54 +302,24 @@ const Projects = () => {
       ),
     },
     {
-      field: "status",
-      headerName: "Status",
+      field: "startDate",
+      headerName: "Start Date",
       flex: 1,
-      renderCell: ({ row }) => (
-        <Box
-          px={1.5}
-          py={0.5}
-          borderRadius="8px"
-          bgcolor={row.status === "Completed" ? "limegreen" : "lightgray"}
-          color={row.status === "Completed" ? "white" : "black"}
-          fontWeight="bold"
-          width="fit-content"
-        >
-          {row.status}
-        </Box>
-      ),
-    },
-    {
-      field: "progress",
-      headerName: "Progress",
-      flex: 1,
-      sortable: false,
-      renderCell: ({ row }) => {
-        const percent = Math.round((row.daysUsed / row.budgetDays) * 100);
-        return (
-          <Box width="100%" mr={1}>
-            <Box height="10px" bgcolor="#e0e0e0" borderRadius="4px">
-              <Box
-                height="100%"
-                width={`${percent}%`}
-                bgcolor="#555"
-                borderRadius="4px"
-              />
-            </Box>
-          </Box>
-        );
-      },
-    },
-    {
-      field: "budget",
-      headerName: "Budget",
-      flex: 1,
-      valueGetter: ({ row }) => `${row.daysUsed}/${row.budgetDays} days`,
     },
     {
       field: "deadline",
       headerName: "Deadline",
       flex: 1,
+    },
+    {
+      field: "budget",
+      headerName: "Budget",
+      sortable: false,
+      renderCell: ({ row }) => (
+        <Box>
+          {row.budget > 2 ? row.budget + " days" : row.budget + " day"}{" "}
+        </Box>
+      ),
     },
     {
       field: "team",
@@ -660,7 +649,7 @@ const Projects = () => {
             setOpenedProject(params.row.id);
             setTimeout(() => {
               detailsRef.current?.scrollIntoView({ behavior: "smooth" });
-            }, 100); // slight delay so details section renders first
+            }, 500); // slight delay so details section renders first
           }}
         />
       </Box>
@@ -669,7 +658,10 @@ const Projects = () => {
           <Box>
             <br />
             <h5>HR project 1 :</h5>
-            <ProjectPipeline />
+            <ProjectPipeline
+              TasksData={allTasks}
+              projectData={projects?.find((p) => p.id === openedProject)}
+            />
           </Box>
           <br />
           {/*--------------------------------------------------------------------------------*/}
@@ -698,7 +690,7 @@ const Projects = () => {
                   <Typography
                     variant="h5"
                     color={colors.greenAccent[500]}
-                    sx={{ mt: "15px" }}
+                    sx={{ mt: "-20px" }}
                   >
                     Project Budget Distribution Overview
                   </Typography>
@@ -758,6 +750,7 @@ const Projects = () => {
                       rows={overdueTask}
                       columns={projectTasksColumns}
                       hideFooter
+                      loading={tasksLoading}
                     />
                   </Box>
                 </Box>
@@ -813,6 +806,7 @@ const Projects = () => {
                       rows={tasks}
                       columns={projectTasksDeadlineColumns}
                       hideFooter
+                      loading={tasksLoading}
                     />
                   </Box>
                 </Box>
@@ -849,6 +843,7 @@ const Projects = () => {
         </Box>
       )}
       {/*--------------------------------------------------------------------------------*/}
+      <Box ref={detailsRef} />
     </Box>
   );
 };

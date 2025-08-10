@@ -27,7 +27,7 @@ var taskSchema = new mongoose.Schema(
     },
     projectPhase: {
       type: String,
-      enum: ["Design", "Design", "Development", "Testing"],
+      enum: ["Planning", "Design", "Development", "Testing"],
       required: true,
     },
     RequiredyearsOfExper: {
