@@ -33,7 +33,7 @@ import {
 } from "../../actions/assignementsAction";
 import WarningIcon from "@mui/icons-material/Warning";
 import { getEmployeeAbsenceById } from "../../actions/absenceAction";
-import { startOfWeek } from "date-fns";
+import { format, isValid, parseISO, startOfWeek } from "date-fns";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -64,6 +64,7 @@ const transformAssignmentsToMissions = (assignments) => {
     // Merge dayDetails
     if (assignment.dayDetails && assignment.dayDetails.length > 0) {
       const details = assignment.dayDetails.map((day) => ({
+        assignementId: assignment._id,
         date: new Date(day.date).toISOString().split("T")[0],
         period: day.period,
       }));
@@ -75,11 +76,14 @@ const transformAssignmentsToMissions = (assignments) => {
       const start = new Date(assignment.startDate);
       const end = new Date(assignment.endDate);
       const current = new Date(start);
-
       while (current <= end) {
         const dateStr = current.toISOString().split("T")[0];
         if (!grouped[key].detailedDates.some((d) => d.date === dateStr)) {
-          grouped[key].fullRangeDates.push({ date: dateStr, period: "FULL" });
+          grouped[key].fullRangeDates.push({
+            assignementId: assignment._id,
+            date: dateStr,
+            period: "FULL",
+          });
         }
         current.setDate(current.getDate() + 1);
       }
@@ -128,6 +132,9 @@ const EditStaffing = () => {
     dayjs(startOfWeek(new Date(), { weekStartsOn: 1 }))
   );
   const [showAssignmentForm, setShowAssignmentForm] = useState(false);
+  const [showAssignmentEditForm, setShowAssignmentEditForm] = useState(false);
+  const [currentEditedAssignement, setCurrentEditedAssignement] =
+    useState(null);
   const daysToShow = 14;
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
@@ -459,6 +466,17 @@ const EditStaffing = () => {
                     m="1px"
                     display="flex"
                     flexDirection="column"
+                    onClick={() => {
+                      setShowAssignmentEditForm(false);
+                      setCurrentEditedAssignement(null);
+                      setShowAssignmentForm(false);
+                      setShowAssignmentEditForm(true);
+                      let newEditedAssignement = assignments?.find(
+                        (a) => a._id === detailedSlot?.assignementId
+                      );
+                      console.log(newEditedAssignement);
+                      setCurrentEditedAssignement(newEditedAssignement);
+                    }}
                   >
                     <Box
                       flex={1}
@@ -494,6 +512,17 @@ const EditStaffing = () => {
                     height="20px"
                     m="1px"
                     bgcolor="#FFA500"
+                    onClick={() => {
+                      setShowAssignmentEditForm(false);
+                      setCurrentEditedAssignement(null);
+                      setShowAssignmentForm(false);
+                      setShowAssignmentEditForm(true);
+                      let newEditedAssignement = assignments?.find(
+                        (a) => a._id === fullRangeSlot?.assignementId
+                      );
+                      console.log(newEditedAssignement);
+                      setCurrentEditedAssignement(newEditedAssignement);
+                    }}
                   />
                 );
               }
@@ -557,7 +586,10 @@ const EditStaffing = () => {
               backgroundColor: colors.primary,
               color: colors.grey[100],
             }}
-            onClick={() => setShowAssignmentForm(true)}
+            onClick={() => {
+              setShowAssignmentEditForm(false);
+              setShowAssignmentForm(true);
+            }}
           >
             + Add mission
           </Button>
@@ -823,6 +855,378 @@ const EditStaffing = () => {
                       sx={{ height: "36px" }}
                     >
                       + Add Half-Day
+                    </Button>
+                  </Box>
+                </Box>
+
+                <Box mt={2} display="flex" flexDirection="column" gap={1}>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<CompareArrowsIcon />}
+                    sx={{
+                      width: "400px",
+                      fontSize: "10px",
+                      borderColor: colors.grey[100],
+                      backgroundColor: "#fff",
+                      color: "#000",
+                      alignSelf: "start",
+                    }}
+                  >
+                    Compare salary skills with assigned task skill requirements
+                  </Button>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    startIcon={<AutoAwesomeIcon />}
+                    sx={{
+                      width: "250px",
+                      fontSize: "10px",
+                      px: 1,
+                      borderRadius: "5px",
+                      backgroundColor: colors.primary[100],
+                      color: colors.grey[900],
+                    }}
+                  >
+                    Generate assignment recommendations
+                  </Button>
+                </Box>
+                <Box mt={2} display="flex" alignItems="center" gap={2}>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => setShowAssignmentForm(false)}
+                    sx={{
+                      width: "130px",
+                      fontSize: "10px",
+                      px: 1,
+                      borderColor: colors.redAccent[500],
+                      backgroundColor: colors.primary,
+                      color: colors.redAccent[500],
+                    }}
+                  >
+                    Annuler
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    type="submit"
+                    sx={{
+                      width: "130px",
+                      fontSize: "10px",
+                      px: 1,
+                      borderColor: colors.grey[100],
+                      backgroundColor: colors.primary,
+                      color: colors.grey[100],
+                    }}
+                  >
+                    SAVE
+                  </Button>
+                  {assignementLoading && <CircularProgress />}
+                </Box>
+              </Box>
+            )}
+          </Formik>
+        )}
+        {showAssignmentEditForm && (
+          <Formik
+            initialValues={{
+              project: null,
+              task: null,
+              startDate: currentEditedAssignement?.startDate
+                ? format(currentEditedAssignement?.startDate, "yyyy-MM-dd")
+                : "",
+              endDate: currentEditedAssignement?.endDate
+                ? format(currentEditedAssignement?.endDate, "yyyy-MM-dd")
+                : "",
+              assignmentType: currentEditedAssignement?.assignmentType || "",
+              exactDays: currentEditedAssignement?.totalDays,
+              dayDetails:
+                currentEditedAssignement?.dayDetails
+                  ?.map((item) => {
+                    const parsedDate = parseISO(item?.date);
+                    const dateStr = isValid(parsedDate)
+                      ? format(parsedDate, "yyyy-MM-dd")
+                      : "";
+                    return `${dateStr} - ${item?.period}`;
+                  })
+                  .join("\n") || "",
+            }}
+            enableReinitialize
+            onSubmit={(values) => {
+              const newAssignementData = {
+                employee: id,
+                project: values?.project?.id,
+                taskId: values?.task._id,
+                startDate: values?.startDate,
+                endDate: values?.endDate,
+                assignmentType: values?.assignmentType,
+                totalDays: values?.exactDays,
+                dayDetails: halfDayAssignments,
+              };
+              handleFormSubmit(newAssignementData);
+            }}
+          >
+            {({ values, setFieldValue, handleChange, handleSubmit }) => (
+              <Box
+                mt={4}
+                p={3}
+                border="2px solid #D3BDF0"
+                borderRadius="10px"
+                component="form"
+                onSubmit={handleSubmit}
+              >
+                <Typography variant="h6" mb={2}>
+                  Edit assignment
+                </Typography>
+                {assignementErrors && (
+                  <Box
+                    mt={2}
+                    mb={2}
+                    p={2}
+                    borderRadius="5px"
+                    bgcolor={colors.redAccent[500]}
+                    color="white"
+                    fontWeight="bold"
+                  >
+                    {assignementErrors}
+                  </Box>
+                )}
+                {success && (
+                  <Box
+                    mt={2}
+                    mb={2}
+                    p={2}
+                    borderRadius="5px"
+                    bgcolor={colors.greenAccent[500]}
+                    color="white"
+                    fontWeight="bold"
+                  >
+                    {success}
+                  </Box>
+                )}
+                <Box display="flex" flexWrap="wrap" gap={2}>
+                  <Box flex="1" minWidth="200px">
+                    <Typography fontSize="14px" mb={0.5}>
+                      Project Name *
+                    </Typography>
+                    <Autocomplete
+                      options={projects}
+                      getOptionLabel={(option) => option.projectName}
+                      value={values.project}
+                      onChange={(event, newValue) => {
+                        setFieldValue("project", newValue);
+                        setSelectedProject(newValue);
+                        if (newValue !== null) {
+                          getTasksOfSelectedProject(newValue);
+                        }
+                      }}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Select a Project"
+                          variant="outlined"
+                          size="small"
+                        />
+                      )}
+                      sx={{ width: "100%" }}
+                    />
+                  </Box>
+
+                  <Box flex="1" minWidth="200px">
+                    <Typography fontSize="14px" mb={0.5}>
+                      Mission - Task Name *
+                    </Typography>
+                    <Autocomplete
+                      options={tasks}
+                      getOptionLabel={(option) => option.taskName}
+                      value={values.task}
+                      disabled={!values.project}
+                      onChange={(event, newValue) => {
+                        setFieldValue("task", newValue);
+                        setSelectedTask(newValue);
+                      }}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label="Select a Task"
+                          variant="outlined"
+                          size="small"
+                          InputProps={{
+                            ...params.InputProps,
+                            endAdornment: (
+                              <>
+                                {tasksLoading ? (
+                                  <CircularProgress color="inherit" size={16} />
+                                ) : null}
+                                {params.InputProps.endAdornment}
+                              </>
+                            ),
+                          }}
+                        />
+                      )}
+                      sx={{ width: "100%" }}
+                    />
+                  </Box>
+
+                  <Box flex="1" minWidth="200px">
+                    <Typography fontSize="14px" mb={0.5}>
+                      Start Date *
+                    </Typography>
+                    <input
+                      type="date"
+                      name="startDate"
+                      value={values.startDate}
+                      onChange={handleChange}
+                      style={{ width: "100%", padding: 6, borderRadius: 4 }}
+                    />
+                  </Box>
+
+                  <Box flex="1" minWidth="200px">
+                    <Typography fontSize="14px" mb={0.5}>
+                      End Date *
+                    </Typography>
+                    <input
+                      type="date"
+                      name="endDate"
+                      value={values.endDate}
+                      onChange={handleChange}
+                      style={{ width: "100%", padding: 6, borderRadius: 4 }}
+                    />
+                  </Box>
+
+                  <Box flex="1" minWidth="200px">
+                    <Typography fontSize="14px" mb={0.5}>
+                      Assignment Type *
+                    </Typography>
+                    <select
+                      name="assignmentType"
+                      value={values.assignmentType}
+                      onChange={handleChange}
+                      style={{ width: "100%", padding: 6, borderRadius: 4 }}
+                    >
+                      <option value="enduring - long period">
+                        enduring - long period
+                      </option>
+                    </select>
+                  </Box>
+
+                  <Box flex="1" minWidth="200px">
+                    <Typography fontSize="14px" mb={0.5}>
+                      Number of days *
+                    </Typography>
+                    <input
+                      type="number"
+                      name="exactDays"
+                      value={values.exactDays}
+                      onChange={handleChange}
+                      style={{ width: "100%", padding: 6, borderRadius: 4 }}
+                    />
+                  </Box>
+
+                  <Box flex="1" minWidth="250px">
+                    <Typography fontSize="14px" mb={0.5}>
+                      Specify half of the day's assignment
+                    </Typography>
+                    <textarea
+                      rows="5"
+                      disabled
+                      style={{
+                        width: "100%",
+                        padding: 6,
+                        borderRadius: 4,
+                        backgroundColor: "#f5f5f5",
+                      }}
+                      value={values?.dayDetails}
+                    />
+                  </Box>
+                  <Box
+                    display="flex"
+                    gap={2}
+                    alignItems="center"
+                    mt={1}
+                    flexWrap="wrap"
+                  >
+                    <Box>
+                      <Typography fontSize="14px" mb={0.5}>
+                        Add Half-Day Date
+                      </Typography>
+                      <input
+                        type="date"
+                        value={halfDayDate}
+                        onChange={(e) => setHalfDayDate(e.target.value)}
+                        style={{ padding: 6, borderRadius: 4 }}
+                      />
+                    </Box>
+
+                    <Box>
+                      <Box display="flex" gap={1}>
+                        <Box>
+                          <Typography fontSize="14px" mb={0.5}>
+                            Period *
+                          </Typography>
+                          <Box display="flex" gap={2}>
+                            <label>
+                              <input
+                                type="radio"
+                                name="halfDayPeriod"
+                                value="Morning"
+                                checked={halfDayPeriod === "Morning"}
+                                onChange={(e) =>
+                                  setHalfDayPeriod(e.target.value)
+                                }
+                              />{" "}
+                              Morning
+                            </label>
+                            <label>
+                              <input
+                                type="radio"
+                                name="halfDayPeriod"
+                                value="Afternoon"
+                                checked={halfDayPeriod === "Afternoon"}
+                                onChange={(e) =>
+                                  setHalfDayPeriod(e.target.value)
+                                }
+                              />{" "}
+                              Afternoon
+                            </label>
+                          </Box>
+                        </Box>
+                      </Box>
+                    </Box>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={() => {
+                        if (!halfDayDate || !halfDayPeriod) return;
+                        setCurrentEditedAssignement({
+                          ...currentEditedAssignement,
+                          dayDetails: [
+                            ...currentEditedAssignement?.dayDetails,
+                            { date: halfDayDate, period: halfDayPeriod },
+                          ],
+                        });
+
+                        // Reset inputs
+                        setHalfDayDate("");
+                        setHalfDayPeriod("");
+                      }}
+                      sx={{ height: "36px" }}
+                    >
+                      + Add Half-Day
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={() => {
+                        setCurrentEditedAssignement({
+                          ...currentEditedAssignement,
+                          dayDetails: [],
+                        });
+                      }}
+                      sx={{ height: "36px" }}
+                    >
+                      RESET
                     </Button>
                   </Box>
                 </Box>
