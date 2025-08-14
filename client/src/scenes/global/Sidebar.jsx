@@ -339,6 +339,58 @@ const Sidebar = () => {
               </MenuItem>
             </Box>
           )}
+
+          {user?.role === "BUDirector" && (
+            <Box paddingLeft={isCollapsed ? undefined : "10%"}>
+              <Item
+                title="Dashboard"
+                to="/dashboard-bu"
+                icon={<HomeOutlinedIcon />}
+                selected={selected}
+                setSelected={setSelected}
+              />
+
+              <Typography
+                variant="h6"
+                color={colors.grey[300]}
+                sx={{ m: "15px 0 5px 20px" }}
+              >
+                Projects
+              </Typography>
+              <Item
+                title="Projects"
+                to="/projects-bu"
+                icon={<FolderIcon />}
+                selected={selected}
+                setSelected={setSelected}
+              />
+              <Typography
+                variant="h6"
+                color={colors.grey[300]}
+                sx={{ m: "15px 0 5px 20px" }}
+              >
+                Team
+              </Typography>
+              <Item
+                title="Resource allocation"
+                to="/team-allocation-bu"
+                icon={<PeopleOutlinedIcon />}
+                selected={selected}
+                setSelected={setSelected}
+              />
+              {/* Logout */}
+              <MenuItem
+                onClick={logOut}
+                style={{
+                  color: colors.grey[100],
+                  marginTop: "20px",
+                }}
+                icon={<ExitToAppIcon />}
+              >
+                <Typography>Logout</Typography>
+              </MenuItem>
+            </Box>
+          )}
         </Menu>
       </ProSidebar>
     </Box>
