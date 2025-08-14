@@ -78,6 +78,18 @@ const assignementReducer = (state = initialState, action) => {
         ...state,
         error: null, // NEW: to store project-related errors
       };
+    case "UPDATE_ASSIGNEMENT_SUCCESS":
+      return {
+        ...state,
+        activeAssignement: {},
+        assignements: [...state.assignements.filter(a=>a._id !== action.payload.data._id), action.payload.data],
+        error: null, // NEW: to store assignement-related errors
+      };
+    case "UPDATE_ASSIGNEMENT_FAILURE":
+      return {
+        ...state,
+        error: action.payload, // store error message
+      };
     default:
       return state;
   }

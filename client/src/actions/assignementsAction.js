@@ -126,6 +126,25 @@ export const updateAssignementTimeEntries =
   };
 
 // create Assignement
+export const updateAssignement = (id,values) => async (dispatch) => {
+  try {
+    const data = await AssignementService.updateAssignement(id,values);
+    dispatch({
+      type: "UPDATE_ASSIGNEMENT_SUCCESS",
+      payload: { data },
+    });
+    return { success: true }; // ✅ return success
+  } catch (error) {
+    dispatch({
+      type: "UPDATE_ASSIGNEMENT_FAILURE",
+      payload: error.response?.data?.message || "Update assignement failed",
+    });
+    return { success: false }; // ✅ return failure
+  }
+};
+
+
+// create Assignement
 export const resetAssignementErros = () => async (dispatch) => {
   dispatch({
     type: "RESET_ASSIGNEMENT_ERROR",

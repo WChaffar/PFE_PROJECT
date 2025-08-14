@@ -199,7 +199,6 @@ const updateAssignmentTimeEntries = async (req, res) => {
   try {
     const { assignmentId } = req.params;
     const entries = req.body; // Expecting array of { date, durationInDays, timeType }
-  
 
     const assignment = await Assignment.findById(assignmentId);
 
@@ -303,6 +302,25 @@ const getAssignmentsForEmployee = async (req, res) => {
   }
 };
 
+// Update assignment dates or details (like your date pickers)
+const updateAssignement = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const assignment = await Assignment.findByIdAndUpdate(
+      { _id: id },
+      req.body,
+      { new: true }
+    );
+    if (!assignment) {
+      return res.status(404).json({ error: "Assignment not found" });
+    }
+
+    res.json(assignment);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
 module.exports = {
   createAssignment,
   getEmployeeAssignments,
@@ -312,4 +330,5 @@ module.exports = {
   getAssignmentsForEmployee,
   updateAssignmentTimeEntry,
   updateAssignmentTimeEntries,
+  updateAssignement,
 };

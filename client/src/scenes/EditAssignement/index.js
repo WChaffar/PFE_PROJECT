@@ -30,6 +30,7 @@ import {
   getEmployeeAssignement,
   resetAssignementErros,
   resetAssignementState,
+  updateAssignement,
 } from "../../actions/assignementsAction";
 import WarningIcon from "@mui/icons-material/Warning";
 import { getEmployeeAbsenceById } from "../../actions/absenceAction";
@@ -172,23 +173,6 @@ const EditStaffing = () => {
   const [absences, setAbsences] = useState([]);
   const [absenceDayMap, setAbsenceDayMap] = useState({});
 
-  // // Add this useEffect to fetch assignments
-  // useEffect(() => {
-  //   const fetchAssignments = async () => {
-  //     try {
-  //       const response = await fetch(
-  //         `${BACKEND_URL}/assignments?employee=${id}`
-  //       );
-  //       const data = await response.json();
-  //       setAssignments(data);
-  //     } catch (error) {
-  //       console.error("Error fetching assignments:", error);
-  //     }
-  //   };
-
-  //   fetchAssignments();
-  // }, [id]);
-
   useEffect(() => {
     if (selectedProjects.length !== 0) {
       const projectsMap = selectedProjects.map((project) => ({
@@ -316,6 +300,27 @@ const EditStaffing = () => {
       setAssignementLoading(false);
     }
   };
+
+  const handleEditFormSubmit = async (data) => {
+    setAssignementLoading(true);
+    const result = await dispatch(updateAssignement(data._id, data));
+    if (result.success) {
+      dispatch(getEmployeeAssignement(id));
+      dispatch(resetAssignementErros());
+      setAssignementLoading(false);
+      setSuccess("Assignement updated with success.");
+      setHalfDayAssignments([]);
+      setHalfDayDate(null);
+      setTimeout(() => {
+        setSuccess(null);
+        setShowAssignmentEditForm(false);
+        navigate(`/assignements/${id}/edit`); // ✅ Only navigate on success
+      }, 2000);
+    } else {
+      setAssignementLoading(false);
+    }
+  };
+
   const weekendColor = "#f0f0f0"; // Light gray
 
   return (
@@ -474,8 +479,18 @@ const EditStaffing = () => {
                       let newEditedAssignement = assignments?.find(
                         (a) => a._id === detailedSlot?.assignementId
                       );
-                      console.log(newEditedAssignement);
-                      setCurrentEditedAssignement(newEditedAssignement);
+                      setCurrentEditedAssignement({
+                        ...newEditedAssignement,
+                        dayDetails: newEditedAssignement?.dayDetails?.map(
+                          (d) => {
+                            return {
+                              _id: d._id,
+                              period: d.period,
+                              date: d.date,
+                            };
+                          }
+                        ),
+                      });
                     }}
                   >
                     <Box
@@ -520,7 +535,6 @@ const EditStaffing = () => {
                       let newEditedAssignement = assignments?.find(
                         (a) => a._id === fullRangeSlot?.assignementId
                       );
-                      console.log(newEditedAssignement);
                       setCurrentEditedAssignement(newEditedAssignement);
                     }}
                   />
@@ -931,8 +945,11 @@ const EditStaffing = () => {
         {showAssignmentEditForm && (
           <Formik
             initialValues={{
-              project: null,
-              task: null,
+              project: {
+                id: currentEditedAssignement?.project?._id,
+                projectName: currentEditedAssignement?.project?.projectName,
+              },
+              task: currentEditedAssignement?.taskId,
               startDate: currentEditedAssignement?.startDate
                 ? format(currentEditedAssignement?.startDate, "yyyy-MM-dd")
                 : "",
@@ -955,6 +972,7 @@ const EditStaffing = () => {
             enableReinitialize
             onSubmit={(values) => {
               const newAssignementData = {
+                _id: currentEditedAssignement?._id,
                 employee: id,
                 project: values?.project?.id,
                 taskId: values?.task._id,
@@ -962,9 +980,9 @@ const EditStaffing = () => {
                 endDate: values?.endDate,
                 assignmentType: values?.assignmentType,
                 totalDays: values?.exactDays,
-                dayDetails: halfDayAssignments,
+                dayDetails: currentEditedAssignement?.dayDetails,
               };
-              handleFormSubmit(newAssignementData);
+              handleEditFormSubmit(newAssignementData);
             }}
           >
             {({ values, setFieldValue, handleChange, handleSubmit }) => (
@@ -1206,7 +1224,6 @@ const EditStaffing = () => {
                             { date: halfDayDate, period: halfDayPeriod },
                           ],
                         });
-
                         // Reset inputs
                         setHalfDayDate("");
                         setHalfDayPeriod("");
@@ -1223,6 +1240,7 @@ const EditStaffing = () => {
                           ...currentEditedAssignement,
                           dayDetails: [],
                         });
+                        setHalfDayAssignments([]);
                       }}
                       sx={{ height: "36px" }}
                     >
@@ -1267,7 +1285,7 @@ const EditStaffing = () => {
                   <Button
                     variant="outlined"
                     size="small"
-                    onClick={() => setShowAssignmentForm(false)}
+                    onClick={() => setShowAssignmentEditForm(false)}
                     sx={{
                       width: "130px",
                       fontSize: "10px",

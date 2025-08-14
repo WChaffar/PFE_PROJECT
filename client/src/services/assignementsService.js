@@ -58,13 +58,26 @@ const updateAssignementTimeEntries = (assignementId, entries) => {
     });
 };
 
+const updateAssignement = (assignementId, data) => {
+  return axios
+    .put(
+      base_url + `assignement/update/${assignementId}`,
+      data,
+      getConfig()
+    )
+    .then((response) => {
+      return response.data;
+    });
+};
+
 const AssignementService = {
   createAssignement,
   getEmployeeAssignement,
   getAllEmployeesAssignements,
   getMyAssignements,
   updateAssignementTimeEntry,
-  updateAssignementTimeEntries
+  updateAssignementTimeEntries,
+  updateAssignement
 };
 
 export default AssignementService;
