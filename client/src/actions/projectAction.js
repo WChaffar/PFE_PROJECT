@@ -118,20 +118,42 @@ export const getAllBuProjects = (businessUnitId) => async (dispatch) => {
   }
 };
 
-
 // create Project
-export const changeProjectManager = (oldManagerId, newManagerId) => async (dispatch) => {
+export const changeProjectManager =
+  (oldManagerId, newManagerId) => async (dispatch) => {
+    try {
+      const data = await projectService.changeProjectManager(
+        oldManagerId,
+        newManagerId
+      );
+      dispatch({
+        type: "CHANGER_PROJECT_MANAGER_SUCCESS",
+        payload: { data },
+      });
+      return { success: true }; // ✅ return success
+    } catch (error) {
+      dispatch({
+        type: "CHANGER_PROJECT_MANAGER_FAILURE",
+        payload:
+          error.response?.data?.message || "change project manager failed",
+      });
+      return { success: false, error: error.response.data.message }; // ✅ return failure
+    }
+  };
+
+// get All Manager projects
+export const getAllManagerProjects = (managerId) => async (dispatch) => {
   try {
-    const data = await projectService.changeProjectManager(oldManagerId, newManagerId);
+    const data = await projectService.getAllManagerProjects(managerId);
     dispatch({
-      type: "CHANGER_PROJECT_MANAGER_SUCCESS",
+      type: "GET_PROJECTS_SUCCESS",
       payload: { data },
     });
     return { success: true }; // ✅ return success
   } catch (error) {
     dispatch({
-      type: "CHANGER_PROJECT_MANAGER_FAILURE",
-      payload: error.response?.data?.message || "change project manager failed",
+      type: "GET_PROJECTS_FAILURE",
+      payload: error.response?.data?.message || "Get manager projects failed",
     });
     return { success: false, error: error.response.data.message }; // ✅ return failure
   }

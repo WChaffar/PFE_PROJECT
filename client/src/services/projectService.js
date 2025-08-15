@@ -52,11 +52,18 @@ const getAllBuProjects = (businessUnitId) => {
 const changeProjectManager = (oldManagerId, newManagerId) => {
   return axios
     .put(
-      base_url +
-        `project/changeProjectManager/${oldManagerId}/${newManagerId}`,
+      base_url + `project/changeProjectManager/${oldManagerId}/${newManagerId}`,
       null,
       getConfig()
     )
+    .then((response) => {
+      return response.data;
+    });
+};
+
+const getAllManagerProjects = (managerId) => {
+  return axios
+    .get(base_url + `project/getAllMangerProjects/${managerId}`, getConfig())
     .then((response) => {
       return response.data;
     });
@@ -69,7 +76,8 @@ const ProjectService = {
   getOneProject,
   editProject,
   getAllBuProjects,
-  changeProjectManager
+  changeProjectManager,
+  getAllManagerProjects,
 };
 
 export default ProjectService;

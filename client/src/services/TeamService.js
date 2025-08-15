@@ -93,6 +93,13 @@ const getAllBuManagers = () => {
   });
 };
 
+const getTeamForManagerInBu = (managerId) => {
+  return axios.get(base_url + `team/getTeam/forManagerInBu/${managerId}`, getConfig()).then((response) => {
+    return response.data;
+  });
+};
+
+
 const TeamService = {
   createTeamMember,
   getTeamMembers,
@@ -103,7 +110,8 @@ const TeamService = {
   editTeamMemberValidation,
   editTeamMemberManager,
   getTeamMembersForManager,
-  getAllBuManagers
+  getAllBuManagers,
+  getTeamForManagerInBu
 };
 
 export default TeamService;

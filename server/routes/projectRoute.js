@@ -7,6 +7,7 @@ const {
   editOneProject,
   getAllBuProjects,
   changeProjectManager,
+  getAllManagerProjects,
 } = require("../controller/projectCtrl");
 const { authMiddleware } = require("../middlewares/authMiddleware");
 
@@ -24,5 +25,7 @@ router.get(
 );
 
 router.put("/changeProjectManager/:oldManagerId/:newManagerId", authMiddleware, changeProjectManager);
+
+router.get("/getAllMangerProjects/:managerId", authMiddleware, getAllManagerProjects);
 
 module.exports = router;

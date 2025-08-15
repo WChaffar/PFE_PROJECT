@@ -292,6 +292,28 @@ const getAllBuManagers = asyncHandler(async (req, res) => {
   res.status(200).json(users);
 });
 
+
+// Get all users whose role is not "RH"
+const getTeamForManagerInBu = asyncHandler(async (req, res) => {
+  const {managerId} = req.params;
+  const users = await User.find({
+    role: { $nin: ["RH", "BUDirector", "Manager"] },
+    manager: managerId, // assuming req.user is populated via authentication middleware
+  })
+    .select("-password -refreshToken")
+    .populate("businessUnit manager");
+
+  if (!users || users.length === 0) {
+    return res.status(404).json({ message: "No users found." });
+  }
+  if (users.length === 0) {
+    res.status(404).json({ message: "No users found." });
+    return;
+  }
+
+  res.status(200).json(users);
+});
+
 module.exports = {
   createTeamMember,
   getOneTeamMember,
@@ -305,4 +327,5 @@ module.exports = {
   getAllTeamForManager,
   completeMyProfile,
   getAllBuManagers,
+  getTeamForManagerInBu
 };

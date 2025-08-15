@@ -12,7 +12,8 @@ const {
   updateUserManager,
   getAllTeamForManager,
   completeMyProfile,
-  getAllBuManagers
+  getAllBuManagers,
+  getTeamForManagerInBu
 } = require("../controller/teamCtrl");
 const { authMiddleware } = require("../middlewares/authMiddleware");
 const upload = require("../middlewares/upload");
@@ -48,5 +49,6 @@ router.put(
 );
 
 router.get("/getAllBuMangers", authMiddleware, getAllBuManagers);
+router.get("/getTeam/forManagerInBu/:managerId", authMiddleware, getTeamForManagerInBu);
 
 module.exports = router;

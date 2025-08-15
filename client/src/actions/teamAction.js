@@ -171,10 +171,28 @@ export const getAllBuManagers = () => async (dispatch) => {
   try {
     const data = await TeamService.getAllBuManagers();
     dispatch({
-      type: "GET_TEAM_MEMBERS_SUCCESS",
+      type: "GET_MANAGERS_SUCCESS",
       payload: { data },
     });
     return { success: true }; // ✅ returns success
+  } catch (error) {
+    dispatch({
+      type: "GET_MANAGERS_FAILURE",
+      payload: error.response?.data?.message || "Get team members failed",
+    });
+    return { success: false }; // ✅ return failure
+  }
+};
+
+// create Project
+export const getTeamForManagerInBu = (managerId) => async (dispatch) => {
+  try {
+    const data = await TeamService.getTeamForManagerInBu(managerId);
+    dispatch({
+      type: "GET_TEAM_MEMBERS_SUCCESS",
+      payload: { data },
+    });
+    return { success: true }; // ✅ return success
   } catch (error) {
     dispatch({
       type: "GET_TEAM_MEMBERS_FAILURE",

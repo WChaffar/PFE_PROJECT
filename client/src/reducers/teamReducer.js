@@ -3,6 +3,7 @@
 const initialState = {
   activeTeamMember: {},
   team: [],
+  managers: [],
   error: null, // NEW: to store team-related errors
 };
 
@@ -111,10 +112,21 @@ const teamReducer = (state = initialState, action) => {
         ...state,
         error: action.payload, // store error message
       };
+    case "GET_MANAGERS_SUCCESS":
+      return {
+        ...state,
+        managers: action.payload.data,
+        error: null, // NEW: to store team-related errors
+      };
+    case "GET_MANAGERS_FAILURE":
+      return {
+        ...state,
+        error: action.payload, // store error message
+      };
     case "EDIT_TEAM_MEMBER_MANAGER_SUCCESS":
       return {
         ...state,
-        team: state.team.map((t) => {
+        managers: state.team.map((t) => {
           if (t._id === action.payload.data.data._id) {
             return action.payload.data.data;
           } else {

@@ -253,6 +253,21 @@ const changeProjectManager = [
   }),
 ];
 
+// Get all BU Projects
+const getAllManagerProjects = asyncHandler(async (req, res) => {
+  try {
+    const { managerId } = req.params;
+    const findProjects = await Project.find({owner: managerId});
+    //
+    if (findProjects.length === 0) {
+      throw new Error("No projects found.");
+    }
+    res.status(200).json(findProjects);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
 module.exports = {
   createProject,
   getAllProjects,
@@ -261,4 +276,5 @@ module.exports = {
   editOneProject,
   getAllBuProjects,
   changeProjectManager,
+  getAllManagerProjects,
 };

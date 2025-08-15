@@ -344,12 +344,6 @@ const ProjectsBU = () => {
       headerName: "Manager",
       flex: 1,
     },
-    {
-      field: "actions",
-      headerName: "Actions",
-      sortable: false,
-      renderCell: ({ row }) => <ActionsMenu row={row} />,
-    },
   ];
 
   const projectTasksColumns = [
@@ -481,9 +475,11 @@ const ProjectsBU = () => {
         dispatch(getAllEmployeeAssignements());
         dispatch(getAllBuManagers());
         setSnackbarMessage("The manager of this project updated successfully!"); // Set success message
-        // Using window.location.reload()
-        window.location.reload();
         setOpenSnackbar(true); // Show Snackbar
+        // Using window.location.reload()
+        setTimeout(() => {
+          window.location.reload();
+        }, 2500);
       }
       setOpenConfirm(false);
       handleCloseMenu();
