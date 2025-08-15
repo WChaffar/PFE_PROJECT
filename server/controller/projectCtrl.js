@@ -4,6 +4,9 @@ const validateMongoDbId = require("../utils/validateMongodbId");
 const jwt = require("jsonwebtoken");
 const { validationResult, check, body } = require("express-validator");
 const mongoose = require("mongoose"); // Erase if already required
+const User = require("../models/userModel");
+const Task = require("../models/taskModel");
+const Assignment = require("../models/AssignmentModel");
 
 // Middleware de validation de l'email
 const validateProject = [
@@ -37,11 +40,12 @@ const validateProject = [
     return true;
   }),
 ];
-  
-  // Create a Project ---------------------------------------------- 
-  
-  const createProject =[
-    validateProject, asyncHandler(async (req, res) => {
+
+// Create a Project ----------------------------------------------
+
+const createProject = [
+  validateProject,
+  asyncHandler(async (req, res) => {
     // Vérifier les erreurs de validation
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -54,13 +58,19 @@ const validateProject = [
     /**
      * TODO:With the help of project name find the project exists or not
      */
-    const findProject = await Project.findOne({ projectName: req.body?.projectName , owner:req.user?._id });
-  
+    const findProject = await Project.findOne({
+      projectName: req.body?.projectName,
+      owner: req.user?._id,
+    });
+
     if (!findProject) {
       /**
        * TODO:if user not found user create a new user
        */
-      const newProject = await Project.create({...req.body, owner:req.user?._id});
+      const newProject = await Project.create({
+        ...req.body,
+        owner: req.user?._id,
+      });
       res.json(newProject);
     } else {
       /**
@@ -68,114 +78,187 @@ const validateProject = [
        */
       throw new Error("Project Already Exists");
     }
-  })];
+  }),
+];
 
-  // get all Projects ---------------------------------------------- 
-  
-  const getAllProjects = asyncHandler(async (req, res) => {
-    try {
-  
-      const findProjects = await Project.find({ owner: req.user?._id });
-  
-      if (findProjects.length === 0) {
-        throw new Error("No projects found.");
-      }
-  
-      res.status(200).json(findProjects);
-    } catch (error) {
-      res.status(400).json({ message: error.message });
-    }
-  });
-  
+// get all Projects ----------------------------------------------
 
-  // get One Project by ID ---------------------------------------------- 
-  
-  const getOneProject = asyncHandler(async (req, res) => {
-    try {
-
-      const { id } = req.params;
-      console.log(id);
-      validateMongoDbId(id);
-      const findProject = await Project.findOne({ owner: req.user?._id, _id:id});
-  
-      if (!findProject) {
-        throw new Error("Project not found.");
-      }
-  
-      res.status(200).json(findProject);
-    } catch (error) {
-      res.status(400).json({ message: error.message });
-    }
-  });
-
-
-
-  const deleteOneProject = asyncHandler(async (req, res) => {
+const getAllProjects = asyncHandler(async (req, res) => {
   try {
-    const { id } = req.params;  // Get the project ID from request parameters
+    const findProjects = await Project.find({ owner: req.user?._id });
+
+    if (findProjects.length === 0) {
+      throw new Error("No projects found.");
+    }
+
+    res.status(200).json(findProjects);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// get One Project by ID ----------------------------------------------
+
+const getOneProject = asyncHandler(async (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log(id);
+    validateMongoDbId(id);
+    const findProject = await Project.findOne({
+      owner: req.user?._id,
+      _id: id,
+    });
+
+    if (!findProject) {
+      throw new Error("Project not found.");
+    }
+
+    res.status(200).json(findProject);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+const deleteOneProject = asyncHandler(async (req, res) => {
+  try {
+    const { id } = req.params; // Get the project ID from request parameters
 
     // Validate MongoDB ID
     validateMongoDbId(id);
 
     // Attempt to find and delete the project that belongs to the logged-in user
-    const project = await Project.findOneAndDelete({ owner: req.user?._id, _id: id });
+    const project = await Project.findOneAndDelete({
+      owner: req.user?._id,
+      _id: id,
+    });
 
     // If no project is found, throw an error
     if (!project) {
-      throw new Error("Project not found or you do not have permission to delete it.");
+      throw new Error(
+        "Project not found or you do not have permission to delete it."
+      );
     }
 
     // Send success response
     res.status(200).json({
       message: "Project deleted successfully.",
-      _id:id
+      _id: id,
     });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
 });
 
+const editOneProject = [
+  validateProject,
+  asyncHandler(async (req, res) => {
+    try {
+      // Vérifier les erreurs de validation
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          message: errors.array()[0].msg,
+          errors: errors.array(),
+          data: req.body,
+        });
+      }
+      const { id } = req.params; // On récupère l'ID du projet dans les paramètres de la requête
+      console.log("project : " + id);
 
-const editOneProject =[validateProject, asyncHandler(async (req, res) => {
-  try {
-        // Vérifier les erreurs de validation
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        message: errors.array()[0].msg,
-        errors: errors.array(),
-        data: req.body,
+      // Validation de l'ID MongoDB
+      validateMongoDbId(id);
+
+      // Chercher et mettre à jour le projet si l'utilisateur est le propriétaire
+      const project = await Project.findOneAndUpdate(
+        { owner: req.user?._id, _id: id }, // On s'assure que l'utilisateur est bien le propriétaire du projet
+        { ...req.body }, // Données à mettre à jour
+        { new: true } // Retourner le projet mis à jour
+      );
+
+      // Si le projet n'est pas trouvé
+      if (!project) {
+        throw new Error(
+          "Project not found or you do not have permission to edit it."
+        );
+      }
+
+      // Réponse réussie avec le projet mis à jour
+      res.status(200).json({
+        message: "Project updated successfully.",
+        data: project,
       });
+    } catch (error) {
+      res.status(400).json({ message: error.message });
     }
-    const { id } = req.params;  // On récupère l'ID du projet dans les paramètres de la requête
-    console.log("project : "+id);
+  }),
+];
 
-    // Validation de l'ID MongoDB
-    validateMongoDbId(id);
-
-    // Chercher et mettre à jour le projet si l'utilisateur est le propriétaire
-    const project = await Project.findOneAndUpdate(
-      { owner: req.user?._id, _id: id }, // On s'assure que l'utilisateur est bien le propriétaire du projet
-      { ...req.body }, // Données à mettre à jour
-      { new: true } // Retourner le projet mis à jour
-    );
-
-    // Si le projet n'est pas trouvé
-    if (!project) {
-      throw new Error("Project not found or you do not have permission to edit it.");
-    }
-
-    // Réponse réussie avec le projet mis à jour
-    res.status(200).json({
-      message: "Project updated successfully.",
-      data:project,
+// Get all BU Projects
+const getAllBuProjects = asyncHandler(async (req, res) => {
+  try {
+    const { businessUnitId } = req.params;
+    const findProjects = await Project.find().populate({
+      path: "owner",
+      match: { businessUnit: businessUnitId },
     });
+    //
+    if (!findProjects.length) {
+      throw new Error("No projects found.");
+    }
+    res.status(200).json(findProjects);
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
-})];
+});
 
-  
+const changeProjectManager = [
+  asyncHandler(async (req, res) => {
+    try {
+      const { oldManagerId, newManagerId } = req.params;
 
+      // Update projects where the owner is oldManagerId
+      const project = await Project.updateMany(
+        { owner: new mongoose.Types.ObjectId(oldManagerId) },
+        { owner: new mongoose.Types.ObjectId(newManagerId) }
+      );
 
-  module.exports = {createProject,getAllProjects, getOneProject,deleteOneProject,editOneProject};
+      // Update team members managed by oldManagerId
+      const teamMember = await User.updateMany(
+        { manager: oldManagerId },
+        { manager: newManagerId }
+      );
+
+      // Update assignments owned by oldManagerId
+      const assignment = await Assignment.updateMany(
+        { owner: oldManagerId },
+        { owner: newManagerId }
+      );
+
+      // Update tasks owned by oldManagerId
+      const task = await Task.updateMany(
+        { owner: oldManagerId },
+        { owner: newManagerId }
+      );
+
+      res.status(200).json({
+        message: "The manager of project updated successfully.",
+        projectUpdated: project.modifiedCount,
+        teamMembersUpdated: teamMember.modifiedCount,
+        assignmentsUpdated: assignment.modifiedCount,
+        tasksUpdated: task.modifiedCount,
+      });
+    } catch (error) {
+      res.status(400).json({ message: error.message });
+    }
+  }),
+];
+
+module.exports = {
+  createProject,
+  getAllProjects,
+  getOneProject,
+  deleteOneProject,
+  editOneProject,
+  getAllBuProjects,
+  changeProjectManager,
+};

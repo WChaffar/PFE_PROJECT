@@ -53,16 +53,16 @@ const getAllUsers = asyncHandler(async (req, res) => {
 
 // Get all users whose role is not "RH"
 const getAllTeamForManager = asyncHandler(async (req, res) => {
-     const users = await User.find({
-      role: { $nin: ["RH", "BUDirector", "Manager"] },
-      manager: req.user._id, // assuming req.user is populated via authentication middleware
-    })
-      .select("-password -refreshToken")
-      .populate("businessUnit manager");
+  const users = await User.find({
+    role: { $nin: ["RH", "BUDirector", "Manager"] },
+    manager: req.user._id, // assuming req.user is populated via authentication middleware
+  })
+    .select("-password -refreshToken")
+    .populate("businessUnit manager");
 
-    if (!users || users.length === 0) {
-      return res.status(404).json({ message: "No users found." });
-    }
+  if (!users || users.length === 0) {
+    return res.status(404).json({ message: "No users found." });
+  }
   if (users.length === 0) {
     res.status(404).json({ message: "No users found." });
     return;
@@ -117,7 +117,6 @@ const deleteOneTeamMemeber = asyncHandler(async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 });
-
 
 const editOneTeamMember = asyncHandler(async (req, res) => {
   try {
@@ -255,15 +254,13 @@ const completeMyProfile = asyncHandler(async (req, res) => {
 
     const teamMember = await User.findOneAndUpdate(
       { _id: req.user._id },
-      { ...req.body , profileCompleted: true },
+      { ...req.body, profileCompleted: true },
       { new: true }
     );
     console.log(teamMember);
 
     if (!teamMember) {
-      throw new Error(
-        "You do not have permission to edit this informations."
-      );
+      throw new Error("You do not have permission to edit this informations.");
     }
 
     res.status(200).json({
@@ -275,8 +272,25 @@ const completeMyProfile = asyncHandler(async (req, res) => {
   }
 });
 
+// Get all users whose role is not "RH"
+const getAllBuManagers = asyncHandler(async (req, res) => {
+  const users = await User.find({
+    role: "Manager",
+    businessUnit: req?.user?.businessUnit, // assuming req.user is populated via authentication middleware
+  })
+    .select("-password -refreshToken")
+    .populate("businessUnit");
 
+  if (!users || users.length === 0) {
+    return res.status(404).json({ message: "No users found." });
+  }
+  if (users.length === 0) {
+    res.status(404).json({ message: "No users found." });
+    return;
+  }
 
+  res.status(200).json(users);
+});
 
 module.exports = {
   createTeamMember,
@@ -289,5 +303,6 @@ module.exports = {
   getUsersByRole,
   updateUserManager,
   getAllTeamForManager,
-  completeMyProfile
+  completeMyProfile,
+  getAllBuManagers,
 };

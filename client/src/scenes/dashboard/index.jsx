@@ -202,7 +202,10 @@ const Dashboard = () => {
             Project Progress Overview
           </Typography>
           <Box height="250px" mt="-40px">
-            <ProjectBarChart isDashboard={true} projectWorkload={projectWorkload} />
+            <ProjectBarChart
+              isDashboard={true}
+              projectWorkload={projectWorkload?.filter((p) => p.progress < 100)}
+            />
           </Box>
         </Box>
         {/* Notifications */}

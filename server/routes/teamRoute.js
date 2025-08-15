@@ -11,7 +11,8 @@ const {
   getUsersByRole,
   updateUserManager,
   getAllTeamForManager,
-  completeMyProfile
+  completeMyProfile,
+  getAllBuManagers
 } = require("../controller/teamCtrl");
 const { authMiddleware } = require("../middlewares/authMiddleware");
 const upload = require("../middlewares/upload");
@@ -45,5 +46,7 @@ router.put(
   upload.single("profilePicture"),
   completeMyProfile
 );
+
+router.get("/getAllBuMangers", authMiddleware, getAllBuManagers);
 
 module.exports = router;

@@ -372,12 +372,20 @@ const Sidebar = () => {
                 Team
               </Typography>
               <Item
+                title="Oversee managers"
+                to="/team-allocation-bu"
+                icon={<PeopleOutlinedIcon />}
+                selected={selected}
+                setSelected={setSelected}
+              />
+              <Item
                 title="Resource allocation"
                 to="/team-allocation-bu"
                 icon={<PeopleOutlinedIcon />}
                 selected={selected}
                 setSelected={setSelected}
               />
+
               {/* Logout */}
               <MenuItem
                 onClick={logOut}

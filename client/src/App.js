@@ -44,6 +44,7 @@ import AddAbsence from "./scenes/AddAbsence";
 import EditAbsence from "./scenes/EditAbsence";
 import AssignementsViewEmployee from "./scenes/AssignementsViewEmployee";
 import CompleteEmployeeProfile from "./scenes/CompleteEmployeeProfile";
+import ProjectsBU from "./scenes/ProjectsBu";
 
 function PrivateRoute({ children }) {
   const isAuthenticated = useSelector((state) => state.auth?.isAuthenticated);
@@ -368,6 +369,16 @@ function AppContent() {
                   element={
                     <PrivateRoute>
                       <CompleteEmployeeProfile />
+                    </PrivateRoute>
+                  }
+                />
+              )}
+              {user?.role === "BUDirector" && (
+                <Route
+                  path="/projects-bu"
+                  element={
+                    <PrivateRoute>
+                      <ProjectsBU />
                     </PrivateRoute>
                   }
                 />

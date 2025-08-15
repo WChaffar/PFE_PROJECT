@@ -60,23 +60,32 @@ const projectReducer = (state = initialState, action) => {
         activeProject: {},
         error: action.payload, // store error message
       };
-      case "EDIT_PROJECT_SUCCESS":
-        return {
-          ...state,
-          activeProject: action.payload.data.data,
-          error: null, // NEW: to store project-related errors
-        };
-      case "EDIT_PROJECT_FAILURE":
-        return {
-          ...state,
-          error: action.payload, // store error message
-        };
+    case "EDIT_PROJECT_SUCCESS":
+      return {
+        ...state,
+        activeProject: action.payload.data.data,
+        error: null, // NEW: to store project-related errors
+      };
+    case "EDIT_PROJECT_FAILURE":
+      return {
+        ...state,
+        error: action.payload, // store error message
+      };
     case "RESET_PROJECT_STATE":
       return {
         ...state,
         activeProject: {},
         projects: [],
         error: null, // NEW: to store project-related errors
+      };
+    case "CHANGER_PROJECT_MANAGER_SUCCESS":
+      return {
+        ...state,
+      };
+    case "CHANGER_PROJECT_MANAGER_FAILURE":
+      return {
+        ...state,
+        error: action.payload, // store error message
       };
     default:
       return state;

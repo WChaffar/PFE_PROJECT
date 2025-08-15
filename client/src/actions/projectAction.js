@@ -95,7 +95,44 @@ export const editProject = (id, values) => async (dispatch) => {
 
 // reset
 export const resetProjectState = () => async (dispatch) => {
+  dispatch({
+    type: "RESET_PROJECT_STATE",
+  });
+};
+
+// get All BU projects
+export const getAllBuProjects = (businessUnitId) => async (dispatch) => {
+  try {
+    const data = await projectService.getAllBuProjects(businessUnitId);
     dispatch({
-      type: "RESET_PROJECT_STATE",
+      type: "GET_PROJECTS_SUCCESS",
+      payload: { data },
     });
-}
+    return { success: true }; // ✅ return success
+  } catch (error) {
+    dispatch({
+      type: "GET_PROJECTS_FAILURE",
+      payload: error.response?.data?.message || "Get bu projects failed",
+    });
+    return { success: false, error: error.response.data.message }; // ✅ return failure
+  }
+};
+
+
+// create Project
+export const changeProjectManager = (oldManagerId, newManagerId) => async (dispatch) => {
+  try {
+    const data = await projectService.changeProjectManager(oldManagerId, newManagerId);
+    dispatch({
+      type: "CHANGER_PROJECT_MANAGER_SUCCESS",
+      payload: { data },
+    });
+    return { success: true }; // ✅ return success
+  } catch (error) {
+    dispatch({
+      type: "CHANGER_PROJECT_MANAGER_FAILURE",
+      payload: error.response?.data?.message || "change project manager failed",
+    });
+    return { success: false, error: error.response.data.message }; // ✅ return failure
+  }
+};

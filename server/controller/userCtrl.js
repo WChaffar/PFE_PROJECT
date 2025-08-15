@@ -87,6 +87,7 @@ const loginUserCtrl = [
           profilePicture: findUser?.profilePicture
             ? findUser?.profilePicture
             : "",
+          businessUnit: findUser?.businessUnit,
         });
       } else {
         res.json({

@@ -159,6 +159,30 @@ const editOneTask = asyncHandler(async (req, res) => {
   }
 });
 
+// get Tasks by project ID ----------------------------------------------
+
+const getBuTasksByPorjectID = asyncHandler(async (req, res) => {
+  const { projectId } = req.params;
+  try {
+    const findTasks = await Task.find({
+      project: projectId,
+    })
+      .populate("project")
+      .populate({
+        path: "owner",
+        match: { businessUnit: req?.user?.businessUnit },
+      });
+
+    if (findTasks.length === 0) {
+      throw new Error("No tasks found.");
+    }
+
+    res.status(200).json(findTasks);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
 module.exports = {
   createTask,
   getAllTasks,
@@ -167,4 +191,5 @@ module.exports = {
   editOneTask,
   getTasksByPorjectID,
   getTasksByManagerID,
+  getBuTasksByPorjectID
 };

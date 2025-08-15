@@ -1,126 +1,140 @@
 // src/actions/taskAction.js
 
-import TaskService from '../services/taskService';
+import TaskService from "../services/taskService";
 import { useNavigate } from "react-router-dom";
-
-
 
 // create Task
 export const createTask = (values) => async (dispatch) => {
-    try {
-      const data = await TaskService.createTask(values);
-      dispatch({
-        type: 'CREATE_TASK_SUCCESS',
-        payload: { data },
-      });
-      return { success: true }; // ✅ return success
-    } catch (error) {
-      dispatch({
-        type: 'CREATE_TASK_FAILURE',
-        payload: error.response?.data?.message || 'Create task failed',
-      });
-      return { success: false }; // ✅ return failure
-    }
-  };
+  try {
+    const data = await TaskService.createTask(values);
+    dispatch({
+      type: "CREATE_TASK_SUCCESS",
+      payload: { data },
+    });
+    return { success: true }; // ✅ return success
+  } catch (error) {
+    dispatch({
+      type: "CREATE_TASK_FAILURE",
+      payload: error.response?.data?.message || "Create task failed",
+    });
+    return { success: false }; // ✅ return failure
+  }
+};
 
-
-  // get Tasks by project id
+// get Tasks by project id
 export const getTasksByProjectId = (values) => async (dispatch) => {
   try {
     const data = await TaskService.getTaskByProjectID(values);
     dispatch({
-      type: 'GET_TASKS_BYPROJECTID_SUCCESS',
+      type: "GET_TASKS_BYPROJECTID_SUCCESS",
       payload: { data },
     });
     return { success: true }; // ✅ return success
   } catch (error) {
     dispatch({
-      type: 'GET_TASKS_BYPROJECTID_FAILURE',
-      payload: error.response?.data?.message || 'Get tasks by project id failed',
+      type: "GET_TASKS_BYPROJECTID_FAILURE",
+      payload:
+        error.response?.data?.message || "Get tasks by project id failed",
     });
     return { success: false }; // ✅ return failure
   }
 };
 
-  // get Tasks by project id
-  export const getTaskById = (taskId) => async (dispatch) => {
-    try {
-      const data = await TaskService.getTaskById(taskId);
-      dispatch({
-        type: 'GET_TASK_By_ID_SUCCESS',
-        payload: { data },
-      });
-      return { success: true }; // ✅ return success
-    } catch (error) {
-      dispatch({
-        type: 'GET_TASK_By_ID__FAILURE',
-        payload: error.response?.data?.message || 'Get task by id failed',
-      });
-      return { success: false }; // ✅ return failure
-    }
-  };
-
-
-    // get Tasks by project id
-  export const deleteTaskById = (taskId) => async (dispatch) => {
-    try {
-      const data = await TaskService.deleteTaskById(taskId);
-      dispatch({
-        type: 'DELETE_TASK_By_ID_SUCCESS',
-        payload: { data },
-      });
-      return { success: true }; // ✅ return success
-    } catch (error) {
-      dispatch({
-        type: 'DELETE_TASK_By_ID__FAILURE',
-        payload: error.response?.data?.message || 'delete task by id failed',
-      });
-      return { success: false }; // ✅ return failure
-    }
-  };
-
-
-  // create Project
-export const editTask = (id,values) => async (dispatch) => {
+// get Tasks by project id
+export const getTaskById = (taskId) => async (dispatch) => {
   try {
-    const data = await TaskService.editTask(id,values);
+    const data = await TaskService.getTaskById(taskId);
     dispatch({
-      type: 'EDIT_TASK_SUCCESS',
+      type: "GET_TASK_By_ID_SUCCESS",
       payload: { data },
     });
     return { success: true }; // ✅ return success
   } catch (error) {
     dispatch({
-      type: 'EDIT_TASK_FAILURE',
-      payload: error.response?.data?.message || 'edit project failed',
+      type: "GET_TASK_By_ID__FAILURE",
+      payload: error.response?.data?.message || "Get task by id failed",
     });
     return { success: false }; // ✅ return failure
   }
 };
 
+// get Tasks by project id
+export const deleteTaskById = (taskId) => async (dispatch) => {
+  try {
+    const data = await TaskService.deleteTaskById(taskId);
+    dispatch({
+      type: "DELETE_TASK_By_ID_SUCCESS",
+      payload: { data },
+    });
+    return { success: true }; // ✅ return success
+  } catch (error) {
+    dispatch({
+      type: "DELETE_TASK_By_ID__FAILURE",
+      payload: error.response?.data?.message || "delete task by id failed",
+    });
+    return { success: false }; // ✅ return failure
+  }
+};
 
-  // get Tasks by project id
+// create Project
+export const editTask = (id, values) => async (dispatch) => {
+  try {
+    const data = await TaskService.editTask(id, values);
+    dispatch({
+      type: "EDIT_TASK_SUCCESS",
+      payload: { data },
+    });
+    return { success: true }; // ✅ return success
+  } catch (error) {
+    dispatch({
+      type: "EDIT_TASK_FAILURE",
+      payload: error.response?.data?.message || "edit project failed",
+    });
+    return { success: false }; // ✅ return failure
+  }
+};
+
+// get Tasks by project id
 export const getTasksByManagerId = () => async (dispatch) => {
   try {
     const data = await TaskService.getTaskByManagerID();
     dispatch({
-      type: 'GET_TASKS_BYMANAGERID_SUCCESS',
+      type: "GET_TASKS_BYMANAGERID_SUCCESS",
       payload: { data },
     });
     return { success: true }; // ✅ return success
   } catch (error) {
     dispatch({
-      type: 'GET_TASKS_BYMANAGERID_FAILURE',
-      payload: error.response?.data?.message || 'Get tasks by manager id failed',
+      type: "GET_TASKS_BYMANAGERID_FAILURE",
+      payload:
+        error.response?.data?.message || "Get tasks by manager id failed",
     });
     return { success: false }; // ✅ return failure
   }
 };
 
-
-  // Reset task state
-export const ResetTaskState = () => async (dispatch) => {
+// get Tasks by project id
+export const getBuTasksByProjectId = (values) => async (dispatch) => {
+  try {
+    const data = await TaskService.getBuTaskByProjectID(values);
     dispatch({
-      type: 'RESET_TASKS_STATE',
+      type: "GET_TASKS_BYPROJECTID_SUCCESS",
+      payload: { data },
     });
+    return { success: true }; // ✅ return success
+  } catch (error) {
+    dispatch({
+      type: "GET_TASKS_BYPROJECTID_FAILURE",
+      payload:
+        error.response?.data?.message || "Get tasks by project id failed",
+    });
+    return { success: false }; // ✅ return failure
+  }
+};
+
+// Reset task state
+export const ResetTaskState = () => async (dispatch) => {
+  dispatch({
+    type: "RESET_TASKS_STATE",
+  });
 };
