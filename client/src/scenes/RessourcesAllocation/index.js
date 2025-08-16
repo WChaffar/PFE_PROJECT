@@ -56,9 +56,20 @@ import {
   getBuTasksByProjectId,
   getTasksByProjectId,
 } from "../../actions/taskAction";
-import { parse, isAfter, isBefore, addDays } from "date-fns";
+import {
+  startOfQuarter,
+  endOfQuarter,
+  parseISO,
+  startOfYear,
+  addMonths,
+  parse,
+  isAfter,
+  isBefore,
+  addDays,
+} from "date-fns";
 import { useRef } from "react";
 import { getAllBuManagers } from "../../actions/teamAction";
+import TeamMembersEvolLineChart from "../../components/TeamMembersEvolLineChart";
 
 const CustomToolbar = () => {
   return (
@@ -73,7 +84,7 @@ const CustomToolbar = () => {
   );
 };
 
-const ProjectsBU = () => {
+const RessourcesAllocation = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const navigate = useNavigate();
@@ -340,11 +351,6 @@ const ProjectsBU = () => {
         </Box>
       ),
     },
-    {
-      field: "managerName",
-      headerName: "Manager",
-      flex: 1,
-    },
   ];
 
   const projectTasksColumns = [
@@ -570,12 +576,79 @@ const ProjectsBU = () => {
     setOpenSnackbar(false); // Close the Snackbar
   };
 
+  // Générer les trimestres de l'année en cours
+  function generateQuarters(year = new Date().getFullYear()) {
+    const quarters = [];
+    for (let i = 0; i < 12; i += 3) {
+      const date = addMonths(startOfYear(new Date(year, 0, 1)), i);
+      quarters.push(date); // garder Date
+    }
+    return quarters;
+  }
+  function buildTeamCompositionByJobTitle(assignments, projectId) {
+    const colors = [
+      "hsl(211, 70%, 50%)",
+      "hsl(32, 90%, 55%)",
+      "hsl(145, 63%, 45%)",
+      "hsl(270, 60%, 60%)",
+      "hsl(0, 80%, 60%)",
+    ];
+
+    // 1. Filter assignments for the specific project
+    const projectAssignments = assignments.filter(
+      (a) => a.project && a.project._id === projectId
+    );
+
+    if (projectAssignments.length === 0) return [];
+
+    // 2. Generate quarters for the current year
+    const periods = generateQuarters();
+
+    // 3. Get unique job titles
+    const jobTitles = [
+      ...new Set(
+        projectAssignments.map((a) => a.employee?.jobTitle).filter(Boolean)
+      ),
+    ];
+
+    // 4. Build the data series
+    const result = jobTitles.map((title, i) => ({
+      id: title,
+      color: colors[i % colors.length],
+      data: periods.map((period) => {
+        const quarterStart = startOfQuarter(period);
+        const quarterEnd = endOfQuarter(period);
+
+        // Find all unique employees with this job title active during this quarter
+        const employeesInQuarter = new Set(
+          projectAssignments
+            .filter(
+              (assign) =>
+                assign.employee?.jobTitle === title &&
+                assign.startDate &&
+                new Date(assign.startDate) <= quarterEnd &&
+                (!assign.startDate ||
+                  new Date(assign.startDate) >= quarterStart)
+            )
+            .map((assign) => assign.employee?._id)
+            .filter(Boolean)
+        );
+        console.log(employeesInQuarter)
+        return {
+          x: format(quarterStart, "MMM yyyy"),
+          y: employeesInQuarter.size,
+        };
+      }),
+    }));
+
+    return result;
+  }
   return (
     <Box m="20px">
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Header
-          title="Overview of Business Unit Projects"
-          subtitle="A Comprehensive Overview of the Projects Managed Within the Business Unit."
+          title="Overview of Resource Allocation"
+          subtitle="Comprehensive Overview of Resource Allocation Strategies for Optimizing Efficiency and Productivity"
         />
         {openSnackbar && (
           <Alert
@@ -660,10 +733,6 @@ const ProjectsBU = () => {
           <Box>
             <br />
             <h5>{currentProject?.name} :</h5>
-            <ProjectPipeline
-              TasksData={allTasks}
-              projectData={projects?.find((p) => p.id === openedProject)}
-            />
           </Box>
           <br />
           {/*--------------------------------------------------------------------------------*/}
@@ -758,71 +827,12 @@ const ProjectsBU = () => {
                 </Box>
               </Box>
               {/*-----------------------------------------------*/}
+              {/* ROW 3 */}
               <Box
-                gridColumn="span 6"
+                gridColumn="span 12"
                 gridRow="span 2"
                 backgroundColor={colors.primary[400]}
-                padding="10px"
               >
-                <Typography variant="h5" fontWeight="300">
-                  Upcoming Deadlines (-15 Days Left)
-                </Typography>
-                <Box
-                  display="flex"
-                  flexDirection="column"
-                  alignItems="center"
-                  paddingTop="10px"
-                >
-                  <Box
-                    m="0px 0 0 0"
-                    height="30vh"
-                    width="100%"
-                    sx={{
-                      "& .MuiDataGrid-root": {
-                        border: "none",
-                      },
-                      "& .MuiDataGrid-cell": {
-                        borderBottom: "none",
-                      },
-                      "& .name-column--cell": {
-                        color: colors.greenAccent[300],
-                      },
-                      "& .MuiDataGrid-columnHeaders": {
-                        backgroundColor: colors.grey[700],
-                        borderBottom: "none",
-                        paddingLeft: "15px",
-                      },
-                      "& .MuiDataGrid-virtualScroller": {
-                        backgroundColor: colors.primary[400],
-                      },
-                      "& .MuiDataGrid-footerContainer": {
-                        borderTop: "none",
-                        backgroundColor: colors.blueAccent[700],
-                      },
-                      "& .MuiCheckbox-root": {
-                        color: `${colors.greenAccent[200]} !important`,
-                      },
-                    }}
-                  >
-                    <DataGrid
-                      rows={tasks}
-                      columns={projectTasksDeadlineColumns}
-                      hideFooter
-                      loading={tasksLoading}
-                    />
-                  </Box>
-                </Box>
-              </Box>
-              {/* ROW 2 */}
-              <Box
-                gridColumn="span 6"
-                gridRow="span 2"
-                backgroundColor={colors.primary[400]}
-                padding="10px"
-              >
-                <Typography variant="h5" fontWeight="300">
-                  Tasks Workload
-                </Typography>
                 <Box
                   mt="25px"
                   p="0 30px"
@@ -830,13 +840,31 @@ const ProjectsBU = () => {
                   justifyContent="space-between"
                   alignItems="center"
                 >
-                  <br />
+                  <Box>
+                    <IconButton>
+                      <DownloadOutlinedIcon
+                        sx={{
+                          fontSize: "26px",
+                          color: colors.greenAccent[500],
+                        }}
+                      />
+                    </IconButton>
+                  </Box>
                 </Box>
-
+                <Typography
+                  variant="h5"
+                  fontWeight="600"
+                  sx={{ padding: "2px 2px 0 30px" }}
+                >
+                  Team Composition Growth Over Time
+                </Typography>
                 <Box height="250px" mt="-40px">
-                  <ProjectWorkLoadBarChart
+                  <TeamMembersEvolLineChart
                     isDashboard={true}
-                    TasksWorkloadData={allTasks}
+                    data={buildTeamCompositionByJobTitle(
+                      selectedAssignements,
+                      openedProject
+                    )}
                   />
                 </Box>
               </Box>
@@ -850,4 +878,4 @@ const ProjectsBU = () => {
   );
 };
 
-export default ProjectsBU;
+export default RessourcesAllocation;

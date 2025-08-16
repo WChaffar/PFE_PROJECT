@@ -292,7 +292,7 @@ const Dashboard = () => {
             Team Composition Growth Over Time
           </Typography>
           <Box height="250px" mt="-40px">
-            <TeamMembersEvolLineChart isDashboard={true} />
+            {/* <TeamMembersEvolLineChart isDashboard={true} /> */}
           </Box>
         </Box>
         {/* Project Risks */}

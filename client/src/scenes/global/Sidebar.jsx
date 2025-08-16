@@ -377,7 +377,7 @@ const Sidebar = () => {
                 icon={<PeopleOutlinedIcon />}
                 selected={selected}
                 setSelected={setSelected}
-              />
+              /> 
               <Item
                 title="Resource allocation"
                 to="/team-allocation-bu"

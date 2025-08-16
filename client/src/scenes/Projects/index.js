@@ -84,6 +84,7 @@ const Projects = () => {
   const [allTasks, setAllTasks] = useState([]);
   const [tasksLoading, setTasksLoading] = useState(false);
   const [openedProject, setOpenedProject] = useState(null);
+  const [currentProject, setCurrentProject] = useState(null);
   const [projectWorkload, setProjectWorkload] = useState([]);
   const [overdueTask, setOverdueTask] = useState([]);
   const detailsRef = useRef(null);
@@ -134,10 +135,10 @@ const Projects = () => {
       const aggregatedProjectsBudgetDays = aggregatedProjectsConsumedDays.map(
         (p) => {
           const matchedProject = selectedProjects?.find(
-            (pr) => pr._id === p._id
+            (pr) => pr?._id === p?._id
           );
           return {
-            _id: matchedProject._id,
+            _id: matchedProject?._id,
             budgetAmountUsed:
               p?.daysConsumed >= matchedProject?.budget
                 ? matchedProject?.budget
@@ -647,6 +648,7 @@ const Projects = () => {
             setOverdueTask([]);
             getTasksOfSelectedProject(params);
             setOpenedProject(params.row.id);
+            setCurrentProject(params.row);
             setTimeout(() => {
               detailsRef.current?.scrollIntoView({ behavior: "smooth" });
             }, 500); // slight delay so details section renders first
@@ -657,7 +659,7 @@ const Projects = () => {
         <Box ref={detailsRef}>
           <Box>
             <br />
-            <h5>HR project 1 :</h5>
+            <h5>{currentProject?.name} :</h5>
             <ProjectPipeline
               TasksData={allTasks}
               projectData={projects?.find((p) => p.id === openedProject)}

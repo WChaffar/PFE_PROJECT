@@ -288,8 +288,8 @@ const EditTeamMemberForm = () => {
 
               {/* Other fields (Job Title, Employment Type, etc.) */}
               {/* exactly like you had them - no need to retype here */}
-
               <TextField
+                select
                 fullWidth
                 variant="filled"
                 label="Job Title"
@@ -300,7 +300,35 @@ const EditTeamMemberForm = () => {
                 error={!!touched.jobTitle && !!errors.jobTitle}
                 helperText={touched.jobTitle && errors.jobTitle}
                 sx={{ gridColumn: "span 2" }}
-              />
+              >
+                <MenuItem value="HRIS Consultant">HRIS Consultant</MenuItem>
+                <MenuItem value="Project Management Officer (PMO)">
+                  Project Management Officer (PMO)
+                </MenuItem>
+                <MenuItem value="IT Support Technician">
+                  IT Support Technician
+                </MenuItem>
+                <MenuItem value="Senior Network Administrator">
+                  Senior Network Administrator
+                </MenuItem>
+                <MenuItem value="Experienced French Payroll Officer">
+                  Experienced French Payroll Officer
+                </MenuItem>
+                <MenuItem value="Software Consultantt">
+                  Software Consultant
+                </MenuItem>
+                <MenuItem value="Java Developer">Java Developer</MenuItem>
+                <MenuItem value="Software Development Engineer">
+                  Software Development Engineer
+                </MenuItem>
+                <MenuItem value="Business Intelligence Specialist">
+                  Business Intelligence Specialist
+                </MenuItem>
+                <MenuItem value="Project Manager">Project Manager</MenuItem>
+                <MenuItem value="Production Engineer">
+                  Production Engineer
+                </MenuItem>
+              </TextField>
 
               <TextField
                 select

@@ -245,12 +245,12 @@ const DelegateAManager = () => {
         </IconButton>
         <Menu anchorEl={anchorEl} open={open} onClose={handleCloseMenu}>
           <MenuItem onClick={() => handleAction("Edit")}>
-            ✏️ Change Manager
+            ✏️ Delegate responsibilities to another manager
           </MenuItem>
         </Menu>
 
         <Dialog open={openConfirm} onClose={() => setOpenConfirm(false)}>
-          <DialogTitle>Change Manager</DialogTitle>
+          <DialogTitle>Delegate projects and team responsibilities to another manager</DialogTitle>
           <DialogContent>
             <DialogContentText>
               <br />

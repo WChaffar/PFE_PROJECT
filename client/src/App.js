@@ -46,6 +46,7 @@ import AssignementsViewEmployee from "./scenes/AssignementsViewEmployee";
 import CompleteEmployeeProfile from "./scenes/CompleteEmployeeProfile";
 import ProjectsBU from "./scenes/ProjectsBu";
 import DelegateAManager from "./scenes/DelegateAManager";
+import RessourcesAllocation from "./scenes/RessourcesAllocation";
 
 function PrivateRoute({ children }) {
   const isAuthenticated = useSelector((state) => state.auth?.isAuthenticated);
@@ -390,6 +391,16 @@ function AppContent() {
                   element={
                     <PrivateRoute>
                       <DelegateAManager />
+                    </PrivateRoute>
+                  }
+                />
+              )}
+              {user?.role === "BUDirector" && (
+                <Route
+                  path="/team-allocation-bu"
+                  element={
+                    <PrivateRoute>
+                      <RessourcesAllocation />
                     </PrivateRoute>
                   }
                 />

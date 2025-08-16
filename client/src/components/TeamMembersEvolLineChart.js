@@ -3,48 +3,49 @@ import { useTheme } from "@mui/material";
 import { tokens } from "../theme";
 
 // Updated data matching your matplotlib chart
-const data = [
-  {
-    id: "Developers",
-    color: "hsl(211, 70%, 50%)", // matplotlib blue
-    data: [
-      { x: "Jan 2023", y: 2 },
-      { x: "Apr 2023", y: 4 },
-      { x: "Jul 2023", y: 6 },
-      { x: "Oct 2023", y: 7 },
-      { x: "Jan 2024", y: 9 },
-      { x: "Apr 2024", y: 10 },
-    ],
-  },
-  {
-    id: "Designers",
-    color: "hsl(32, 90%, 55%)", // matplotlib orange
-    data: [
-      { x: "Jan 2023", y: 1 },
-      { x: "Apr 2023", y: 2 },
-      { x: "Jul 2023", y: 2 },
-      { x: "Oct 2023", y: 3 },
-      { x: "Jan 2024", y: 3 },
-      { x: "Apr 2024", y: 4 },
-    ],
-  },
-  {
-    id: "PMs",
-    color: "hsl(145, 63%, 45%)", // matplotlib green
-    data: [
-      { x: "Jan 2023", y: 1 },
-      { x: "Apr 2023", y: 1 },
-      { x: "Jul 2023", y: 2 },
-      { x: "Oct 2023", y: 2 },
-      { x: "Jan 2024", y: 3 },
-      { x: "Apr 2024", y: 4 },
-    ],
-  },
-];
+// const data = [
+//   {
+//     id: "Developers",
+//     color: "hsl(211, 70%, 50%)", // matplotlib blue
+//     data: [
+//       { x: "Jan 2023", y: 2 },
+//       { x: "Apr 2023", y: 4 },
+//       { x: "Jul 2023", y: 6 },
+//       { x: "Oct 2023", y: 7 },
+//       { x: "Jan 2024", y: 9 },
+//       { x: "Apr 2024", y: 10 },
+//     ],
+//   },
+//   {
+//     id: "Designers",
+//     color: "hsl(32, 90%, 55%)", // matplotlib orange
+//     data: [
+//       { x: "Jan 2023", y: 1 },
+//       { x: "Apr 2023", y: 2 },
+//       { x: "Jul 2023", y: 2 },
+//       { x: "Oct 2023", y: 3 },
+//       { x: "Jan 2024", y: 3 },
+//       { x: "Apr 2024", y: 4 },
+//     ],
+//   },
+//   {
+//     id: "PMs",
+//     color: "hsl(145, 63%, 45%)", // matplotlib green
+//     data: [
+//       { x: "Jan 2023", y: 1 },
+//       { x: "Apr 2023", y: 1 },
+//       { x: "Jul 2023", y: 2 },
+//       { x: "Oct 2023", y: 2 },
+//       { x: "Jan 2024", y: 3 },
+//       { x: "Apr 2024", y: 4 },
+//     ],
+//   },
+// ];
 
-const TeamMembersEvolLineChart = ({ isCustomLineColors = false, isDashboard = false }) => {
+const TeamMembersEvolLineChart = ({ isCustomLineColors = false, isDashboard = false, data }) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+  console.log(data)
 
   return (
     <ResponsiveLine
@@ -84,13 +85,13 @@ const TeamMembersEvolLineChart = ({ isCustomLineColors = false, isDashboard = fa
         },
       }}
       colors={{ datum: "color" }} // Use per-series color
-      margin={{ top: 50, right: 110, bottom: 50, left: 60 }}
+      margin={{ top: 50, right: 250, bottom: 50, left: 60 }}
       xScale={{ type: "point" }}
       yScale={{
         type: "linear",
         min: "auto",
         max: "auto",
-        stacked: true, // ✅ for stacking areas
+        stacked: false, // ✅ for stacking areas
         reverse: false,
       }}
       yFormat=" >-.2f"
