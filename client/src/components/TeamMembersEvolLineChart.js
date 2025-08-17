@@ -13,7 +13,7 @@ import { tokens } from "../theme";
 //       { x: "Jul 2023", y: 6 },
 //       { x: "Oct 2023", y: 7 },
 //       { x: "Jan 2024", y: 9 },
-//       { x: "Apr 2024", y: 10 },
+//       { x: "Apr 2024", y: 10 },v
 //     ],
 //   },
 //   {
@@ -45,7 +45,6 @@ import { tokens } from "../theme";
 const TeamMembersEvolLineChart = ({ isCustomLineColors = false, isDashboard = false, data }) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
-  console.log(data)
 
   return (
     <ResponsiveLine
@@ -115,6 +114,7 @@ const TeamMembersEvolLineChart = ({ isCustomLineColors = false, isDashboard = fa
         legend: isDashboard ? undefined : "Number of Team Members",
         legendOffset: -50,
         legendPosition: "middle",
+        tickValues: 1,
       }}
       enableGridX={true}
       enableGridY={true}

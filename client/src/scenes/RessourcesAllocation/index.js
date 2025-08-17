@@ -28,7 +28,6 @@ import {
   projectTasksDeadlineData,
 } from "../../data/ProjectsData";
 import ProjectPipeline from "../../components/ProjectPipeline";
-import ProjectBudgetProgressPie from "../../components/ProjectBudgetProgressPie";
 import AdminPanelSettingsOutlinedIcon from "@mui/icons-material/AdminPanelSettingsOutlined";
 import LockOpenOutlinedIcon from "@mui/icons-material/LockOpenOutlined";
 import SecurityOutlinedIcon from "@mui/icons-material/SecurityOutlined";
@@ -70,6 +69,7 @@ import {
 import { useRef } from "react";
 import { getAllBuManagers } from "../../actions/teamAction";
 import TeamMembersEvolLineChart from "../../components/TeamMembersEvolLineChart";
+import TeamExpertisePie from "../../components/TeamExpertisePie";
 
 const CustomToolbar = () => {
   return (
@@ -109,15 +109,129 @@ const RessourcesAllocation = () => {
   const [openedProject, setOpenedProject] = useState(null);
   const [currentProject, setCurrentProject] = useState(null);
   const [projectWorkload, setProjectWorkload] = useState([]);
+  const [availableTeamMember, setAvailableTeamMember] = useState([]);
+  const [onProjectTeamMember, setOnProjectTeamMember] = useState([]);
+  const [employeesExperienceMap, setEmployeesExperienceMap] = useState([]);
+  const [filtredEmployeesExperience, setFiltredEmployeesExperience] = useState(null);
   const [overdueTask, setOverdueTask] = useState([]);
   const detailsRef = useRef(null);
   const [projectsBudgetDays, setProjectsBudgetDays] = useState([]);
 
+  function getExperienceYears(joinDate) {
+    const start = new Date(joinDate); // joining date
+    const now = new Date(); // today
+
+    let years = now.getFullYear() - start.getFullYear();
+    let months = now.getMonth() - start.getMonth();
+    let days = now.getDate() - start.getDate();
+
+    // Adjust months and years if necessary
+    if (days < 0) {
+      months -= 1;
+      days += new Date(now.getFullYear(), now.getMonth(), 0).getDate();
+    }
+    if (months < 0) {
+      years -= 1;
+      months += 12;
+    }
+
+    // Convert months into fraction of a year
+    const experience = years + months / 10;
+
+    return experience;
+  }
+
+  function addPeriods(p1, p2) {
+    // Extract years and months
+    let y1 = Math.floor(p1);
+    let m1 = Math.round((p1 - y1) * 10); // take digit after decimal as months
+
+    let y2 = Math.floor(p2);
+    let m2 = Math.round((p2 - y2) * 10);
+
+    let years = y1 + y2;
+    let months = m1 + m2;
+
+    // Handle overflow of months
+    if (months >= 12) {
+      years += Math.floor(months / 12);
+      months = months % 12;
+    }
+
+    return years + (months > 0 ? "." + months : "");
+  }
+
   useEffect(() => {
     if (selectedAssignements.length !== 0) {
       setAssignements(selectedAssignements);
+      const today = new Date();
+      const availableEmployees = Object.values(
+        selectedAssignements.reduce((acc, assignment) => {
+          const empId = assignment.employee._id;
+          const endDate = new Date(assignment.endDate);
+
+          // si on n'a pas encore cet employé OU si on trouve une date de fin plus grande
+          if (!acc[empId] || new Date(acc[empId].endDate) < endDate) {
+            acc[empId] = assignment;
+          }
+
+          return acc;
+        }, {})
+      ).filter((assignment) => new Date(assignment.endDate) < today);
+      const onProjectEmployees = Object.values(
+        selectedAssignements.reduce((acc, assignment) => {
+          const empId = assignment.employee._id;
+          const endDate = new Date(assignment.endDate);
+
+          // si on n'a pas encore cet employé OU si on trouve une date de fin plus grande
+          if (!acc[empId] || new Date(acc[empId].endDate) < endDate) {
+            acc[empId] = assignment;
+          }
+
+          return acc;
+        }, {})
+      ).filter((assignment) => new Date(assignment.endDate) < today);
+      setAvailableTeamMember(availableEmployees);
+      setOnProjectTeamMember(onProjectEmployees);
     }
   }, [selectedAssignements]); // <== Écoute les changements de selectedProjects
+
+  useEffect(() => {
+    let employeesExprMap = onProjectTeamMember.map((a) => {
+      let internYearsOfExp = getExperienceYears(a.employee.dateOfJoining);
+      let totalExperience = addPeriods(
+        internYearsOfExp,
+        a.employee.yearsOfExperience
+      );
+      return { _id: a.employee._id, yearsOfExperience: totalExperience , projectId:a.project._id};
+    });
+    
+    setEmployeesExperienceMap(employeesExprMap);
+  }, [onProjectTeamMember]);
+
+  useEffect(() => {
+   const categories = {
+      beginner: 0, // 0–2 years
+      competent: 0, // 2–5 years
+      proficient: 0, // 5–10 years
+      expert: 0, // 10+ years
+    };
+
+    employeesExperienceMap.filter(e=>e.projectId === openedProject).forEach((emp) => {
+      const exp = parseFloat(emp.yearsOfExperience);
+      if (exp >= 0 && exp < 2) {
+        categories.beginner++;
+      } else if (exp >= 2 && exp < 5) {
+        categories.competent++;
+      } else if (exp >= 5 && exp < 10) {
+        categories.proficient++;
+      } else if (exp >= 10) {
+        categories.expert++;
+      }
+    });
+     setFiltredEmployeesExperience(categories);
+  }, [openedProject]);
+  
 
   useEffect(() => {
     if (
@@ -151,7 +265,7 @@ const RessourcesAllocation = () => {
 
           return acc;
         },
-        []
+        [selectedProjects, selectedAssignements]
       );
       // Exemple de sortie : [ { _id: "686ebf6a40e1b4d1b7e1bebe", daysConsumed: 8 } ]
       //////////////////////
@@ -353,40 +467,39 @@ const RessourcesAllocation = () => {
     },
   ];
 
-  const projectTasksColumns = [
+  const AvailableTeamMemebersColumns = [
     {
-      field: "Overdue",
-      headerName: "Overdue days",
+      field: "Employee",
+      headerName: "Employee",
       flex: 1,
       renderCell: (params) => {
-        const days = parseInt(params.row.overdueDays);
-        let color = "black";
-        if (days <= 4) color = "blue";
-        else if (days > 4) color = "red";
-
-        return (
-          <span style={{ color, fontWeight: "bold" }}>
-            {params.row.overdueDays > 1
-              ? params.row.overdueDays + " days"
-              : params.row.overdueDays + " day"}
-          </span>
-        );
+        return <Box>{params.row.employee.fullName}</Box>;
+      },
+    },
+    {
+      field: "endDate",
+      headerName: "Assignment end date",
+      flex: 1,
+      renderCell: (params) => {
+        return <Box>{format(params.row.endDate, "yyyy-MM-dd")}</Box>;
+      },
+    },
+    {
+      field: "availableFrom",
+      headerName: "Available from",
+      flex: 1,
+      renderCell: (params) => {
+        const nextDay = addDays(new Date(params.row.endDate), 1);
+        return <Box>{format(nextDay, "yyyy-MM-dd")}</Box>;
       },
     },
     {
       field: "Task",
       headerName: "Task",
       flex: 1,
-    },
-    {
-      field: "Deadline",
-      headerName: "Deadline",
-      flex: 1,
-    },
-    {
-      field: "Employee",
-      headerName: "Employee",
-      flex: 1,
+      renderCell: (params) => {
+        return <Box>{params.row.taskId.taskName}</Box>;
+      },
     },
   ];
 
@@ -633,7 +746,7 @@ const RessourcesAllocation = () => {
             .map((assign) => assign.employee?._id)
             .filter(Boolean)
         );
-        console.log(employeesInQuarter)
+
         return {
           x: format(quarterStart, "MMM yyyy"),
           y: employeesInQuarter.size,
@@ -750,23 +863,21 @@ const RessourcesAllocation = () => {
                 p="10px"
               >
                 <Typography variant="h5" fontWeight="300">
-                  Project Budget
+                  The structure of expertise in the team
                 </Typography>
                 <Box display="flex" flexDirection="column" alignItems="center">
-                  <ProjectBudgetProgressPie
-                    projectBudgetDays={projectsBudgetDays?.find(
-                      (p) => p._id === openedProject
-                    )}
+                  <TeamExpertisePie
+                    employeesExperienceMap={filtredEmployeesExperience}
                   />
                   <Typography
                     variant="h5"
                     color={colors.greenAccent[500]}
                     sx={{ mt: "-20px" }}
                   >
-                    Project Budget Distribution Overview
+                    The structure of expertise in the team Overview
                   </Typography>
                   <Typography>
-                    Visual Breakdown of Project Budget Allocation{" "}
+                    Visual Breakdown of Project Expertise composition{" "}
                   </Typography>
                 </Box>
               </Box>
@@ -778,7 +889,7 @@ const RessourcesAllocation = () => {
                 padding="10px"
               >
                 <Typography variant="h5" fontWeight="300">
-                  Overdue Task
+                  Available team members
                 </Typography>
                 <Box
                   display="flex"
@@ -818,8 +929,10 @@ const RessourcesAllocation = () => {
                     }}
                   >
                     <DataGrid
-                      rows={overdueTask}
-                      columns={projectTasksColumns}
+                      rows={availableTeamMember?.filter(
+                        (p) => p.project._id === openedProject
+                      )}
+                      columns={AvailableTeamMemebersColumns}
                       hideFooter
                       loading={tasksLoading}
                     />

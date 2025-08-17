@@ -115,7 +115,7 @@ const getEmployeeAssignments = async (req, res) => {
 
     const assignments = await Assignment.find({ employee: employeeId })
       .populate("project", "client projectName requiredSkills")
-      .populate("employee", "fullName keySkills jobTitle")
+      .populate("employee", "fullName keySkills jobTitle dateOfJoining yearsOfExperience")
       .populate("taskId", "taskName workload")
       .sort({ startDate: 1 });
 
@@ -277,7 +277,7 @@ const getAllEmployeesAssignments = async (req, res) => {
   try {
     const assignments = await Assignment.find()
       .populate("project")
-      .populate("employee", "fullName keySkills profilePicture jobTitle")
+      .populate("employee", "fullName keySkills profilePicture jobTitle dateOfJoining yearsOfExperience")
       .populate("taskId")
       .sort({ startDate: 1 });
 
@@ -292,7 +292,7 @@ const getAssignmentsForEmployee = async (req, res) => {
   try {
     const assignments = await Assignment.find({ employee: req.user._id })
       .populate("project", "client projectName requiredSkills")
-      .populate("employee", "fullName keySkills jobTitle")
+      .populate("employee", "fullName keySkills jobTitle dateOfJoining yearsOfExperience")
       .populate("taskId", "taskName workload")
       .sort({ startDate: 1 });
 

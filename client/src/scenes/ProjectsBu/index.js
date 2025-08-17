@@ -140,7 +140,7 @@ const ProjectsBU = () => {
 
           return acc;
         },
-        []
+        [selectedProjects,selectedAssignements]
       );
       // Exemple de sortie : [ { _id: "686ebf6a40e1b4d1b7e1bebe", daysConsumed: 8 } ]
       //////////////////////
