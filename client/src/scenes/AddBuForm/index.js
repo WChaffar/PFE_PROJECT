@@ -18,7 +18,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { getAllProjects } from "../../actions/projectAction";
 import { createTask } from "../../actions/taskAction";
 import { useNavigate } from "react-router-dom";
-import { createBU } from "../../actions/businessUnitAction";
+import { BuResetState, createBU } from "../../actions/businessUnitAction";
 
 const CreateBUForm = () => {
   const isNonMobile = useMediaQuery("(min-width:600px)");
@@ -29,6 +29,11 @@ const CreateBUForm = () => {
   const [success, setSuccess] = useState(null);
   const error = useSelector((state) => state.businessUnit.error);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    dispatch(BuResetState());
+  }, [dispatch])
+  
 
   const handleFormSubmit = async (values) => {
     console.log("Form Values on Submit:", values); // Debugging: Check if values are submitted correctly

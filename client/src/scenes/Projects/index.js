@@ -399,11 +399,6 @@ const Projects = () => {
       headerName: "Deadline",
       flex: 1,
     },
-    {
-      field: "Employee",
-      headerName: "Employee",
-      flex: 1,
-    },
   ];
 
   const projectTasksDeadlineColumns = [

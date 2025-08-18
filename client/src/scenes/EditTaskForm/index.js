@@ -212,7 +212,7 @@ const EditTaskForm = () => {
                 helperText={touched.projectPhase && errors.projectPhase}
                 sx={{ gridColumn: "span 2" }}
               >
-                <MenuItem value="Design">Planning</MenuItem>
+                <MenuItem value="Planning">Planning</MenuItem>
                 <MenuItem value="Design">Design</MenuItem>
                 <MenuItem value="Development">Development</MenuItem>
                 <MenuItem value="Testing">Testing</MenuItem>

@@ -26,9 +26,7 @@ import {
   resetAssignementState,
 } from "../../actions/assignementsAction";
 import WarningIcon from "@mui/icons-material/Warning";
-import {
-  getMyAbsences,
-} from "../../actions/absenceAction";
+import { getMyAbsences } from "../../actions/absenceAction";
 
 const transformAssignmentsToMissions = (assignments) => {
   const grouped = {};
@@ -125,9 +123,7 @@ const AssignementsViewEmployee = () => {
     startDate.add(i, "day")
   );
   const dispatch = useDispatch();
-  const selectedUser = useSelector(
-    (state) => state.auth.user
-  );
+  const selectedUser = useSelector((state) => state.auth.user);
   const [teamMember, setTeamMember] = useState({});
   const error = useSelector((state) => state.tasks.error);
   const assignementError = useSelector((state) => state.assignements.error);
@@ -152,8 +148,6 @@ const AssignementsViewEmployee = () => {
   const [assignments, setAssignments] = useState([]);
   const [absences, setAbsences] = useState([]);
   const [absenceDayMap, setAbsenceDayMap] = useState({});
-
-
 
   useEffect(() => {
     if (selectedAbsences.length !== 0) {
@@ -186,8 +180,6 @@ const AssignementsViewEmployee = () => {
       setTasks(selectedTasks);
     }
   }, [selectedTasks]);
-
-
 
   useEffect(() => {
     if (Object.keys(selectedUser).length > 0) {
@@ -315,16 +307,121 @@ const AssignementsViewEmployee = () => {
             <ArrowForwardIosIcon fontSize="small" />
           </IconButton>
         </Box>
-        {transformAssignmentsToMissions(assignments).map((mission) => (
-          <Box key={mission.id} display="flex" alignItems="center" mb={1}>
-            <Typography width="200px" fontSize="14px">
-              {mission.title}
-            </Typography>
-            {dates.map((date) => {
-              const dateStr = date.format("YYYY-MM-DD");
-              const dayOfWeek = date.day(); // 0 = Sunday, 6 = Saturday
-              const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-              if (isWeekend) {
+        <Box
+          style={{
+            maxHeight: "260px", // adjust to your desired height
+            overflowY:
+              transformAssignmentsToMissions(assignments).length > 1
+                ? "auto" // "auto" is better than "scroll"
+                : "hidden",
+          }}
+        >
+          {transformAssignmentsToMissions(assignments).map((mission) => (
+            <Box key={mission.id} display="flex" alignItems="center" mb={1}>
+              <Typography
+                style={{
+                  borderBottom: "1px solid #eee", // ligne grise sous le titre
+                  paddingBottom: "2px", // petit espace pour respirer
+                }}
+                width="200px"
+                fontSize="14px"
+              >
+                {mission.title.length > 40
+                  ? mission.title.slice(0, 45) + "..."
+                  : mission.title}
+              </Typography>
+              {dates.map((date) => {
+                const dateStr = date.format("YYYY-MM-DD");
+                const dayOfWeek = date.day(); // 0 = Sunday, 6 = Saturday
+                const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+                if (isWeekend) {
+                  // Empty slot (but highlight weekends)
+                  return (
+                    <Box
+                      key={`${mission.id}-empty-${dateStr}`}
+                      width="60px"
+                      height="20px"
+                      m="1px"
+                      border="1px solid #eee"
+                      bgcolor={isWeekend ? weekendColor : "transparent"}
+                    />
+                  );
+                }
+                // Check for absence
+                if (absenceDayMap[dateStr]) {
+                  return (
+                    <Box
+                      key={`${mission.id}-absence-${dateStr}`}
+                      width="60px"
+                      height="20px"
+                      m="1px"
+                      display="flex"
+                    >
+                      {absenceDayMap[dateStr].map((absence, idx) => (
+                        <Box
+                          key={absence.id + "-" + idx}
+                          flex={1}
+                          bgcolor={absence.color}
+                          title={absence.type}
+                          border="1px solid #ccc"
+                        />
+                      ))}
+                    </Box>
+                  );
+                }
+
+                // Check for detailed dates first (AM/PM)
+                const detailedSlot = mission.detailedDates.find(
+                  (d) => d.date === dateStr
+                );
+                if (detailedSlot) {
+                  return (
+                    <Box
+                      key={`${mission.id}-detail-${dateStr}`}
+                      width="60px"
+                      height="20px"
+                      m="1px"
+                      display="flex"
+                      flexDirection="column"
+                    >
+                      <Box
+                        flex={1}
+                        bgcolor={
+                          detailedSlot.period === "Morning"
+                            ? "#FFD580"
+                            : "transparent"
+                        }
+                        border="1px solid #FFD580"
+                      />
+                      <Box
+                        flex={1}
+                        bgcolor={
+                          detailedSlot.period === "Afternoon"
+                            ? "#FFA500"
+                            : "transparent"
+                        }
+                        border="1px solid #FFA500"
+                      />
+                    </Box>
+                  );
+                }
+
+                // Check for full range dates
+                const fullRangeSlot = mission.fullRangeDates.find(
+                  (d) => d.date === dateStr
+                );
+                if (fullRangeSlot) {
+                  return (
+                    <Box
+                      key={`${mission.id}-full-${dateStr}`}
+                      width="60px"
+                      height="20px"
+                      m="1px"
+                      bgcolor="#FFA500"
+                    />
+                  );
+                }
+
                 // Empty slot (but highlight weekends)
                 return (
                   <Box
@@ -333,99 +430,13 @@ const AssignementsViewEmployee = () => {
                     height="20px"
                     m="1px"
                     border="1px solid #eee"
-                    bgcolor={isWeekend ? weekendColor : "transparent"}
+                    bgcolor="transparent"
                   />
                 );
-              }
-              // Check for absence
-              if (absenceDayMap[dateStr]) {
-                return (
-                  <Box
-                    key={`${mission.id}-absence-${dateStr}`}
-                    width="60px"
-                    height="20px"
-                    m="1px"
-                    display="flex"
-                  >
-                    {absenceDayMap[dateStr].map((absence, idx) => (
-                      <Box
-                        key={absence.id + "-" + idx}
-                        flex={1}
-                        bgcolor={absence.color}
-                        title={absence.type}
-                        border="1px solid #ccc"
-                      />
-                    ))}
-                  </Box>
-                );
-              }
-
-              // Check for detailed dates first (AM/PM)
-              const detailedSlot = mission.detailedDates.find(
-                (d) => d.date === dateStr
-              );
-              if (detailedSlot) {
-                return (
-                  <Box
-                    key={`${mission.id}-detail-${dateStr}`}
-                    width="60px"
-                    height="20px"
-                    m="1px"
-                    display="flex"
-                    flexDirection="column"
-                  >
-                    <Box
-                      flex={1}
-                      bgcolor={
-                        detailedSlot.period === "Morning"
-                          ? "#FFD580"
-                          : "transparent"
-                      }
-                      border="1px solid #FFD580"
-                    />
-                    <Box
-                      flex={1}
-                      bgcolor={
-                        detailedSlot.period === "Afternoon"
-                          ? "#FFA500"
-                          : "transparent"
-                      }
-                      border="1px solid #FFA500"
-                    />
-                  </Box>
-                );
-              }
-
-              // Check for full range dates
-              const fullRangeSlot = mission.fullRangeDates.find(
-                (d) => d.date === dateStr
-              );
-              if (fullRangeSlot) {
-                return (
-                  <Box
-                    key={`${mission.id}-full-${dateStr}`}
-                    width="60px"
-                    height="20px"
-                    m="1px"
-                    bgcolor="#FFA500"
-                  />
-                );
-              }
-
-              // Empty slot (but highlight weekends)
-              return (
-                <Box
-                  key={`${mission.id}-empty-${dateStr}`}
-                  width="60px"
-                  height="20px"
-                  m="1px"
-                  border="1px solid #eee"
-                  bgcolor="transparent"
-                />
-              );
-            })}
-          </Box>
-        ))}
+              })}
+            </Box>
+          ))}
+        </Box>
 
         <Box mt={2}>
           <Box display="flex" gap={2} mt={2}>

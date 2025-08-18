@@ -69,6 +69,7 @@ const TeamManagement = () => {
   const [onProjectTeamMemebers, setOnProjectTeamMembers] = useState([]);
 
   useEffect(() => {
+    console.log(onProjectTeamMemebers)
     if (selectedTeamMembers.length !== 0) {
       const teamMembersMap = selectedTeamMembers.map((member) => ({
         id: member?._id,
@@ -79,11 +80,13 @@ const TeamManagement = () => {
         experience:
           member.yearsOfExperience +
           (member.yearsOfExperience > 1 ? " years" : " year"),
-        availability: "On Project",
+        availability: onProjectTeamMemebers?.some((m) => m.id === member?._id)
+          ? "On Project"
+          : "Available Now",
       }));
       setTeamMembers(teamMembersMap);
     }
-  }, [selectedTeamMembers]); // <== Écoute les changements de selectedProjects
+  }, [selectedTeamMembers,onProjectTeamMemebers.length,availableTeamMemebers.length]); // <== Écoute les changements de selectedProjects
 
   useEffect(() => {
     dispatch(getAllTeamMembersForManager());
@@ -117,8 +120,6 @@ const TeamManagement = () => {
 
       setOnProjectTeamMembers(onProject);
       setAvailableTeamMembers(available);
-      console.log("On Project:", onProject.length);
-      console.log("Available:", available.length);
     }
   }, [teamMembers, selectedAssignements]);
 

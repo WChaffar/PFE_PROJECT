@@ -65,13 +65,19 @@ const businessUnitReducer = (state = initialState, action) => {
     case "DELETE_BUSINESS_UNIT_BY_ID_SUCCESS":
       return {
         ...state,
-        businessUnit: state.businessUnit.filter((b) => b._id !== action.payload.data._id),
+        businessUnit: state.businessUnit.filter(
+          (b) => b._id !== action.payload.data._id
+        ),
         error: null, // NEW: to store team-related errors
       };
     case "DELETE_BUSINESS_UNIT_BY_ID_FAILURE":
       return {
         ...state,
         error: action.payload, // store error message
+      };
+    case "BUSINESS_UNIT_RESET_STATE":
+      return {
+        ...initialState,
       };
 
     default:

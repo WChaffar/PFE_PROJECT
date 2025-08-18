@@ -139,6 +139,7 @@ const StaffingCalendar = () => {
         const startDate = new Date(assignment?.startDate);
         const endDate = new Date(assignment?.endDate);
         const dayDetails = assignment?.dayDetails;
+        const project = assignment?.project?.projectName;
         const result = [];
         let currentDate = new Date(startDate);
 
@@ -148,6 +149,7 @@ const StaffingCalendar = () => {
             date: currentDate.toISOString().split("T")[0], // YYYY-MM-DD format
             task,
             dayDetails,
+            project,
           });
           currentDate.setDate(currentDate.getDate() + 1);
         }
@@ -454,6 +456,49 @@ const StaffingCalendar = () => {
           <ToggleButton value="perMonth">Per Month</ToggleButton>
         </ToggleButtonGroup>
       </Box>
+      {/* === Legend === */}
+      <Box display="flex" gap={3} mb={2} alignItems="center">
+        {/* Full Day */}
+        <Box display="flex" alignItems="center" gap={1}>
+          <Box
+            sx={{
+              width: 20,
+              height: 20,
+              borderRadius: "6px",
+              backgroundColor: "#9e9e9e", // solid gray
+            }}
+          />
+          <Typography variant="body2">Full Day Assignment</Typography>
+        </Box>
+
+        {/* Half Day */}
+        <Box display="flex" alignItems="center" gap={1}>
+          <Box
+            sx={{
+              width: 20,
+              height: 20,
+              borderRadius: "6px",
+              backgroundImage:
+                "repeating-linear-gradient(45deg, #bdbdbd 0, #bdbdbd 4px, #e0e0e0 4px, #e0e0e0 8px)", // gray stripes
+            }}
+          />
+          <Typography variant="body2">Half Day Assignment</Typography>
+        </Box>
+
+        {/* Absence */}
+        <Box display="flex" alignItems="center" gap={1}>
+          <Box
+            sx={{
+              width: 20,
+              height: 20,
+              borderRadius: "6px",
+              backgroundColor: "#eeeeee", // light gray for absence
+              border: "1px solid #9e9e9e",
+            }}
+          />
+          <Typography variant="body2">Absence</Typography>
+        </Box>
+      </Box>
 
       <TableContainer component={Paper}>
         <Table size="small">
@@ -599,7 +644,7 @@ const StaffingCalendar = () => {
                                     )} 4px,rgba(0,0,0,0.1) 4px,rgba(0,0,0,0.1) 8px)`,
                                   }}
                                 >
-                                  {morningAssignment.task}
+                                {morningAssignment.project} - {morningAssignment.task}
                                 </Box>
                               </Tooltip>
                             )}
@@ -622,7 +667,8 @@ const StaffingCalendar = () => {
                                     )} 4px,rgba(0,0,0,0.1) 4px,rgba(0,0,0,0.1) 8px)`,
                                   }}
                                 >
-                                  {afternoonAssignment?.task}
+                                  
+                               {afternoonAssignment.project} - {afternoonAssignment?.task}
                                 </Box>
                               </Tooltip>
                             )}
@@ -649,7 +695,7 @@ const StaffingCalendar = () => {
                                   margin: "3px 0px",
                                 }}
                               >
-                                {fullDayAssignment.task}
+                               {fullDayAssignment.project} - {fullDayAssignment.task}
                               </Box>
                             </Tooltip>
                           ))

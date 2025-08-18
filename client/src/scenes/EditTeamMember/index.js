@@ -328,6 +328,13 @@ const EditTeamMemberForm = () => {
                 <MenuItem value="Production Engineer">
                   Production Engineer
                 </MenuItem>
+                <MenuItem value="Fullstack Developer">
+                  Fullstack Developer
+                </MenuItem>
+                <MenuItem value="Product Manager">Product Manager</MenuItem>
+                 <MenuItem value="Frontend Developer">
+                  Frontend Developer
+                </MenuItem>
               </TextField>
 
               <TextField
@@ -364,6 +371,7 @@ const EditTeamMemberForm = () => {
               />
 
               <TextField
+                select
                 fullWidth
                 variant="filled"
                 label="Seniority Level"
@@ -374,7 +382,12 @@ const EditTeamMemberForm = () => {
                 error={!!touched.seniorityLevel && !!errors.seniorityLevel}
                 helperText={touched.seniorityLevel && errors.seniorityLevel}
                 sx={{ gridColumn: "span 2" }}
-              />
+              >
+                <MenuItem value="Full-time">Beginner</MenuItem>
+                <MenuItem value="Part-time">Competent</MenuItem>
+                <MenuItem value="Contract">Proficient</MenuItem>
+                <MenuItem value="Contract">Expert</MenuItem>
+              </TextField>
 
               <FormControlLabel
                 control={

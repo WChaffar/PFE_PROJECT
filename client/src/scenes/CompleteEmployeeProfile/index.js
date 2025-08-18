@@ -45,7 +45,7 @@ const CompleteEmployeeProfile = () => {
     const result = await dispatch(completeMyProfile(formData));
     if (result.success) {
       setSuccess("Profile completed with success.");
-        navigate("/my-absences");
+      navigate("/my-absences");
     }
   };
 
@@ -174,16 +174,42 @@ const CompleteEmployeeProfile = () => {
                 sx={{ gridColumn: "span 2" }}
               >
                 <MenuItem value="HRIS Consultant">HRIS Consultant</MenuItem>
-                <MenuItem value="Project Management Officer (PMO)">Project Management Officer (PMO)</MenuItem>
-                <MenuItem value="IT Support Technician">IT Support Technician</MenuItem>
-                <MenuItem value="Senior Network Administrator">Senior Network Administrator</MenuItem>
-                <MenuItem value="Experienced French Payroll Officer">Experienced French Payroll Officer</MenuItem>
-                <MenuItem value="Software Consultantt">Software Consultant</MenuItem>
+                <MenuItem value="Project Management Officer (PMO)">
+                  Project Management Officer (PMO)
+                </MenuItem>
+                <MenuItem value="IT Support Technician">
+                  IT Support Technician
+                </MenuItem>
+                <MenuItem value="Senior Network Administrator">
+                  Senior Network Administrator
+                </MenuItem>
+                <MenuItem value="Experienced French Payroll Officer">
+                  Experienced French Payroll Officer
+                </MenuItem>
+                <MenuItem value="Software Consultantt">
+                  Software Consultant
+                </MenuItem>
                 <MenuItem value="Java Developer">Java Developer</MenuItem>
-                <MenuItem value="Software Development Engineer">Software Development Engineer</MenuItem>
-                <MenuItem value="Business Intelligence Specialist">Business Intelligence Specialist</MenuItem>
+                <MenuItem value="Software Development Engineer">
+                  Software Development Engineer
+                </MenuItem>
+                <MenuItem value="Business Intelligence Specialist">
+                  Business Intelligence Specialist
+                </MenuItem>
                 <MenuItem value="Project Manager">Project Manager</MenuItem>
-                <MenuItem value="Production Engineer">Production Engineer</MenuItem>
+                <MenuItem value="Production Engineer">
+                  Production Engineer
+                </MenuItem>
+                <MenuItem value="Fullstack Developer">
+                  Fullstack Developer
+                </MenuItem>
+                <MenuItem value="Product Manager">
+                  Product Manager
+                </MenuItem>
+                <MenuItem value="Frontend Developer">
+                  Frontend Developer
+                </MenuItem>
+                
               </TextField>
 
               {/* Employment Type */}
@@ -223,6 +249,7 @@ const CompleteEmployeeProfile = () => {
 
               {/* Seniority Level */}
               <TextField
+                select
                 fullWidth
                 variant="filled"
                 label="Seniority Level"
@@ -233,7 +260,12 @@ const CompleteEmployeeProfile = () => {
                 error={!!touched.seniorityLevel && !!errors.seniorityLevel}
                 helperText={touched.seniorityLevel && errors.seniorityLevel}
                 sx={{ gridColumn: "span 2" }}
-              />
+              >
+                <MenuItem value="Full-time">Beginner</MenuItem>
+                <MenuItem value="Part-time">Competent</MenuItem>
+                <MenuItem value="Contract">Proficient</MenuItem>
+                <MenuItem value="Contract">Expert</MenuItem>
+              </TextField>
 
               {/* Remote Work Allowed */}
               <FormControlLabel
