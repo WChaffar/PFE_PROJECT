@@ -9,6 +9,8 @@ import {
   LinearProgress,
   Autocomplete,
   TextField,
+  Stack,
+  Avatar,
 } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert"; // Icône pour les trois points
 import {
@@ -59,6 +61,7 @@ import {
 import { parse, isAfter, isBefore, addDays } from "date-fns";
 import { useRef } from "react";
 import { getAllBuManagers } from "../../actions/teamAction";
+import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 
 const CustomToolbar = () => {
   return (
@@ -101,6 +104,7 @@ const ProjectsBU = () => {
   const [overdueTask, setOverdueTask] = useState([]);
   const detailsRef = useRef(null);
   const [projectsBudgetDays, setProjectsBudgetDays] = useState([]);
+  const [projectTeamMembers, setProjectTeamMembers] = useState(null);
 
   useEffect(() => {
     if (selectedAssignements.length !== 0) {
@@ -140,7 +144,7 @@ const ProjectsBU = () => {
 
           return acc;
         },
-        [selectedProjects,selectedAssignements]
+        [selectedProjects, selectedAssignements]
       );
       // Exemple de sortie : [ { _id: "686ebf6a40e1b4d1b7e1bebe", daysConsumed: 8 } ]
       //////////////////////
@@ -171,6 +175,143 @@ const ProjectsBU = () => {
       setProjectsBudgetDays(aggregatedProjectsBudgetDays);
     }
   }, [selectedProjects, selectedAssignements]);
+
+  useEffect(() => {
+    if (
+      selectedProjects.length > 0 &&
+      selectedAssignements.length > 0 &&
+      openedProject !== null
+    ) {
+      let projectTeam = selectedAssignements
+        .filter((a) => a.project._id === openedProject)
+        .map((a) => a?.employee);
+      setProjectTeamMembers({
+        projectTeam: projectTeam,
+        projectId: openedProject,
+      });
+    }
+  }, [selectedProjects, selectedAssignements, openedProject]);
+
+  const AccountsAvatars = ({ accounts }) => {
+    const [openDialog, setOpenDialog] = React.useState(false);
+    const [searchTerm, setSearchTerm] = React.useState("");
+
+    const visibleAccounts = accounts?.slice(0, 3) || [];
+    const getInitials = (fullName) => {
+      if (!fullName) return "";
+      return fullName
+        .split(" ")
+        .map((word) => word[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase();
+    };
+
+    // Filter accounts based on search input
+    const filteredAccounts = accounts?.filter((member) =>
+      member?.fullName?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    return (
+      <>
+        <Stack direction="row" spacing={-1}>
+          {visibleAccounts.map((member, index) => {
+            const hasPicture = member?.avatar?.trim();
+            const initials = getInitials(member?.fullName);
+
+            return (
+              <Avatar
+                key={index}
+                src={hasPicture || undefined}
+                alt={member?.fullName}
+                sx={{ width: 40, height: 40, fontWeight: 600 }}
+              >
+                {!hasPicture && initials}
+              </Avatar>
+            );
+          })}
+          <Box>
+            <IconButton
+              sx={{ width: "40px", height: "40px", marginLeft: "30px" }}
+              onClick={(event) => {
+                event.stopPropagation();
+                setOpenDialog(true);
+              }}
+            >
+              <MoreHorizIcon />
+            </IconButton>
+          </Box>
+        </Stack>
+
+        {/* Dialog */}
+        <Dialog
+          open={openDialog}
+          onClose={() => setOpenDialog(false)}
+          fullWidth
+          maxWidth="sm"
+        >
+          <DialogTitle>Team Members</DialogTitle>
+
+          {/* Search input */}
+          <Box sx={{ p: 2 }}>
+            <input
+              type="text"
+              placeholder="Search by name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "8px",
+                borderRadius: "6px",
+                border: "1px solid #ccc",
+                fontSize: "14px",
+              }}
+            />
+          </Box>
+
+          <DialogContent
+            dividers
+            sx={{ maxHeight: "400px", overflowY: "auto" }}
+          >
+            <Stack spacing={2}>
+              {filteredAccounts?.length > 0 ? (
+                filteredAccounts.map((member, idx) => {
+                  const hasPicture = member?.avatar?.trim();
+                  const initials = getInitials(member?.fullName);
+                  return (
+                    <Stack
+                      key={idx}
+                      direction="row"
+                      spacing={2}
+                      alignItems="center"
+                    >
+                      <Avatar
+                        src={hasPicture || undefined}
+                        sx={{ width: 40, height: 40, fontWeight: 600 }}
+                      >
+                        {!hasPicture && initials}
+                      </Avatar>
+                      <Typography variant="body1">
+                        {member?.fullName}
+                      </Typography>
+                    </Stack>
+                  );
+                })
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  No members found
+                </Typography>
+              )}
+            </Stack>
+          </DialogContent>
+
+          <DialogActions>
+            <Button onClick={() => setOpenDialog(false)}>Close</Button>
+          </DialogActions>
+        </Dialog>
+      </>
+    );
+  };
 
   useEffect(() => {
     if (openedProject !== null && selectedProjects.length > 0) {
@@ -344,6 +485,18 @@ const ProjectsBU = () => {
       field: "managerName",
       headerName: "Manager",
       flex: 1,
+    },
+    {
+      field: "team",
+      headerName: "Team",
+      flex: 1,
+      renderCell: ({ row }) => {
+        if (row.id === projectTeamMembers?.projectId) {
+          return <AccountsAvatars accounts={projectTeamMembers?.projectTeam} />;
+        } else {
+          return <Box></Box>;
+        }
+      },
     },
   ];
 
@@ -831,7 +984,9 @@ const ProjectsBU = () => {
                 <Box height="250px" mt="-40px">
                   <ProjectWorkLoadBarChart
                     isDashboard={true}
-                    TasksWorkloadData={allTasks}
+                    TasksWorkloadData={allTasks?.filter(
+                      (t) => t.workload < 100
+                    )}
                   />
                 </Box>
               </Box>

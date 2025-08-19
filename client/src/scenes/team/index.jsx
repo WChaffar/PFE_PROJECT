@@ -471,8 +471,8 @@ const TeamManagement = () => {
         <DataGrid
           rows={teamMembers}
           columns={columns}
-          pageSize={5}
-          rowsPerPageOptions={[5]}
+          pageSize={7}
+          rowsPerPageOptions={[7]}
           components={{ Toolbar: CustomToolbar }}
           sx={{
             borderRadius: "12px",

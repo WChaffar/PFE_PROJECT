@@ -209,6 +209,9 @@ const CompleteEmployeeProfile = () => {
                 <MenuItem value="Frontend Developer">
                   Frontend Developer
                 </MenuItem>
+                  <MenuItem value="QA Engineer">
+                  QA Engineer
+                </MenuItem>
                 
               </TextField>
 

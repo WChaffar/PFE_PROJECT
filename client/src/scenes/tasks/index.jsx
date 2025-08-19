@@ -15,6 +15,7 @@ import {
   DialogContentText,
   DialogActions,
   Alert,
+  Stack
 } from "@mui/material";
 import {
   DataGrid,
@@ -33,6 +34,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { format } from "date-fns";
 import { getAllProjects } from "../../actions/projectAction";
 import { deleteTaskById, getTasksByProjectId } from "../../actions/taskAction";
+import { getAllEmployeeAssignements } from "../../actions/assignementsAction";
+import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 
 const CustomToolbar = () => {
   return (
@@ -62,7 +65,10 @@ const TasksManagement = () => {
   const [openSnackbar, setOpenSnackbar] = React.useState(false); // Snackbar state
   const [snackbarMessage, setSnackbarMessage] = React.useState(""); // Message for Snackbar
   const error = useSelector((state) => state.tasks.error);
-   const [getProjectsError, setGetProjectsError ] = useState(null);
+  const [getProjectsError, setGetProjectsError] = useState(null);
+  const selectedAssignements = useSelector(
+    (state) => state.assignements.assignements
+  );
 
   useEffect(() => {
     if (selectedProjects.length !== 0) {
@@ -78,6 +84,10 @@ const TasksManagement = () => {
       setProjectLoading(false);
     }
   }, [selectedProjects]); // <== Écoute les changements de selectedProjects
+
+  useEffect(() => {
+    dispatch(getAllEmployeeAssignements());
+  }, [dispatch]); // <== Appelle une seule fois le fetch
 
   useEffect(() => {
     setProjectLoading(true);
@@ -138,6 +148,126 @@ const TasksManagement = () => {
     { field: "active", headerName: "Active Taks", flex: 1 },
     { field: "overdue", headerName: "Overdue Tasks", flex: 1 },
   ];
+  const AccountsAvatars = ({ accounts }) => {
+    const [openDialog, setOpenDialog] = React.useState(false);
+    const [searchTerm, setSearchTerm] = React.useState("");
+
+    const visibleAccounts = accounts?.slice(0, 3) || [];
+    const getInitials = (fullName) => {
+      if (!fullName) return "";
+      return fullName
+        .split(" ")
+        .map((word) => word[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase();
+    };
+
+    // Filter accounts based on search input
+    const filteredAccounts = accounts?.filter((member) =>
+      member?.fullName?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    return (
+      <>
+        <Stack direction="row" spacing={-1}>
+          {visibleAccounts.map((member, index) => {
+            const hasPicture = member?.avatar?.trim();
+            const initials = getInitials(member?.fullName);
+
+            return (
+              <Avatar
+                key={index}
+                src={hasPicture || undefined}
+                alt={member?.fullName}
+                sx={{ width: 40, height: 40, fontWeight: 600 }}
+              >
+                {!hasPicture && initials}
+              </Avatar>
+            );
+          })}
+          <Box>
+            <IconButton
+              sx={{ width: "40px", height: "40px", marginLeft: "30px" }}
+              onClick={(event) => {
+                event.stopPropagation();
+                setOpenDialog(true);
+              }}
+            >
+              <MoreHorizIcon />
+            </IconButton>
+          </Box>
+        </Stack>
+
+        {/* Dialog */}
+        <Dialog
+          open={openDialog}
+          onClose={() => setOpenDialog(false)}
+          fullWidth
+          maxWidth="sm"
+        >
+          <DialogTitle>Team Members</DialogTitle>
+
+          {/* Search input */}
+          <Box sx={{ p: 2 }}>
+            <input
+              type="text"
+              placeholder="Search by name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "8px",
+                borderRadius: "6px",
+                border: "1px solid #ccc",
+                fontSize: "14px",
+              }}
+            />
+          </Box>
+
+          <DialogContent
+            dividers
+            sx={{ maxHeight: "400px", overflowY: "auto" }}
+          >
+            <Stack spacing={2}>
+              {filteredAccounts?.length > 0 ? (
+                filteredAccounts.map((member, idx) => {
+                  const hasPicture = member?.avatar?.trim();
+                  const initials = getInitials(member?.fullName);
+                  return (
+                    <Stack
+                      key={idx}
+                      direction="row"
+                      spacing={2}
+                      alignItems="center"
+                    >
+                      <Avatar
+                        src={hasPicture || undefined}
+                        sx={{ width: 40, height: 40, fontWeight: 600 }}
+                      >
+                        {!hasPicture && initials}
+                      </Avatar>
+                      <Typography variant="body1">
+                        {member?.fullName}
+                      </Typography>
+                    </Stack>
+                  );
+                })
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  No members found
+                </Typography>
+              )}
+            </Stack>
+          </DialogContent>
+
+          <DialogActions>
+            <Button onClick={() => setOpenDialog(false)}>Close</Button>
+          </DialogActions>
+        </Dialog>
+      </>
+    );
+  };
 
   const taskColumns = [
     { field: "name", headerName: "Task Name", flex: 1.5 },
@@ -157,12 +287,15 @@ const TasksManagement = () => {
       field: "assignedTo",
       headerName: "Assigned To",
       flex: 1.5,
-      renderCell: (params) => (
-        <Box display="flex" alignItems="center" gap={1}>
-          <Avatar src={params.row.avatar} />
-          <Typography fontWeight="bold">{params.row.assignedTo}</Typography>
-        </Box>
-      ),
+      renderCell: ({ row }) => {
+        return (
+          <AccountsAvatars
+            accounts={selectedAssignements
+              .filter((a) => a.taskId._id === row.id)
+              ?.map((a) => a.employee)}
+          />
+        );
+      },
     },
     {
       field: "experience",

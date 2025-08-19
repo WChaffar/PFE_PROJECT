@@ -1,16 +1,11 @@
-import React from 'react';
-import {
-  Box,
-  Typography,
-  LinearProgress,
-  useTheme,
-} from '@mui/material';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
-import { tokens } from '../theme';
-import { format } from 'date-fns';
+import React from "react";
+import { Box, Typography, LinearProgress, useTheme } from "@mui/material";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import RadioButtonUncheckedIcon from "@mui/icons-material/RadioButtonUnchecked";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
+import { tokens } from "../theme";
+import { format } from "date-fns";
 
 const statusIconMap = {
   completed: <CheckCircleIcon color="success" />,
@@ -20,32 +15,44 @@ const statusIconMap = {
 
 const getProgressColor = (status) => {
   switch (status) {
-    case 'completed': return 'limegreen';
-    case 'inProgress': return 'orange';
-    default: return 'grey';
+    case "completed":
+      return "limegreen";
+    case "inProgress":
+      return "orange";
+    default:
+      return "grey";
   }
 };
 
-const ProjectPipeline = ({ TasksData = [] , projectData = [] }) => {
+const ProjectPipeline = ({ TasksData = [], projectData = [] }) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
 
   // Group tasks by phase
-  const phases = [...new Set(TasksData.map(t => t.phase))];
+  const phases = [...new Set(TasksData.map((t) => t.phase))];
 
-  const steps = phases.map(phase => {
-    const tasksInPhase = TasksData.filter(t => t.phase === phase);
-    const avgProgress = tasksInPhase.reduce((sum, t) => sum + t.workload, 0) / tasksInPhase.length;
+  // Fixed step order
+  const STEP_ORDER = ["Planning", "Design", "Development", "Testing"];
+
+  const steps = STEP_ORDER.map((phase) => {
+    const tasksInPhase = TasksData.filter((t) => t.phase === phase);
+    let avgProgress = 0;
+
+    if (tasksInPhase.length > 0) {
+      avgProgress =
+        tasksInPhase.reduce((sum, t) => sum + t.workload, 0) /
+        tasksInPhase.length;
+    }
 
     let status;
-    if (avgProgress === 100) status = 'completed';
-    else if (avgProgress > 0) status = 'inProgress';
-    else status = 'waiting';
+    if (avgProgress === 100) status = "completed";
+    else if (avgProgress > 0) status = "inProgress";
+    else status = "waiting";
 
     return {
       label: phase,
       status,
-      progress: Math.round(avgProgress)
+      progress: Math.round(avgProgress),
     };
   });
 
@@ -59,7 +66,7 @@ const ProjectPipeline = ({ TasksData = [] , projectData = [] }) => {
       sx={{
         boxShadow: 3,
         padding: 3,
-        transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+        transition: "transform 0.3s ease, box-shadow 0.3s ease",
       }}
     >
       {/* Launch Info - Left Side */}
@@ -69,8 +76,8 @@ const ProjectPipeline = ({ TasksData = [] , projectData = [] }) => {
         gap={2}
         sx={{
           minWidth: 250,
-          borderRight: '1px solid',
-          borderColor: 'divider',
+          borderRight: "1px solid",
+          borderColor: "divider",
           pr: 3,
         }}
       >
@@ -79,16 +86,21 @@ const ProjectPipeline = ({ TasksData = [] , projectData = [] }) => {
           <Typography fontWeight="bold" variant="h6">
             Project Launch Date
           </Typography>
-            <Typography variant="body3" color="text.secondary">
-            {format(projectData.startDate, 'yyyy MMMM dd')}
+          <Typography variant="body3" color="text.secondary">
+            {format(projectData.startDate, "yyyy MMMM dd")}
           </Typography>
           <Typography variant="h4">{projectData.budget} Days</Typography>
-        
         </Box>
       </Box>
 
       {/* Steps - Right Side */}
-      <Box display="flex" flex={1} justifyContent="space-between" gap={2} pl={3}>
+      <Box
+        display="flex"
+        flex={1}
+        justifyContent="space-between"
+        gap={2}
+        pl={3}
+      >
         {steps.map((step, index) => (
           <Box
             key={index}
@@ -96,14 +108,20 @@ const ProjectPipeline = ({ TasksData = [] , projectData = [] }) => {
             textAlign="center"
             p={2}
             sx={{
-              border: '1px solid',
-              borderColor: 'divider',
+              border: "1px solid",
+              borderColor: "divider",
               borderRadius: 2,
-              backgroundColor: 'background.paper',
+              backgroundColor: "background.paper",
               boxShadow: 2,
             }}
           >
-            <Box display="flex" justifyContent="center" alignItems="center" gap={1} mb={1}>
+            <Box
+              display="flex"
+              justifyContent="center"
+              alignItems="center"
+              gap={1}
+              mb={1}
+            >
               {statusIconMap[step.status]}
               <Typography fontWeight="bold">{step.label}</Typography>
             </Box>
@@ -114,8 +132,8 @@ const ProjectPipeline = ({ TasksData = [] , projectData = [] }) => {
               sx={{
                 height: 8,
                 borderRadius: 5,
-                bgcolor: '#f0f0f0',
-                '& .MuiLinearProgress-bar': {
+                bgcolor: "#f0f0f0",
+                "& .MuiLinearProgress-bar": {
                   bgcolor: getProgressColor(step.status),
                 },
               }}
@@ -126,9 +144,9 @@ const ProjectPipeline = ({ TasksData = [] , projectData = [] }) => {
             </Typography>
 
             <Typography variant="caption" color="text.secondary">
-              {step.status === 'completed' && 'Completed'}
-              {step.status === 'inProgress' && 'In Progress'}
-              {step.status === 'waiting' && 'Waiting'}
+              {step.status === "completed" && "Completed"}
+              {step.status === "inProgress" && "In Progress"}
+              {step.status === "waiting" && "Waiting"}
             </Typography>
           </Box>
         ))}

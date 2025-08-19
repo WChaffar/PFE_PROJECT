@@ -332,9 +332,10 @@ const EditTeamMemberForm = () => {
                   Fullstack Developer
                 </MenuItem>
                 <MenuItem value="Product Manager">Product Manager</MenuItem>
-                 <MenuItem value="Frontend Developer">
+                <MenuItem value="Frontend Developer">
                   Frontend Developer
                 </MenuItem>
+                <MenuItem value="QA Engineer">QA Engineer</MenuItem>
               </TextField>
 
               <TextField
