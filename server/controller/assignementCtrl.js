@@ -184,14 +184,12 @@ const updateAssignmentTimeEntry = async (req, res) => {
       };
       assignment.timeEntries.push(newTimeEntry);
     }
-    console.log(assignment);
     await assignment.save();
 
     res
       .status(200)
       .json({ message: "Time entry updated successfully", assignment });
   } catch (error) {
-    console.error(error);
     res.status(400).json({ error: error.message });
   }
 };
@@ -234,7 +232,6 @@ const updateAssignmentTimeEntries = async (req, res) => {
       assignment,
     });
   } catch (error) {
-    console.error(error);
     res.status(400).json({ error: error.message });
   }
 };
@@ -249,13 +246,6 @@ const deleteAssignment = async (req, res) => {
     if (!assignment) {
       return res.status(404).json({ error: "Assignment not found" });
     }
-
-    // 2. Remove assignment reference from the employee
-    await User.findByIdAndUpdate(
-      assignment.employee,
-      { $pull: { assignments: assignmentId } },
-      { new: true }
-    );
 
     // 3. Delete the assignment
     await Assignment.findByIdAndDelete(assignmentId);

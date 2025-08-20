@@ -157,3 +157,22 @@ export const resetAssignementState = () => async (dispatch) => {
     type: "RESET_ASSIGNEMENT",
   });
 };
+
+
+// delete Assignement
+export const deleteAssignement = (assignementId) => async (dispatch) => {
+  try {
+    const data = await AssignementService.deleteAssignement(assignementId);
+    dispatch({
+      type: "DELETE_ASSIGNEMENT_SUCCESS",
+      payload: { data },
+    });
+    return { success: true }; // ✅ return success
+  } catch (error) {
+    dispatch({
+      type: "DELETE_ASSIGNEMENT_FAILURE",
+      payload: error.response?.data?.message || "Delete assignement failed",
+    });
+    return { success: false }; // ✅ return failure
+  }
+};

@@ -27,6 +27,7 @@ import { getTasksByProjectId } from "../../actions/taskAction";
 import { Formik } from "formik";
 import {
   createAssignement,
+  deleteAssignement,
   getEmployeeAssignement,
   resetAssignementErros,
   resetAssignementState,
@@ -282,6 +283,7 @@ const EditStaffing = () => {
     );
   });
   const handleFormSubmit = async (data) => {
+    setAssignementErrors(null);
     setAssignementLoading(true);
     const result = await dispatch(createAssignement(data));
     if (result.success) {
@@ -312,6 +314,23 @@ const EditStaffing = () => {
       setHalfDayAssignments([]);
       setHalfDayDate(null);
       setTimeout(() => {
+        setSuccess(null);
+        setShowAssignmentEditForm(false);
+        navigate(`/assignements/${id}/edit`); // ✅ Only navigate on success
+      }, 2000);
+    } else {
+      setAssignementLoading(false);
+    }
+  };
+
+  const handleDeleteAssignement = async (assigId) => {
+    setAssignementLoading(true);
+    const result = await dispatch(deleteAssignement(assigId));
+    if (result.success) {
+      setAssignementLoading(false);
+      setSuccess("Assignement deleted with success.");
+      setTimeout(() => {
+        dispatch(getEmployeeAssignement(id));
         setSuccess(null);
         setShowAssignmentEditForm(false);
         navigate(`/assignements/${id}/edit`); // ✅ Only navigate on success
@@ -648,7 +667,38 @@ const EditStaffing = () => {
                 totalDays: values?.exactDays,
                 dayDetails: halfDayAssignments,
               };
-              handleFormSubmit(newAssignementData);
+              // Vérifier si l'assignation existe déjà
+              let findAssignment = selectedAssignements?.find((a) => {
+                const sameEmployee =
+                  a?.employee?._id === newAssignementData?.employee;
+                const sameTask =
+                  a?.taskId?._id === newAssignementData?.taskId ||
+                  a?.taskId === newAssignementData?.taskId;
+
+                // S'assurer que les dates sont comparées correctement (objets Date plutôt que strings)
+                const newStart = new Date(newAssignementData?.startDate);
+                const newEnd = new Date(newAssignementData?.endDate);
+                const existingStart = new Date(a?.startDate);
+                const existingEnd = new Date(a?.endDate);
+
+                const overlap =
+                  (newStart >= existingStart && newStart <= existingEnd) ||
+                  (newEnd >= existingStart && newEnd <= existingEnd) ||
+                  (newStart <= existingStart && newEnd >= existingEnd);
+
+                return sameEmployee && sameTask && overlap;
+              });
+
+              if (findAssignment) {
+                setAssignementErrors(
+                  "The employee is already assigned to this task during the selected period."
+                );
+                setTimeout(() => {
+                  setAssignementErrors(null);
+                }, 10000);
+              } else {
+                handleFormSubmit(newAssignementData);
+              }
             }}
           >
             {({ values, setFieldValue, handleChange, handleSubmit }) => (
@@ -1314,6 +1364,23 @@ const EditStaffing = () => {
                     }}
                   >
                     Annuler
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() =>
+                      handleDeleteAssignement(currentEditedAssignement?._id)
+                    }
+                    sx={{
+                      width: "130px",
+                      fontSize: "10px",
+                      px: 1,
+                      borderColor: "orange",
+                      backgroundColor: colors.primary,
+                      color: "orange",
+                    }}
+                  >
+                    DELETE
                   </Button>
                   <Button
                     variant="outlined"

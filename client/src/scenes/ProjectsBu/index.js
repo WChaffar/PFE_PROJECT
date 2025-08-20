@@ -125,7 +125,14 @@ const ProjectsBU = () => {
           // Calculer le total des jours pour cet assignment
           const daysForAssignment = assignment.timeEntries.reduce(
             (sum, entry) => {
-              return sum + (entry.durationInDays || 0);
+              if (
+                entry.timeType === "billable" ||
+                entry.timeType === "nonBillable"
+              ) {
+                return sum + (entry.durationInDays || 0);
+              } else {
+                return sum;
+              }
             },
             0
           );

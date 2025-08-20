@@ -21,7 +21,7 @@ router.get(
   getEmployeeAssignments
 );
 //router.get("/getOne/:id",authMiddleware,getOneProject);
-router.get("/deleteOne/:id", authMiddleware, deleteAssignment);
+router.delete("/deleteOne/:assignmentId", authMiddleware, deleteAssignment);
 router.put("/editOne/:id", authMiddleware, updateAssignmentDates);
 router.get(
   "/getEmployeeAssignements/all",

@@ -309,6 +309,34 @@ export default function TimeTracking() {
   }, [selectedProjects]); // <== Écoute les changements de selectedProjects
 
   useEffect(() => {
+    if (selectedAssignements?.length > 0 && projects?.length > 0) {
+      const projectMap = projects.map((project) => {
+        let totalBillable = 0;
+        let totalNonBillable = 0;
+
+        selectedAssignements.forEach((assignment) => {
+          if (assignment.project?._id === project.id) {
+            assignment.timeEntries?.forEach((entry) => {
+              if (entry.timeType === "billable") {
+                totalBillable += 1;
+              } else if (entry.timeType === "nonBillable") {
+                totalNonBillable += 1;
+              }
+            });
+          }
+        });
+
+        return {
+          ...project,
+          totalBillable: totalBillable,
+          totalNonBillable: totalNonBillable,
+        };
+      });
+      setProjects(projectMap);
+    }
+  }, [selectedAssignements, selectedProject]);
+
+  useEffect(() => {
     setLoadingProjects(true);
     async function fetchData(params) {
       const result = await dispatch(getAllProjects());
@@ -386,6 +414,7 @@ export default function TimeTracking() {
 
     if (result.success) {
       setSuccess("Time status updated successfully.");
+      dispatch(getAllEmployeeAssignements()); // 🔄 reload fresh data
     } else {
       setError("Time status update has failed.");
     }
@@ -461,8 +490,22 @@ export default function TimeTracking() {
         </Box>
       ),
     },
-    { field: "tnf", headerName: "TNF (Non-Billable)", flex: 1 },
-    { field: "bt", headerName: "BT (Billable)", flex: 1 },
+    {
+      field: "totalBillable",
+      headerName: "TNF (Non-Billable)",
+      flex: 1,
+      renderCell: ({ row }) => {
+        return <Box>{row.totalBillable}</Box>;
+      },
+    },
+    {
+      field: " totalNonBillable",
+      headerName: "BT (Billable)",
+      flex: 1,
+      renderCell: ({ row }) => {
+        return <Box>{row.totalNonBillable}</Box>;
+      },
+    },
   ];
   function WorkloadCell({ workload, id, onChange }) {
     const [value, setValue] = React.useState(workload);

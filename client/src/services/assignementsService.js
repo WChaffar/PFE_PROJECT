@@ -70,6 +70,18 @@ const updateAssignement = (assignementId, data) => {
     });
 };
 
+
+const deleteAssignement = (assignementId) => {
+  return axios
+    .delete(
+      base_url + `assignement/deleteOne/${assignementId}`,
+      getConfig()
+    )
+    .then((response) => {
+      return response.data;
+    });
+};
+
 const AssignementService = {
   createAssignement,
   getEmployeeAssignement,
@@ -77,7 +89,8 @@ const AssignementService = {
   getMyAssignements,
   updateAssignementTimeEntry,
   updateAssignementTimeEntries,
-  updateAssignement
+  updateAssignement,
+  deleteAssignement
 };
 
 export default AssignementService;

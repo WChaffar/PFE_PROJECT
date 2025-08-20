@@ -82,10 +82,29 @@ const assignementReducer = (state = initialState, action) => {
       return {
         ...state,
         activeAssignement: {},
-        assignements: [...state.assignements.filter(a=>a._id !== action.payload.data._id), action.payload.data],
+        assignements: [
+          ...state.assignements.filter(
+            (a) => a._id !== action.payload.data._id
+          ),
+          action.payload.data,
+        ],
         error: null, // NEW: to store assignement-related errors
       };
     case "UPDATE_ASSIGNEMENT_FAILURE":
+      return {
+        ...state,
+        error: action.payload, // store error message
+      };
+    case "DELETE_ASSIGNEMENT_SUCCESS":
+      return {
+        ...state,
+        activeAssignement: {},
+        assignements: state.assignements.filter(
+          (a) => a._id !== action.payload.data._id
+        ),
+        error: null, // NEW: to store assignement-related errors
+      };
+    case "DELETE_ASSIGNEMENT_FAILURE":
       return {
         ...state,
         error: action.payload, // store error message
