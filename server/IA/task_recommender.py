@@ -107,7 +107,21 @@ def extract_features(user, task, workload):
     try:
         ts, te = task.get("startDate"), task.get("endDate")
         if pd.notna(ts) and pd.notna(te):
-            duration = max(1, int((pd.to_datetime(te) - pd.to_datetime(ts)).days))
+            ts, te = pd.to_datetime(ts), pd.to_datetime(te)
+
+            # Supposons que ts et te soient des objets Timestamp
+            # Créer une série de dates entre ts et te inclus
+            all_days = pd.date_range(start=ts, end=te)
+            
+            # Filtrer pour ne garder que les jours de semaine (Monday=0, Sunday=6)
+            working_days = all_days[all_days.dayofweek < 5]
+            
+            # Nombre de jours ouvrés
+            duration = len(working_days)
+
+
+            # ensure at least 1 day
+            duration = max(1, duration)
     except Exception:
         duration = 0
 
@@ -238,6 +252,7 @@ def recommander_taches(employee_id, top_k=3):
                 "start": str(ts),
                 "end": str(te),
             },
+            "duration": features[2],
             "justification": f"{features[0]} matched skills, {features[1]} matched certifications, duration {features[2]} days, workload {wl} task(s)"
         })
 

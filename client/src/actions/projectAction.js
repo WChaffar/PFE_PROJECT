@@ -15,9 +15,9 @@ export const createProject = (values) => async (dispatch) => {
   } catch (error) {
     dispatch({
       type: "CREATE_PROJECT_FAILURE",
-      payload: error.response?.data?.message || "Create project failed",
+      payload: error?.response?.data?.message || "Create project failed",
     });
-    return { success: false, error: error.response.data.message }; // ✅ return failure
+    return { success: false, error: error?.response?.data?.message }; // ✅ return failure
   }
 };
 
@@ -33,9 +33,9 @@ export const getAllProjects = () => async (dispatch) => {
   } catch (error) {
     dispatch({
       type: "GET_PROJECTS_FAILURE",
-      payload: error.response?.data?.message || "Get projects failed",
+      payload: error?.response?.data?.message || "Get projects failed",
     });
-    return { success: false, error: error.response.data.message }; // ✅ return failure
+    return { success: false, error: error?.response?.data?.message }; // ✅ return failure
   }
 };
 
@@ -51,9 +51,9 @@ export const deleteProject = (id) => async (dispatch) => {
   } catch (error) {
     dispatch({
       type: "DELETE_PROJECT_FAILURE",
-      payload: error.response?.data?.message || "delete project failed",
+      payload: error?.response?.data?.message || "delete project failed",
     });
-    return { success: false, error: error.response.data.message }; // ✅ return failure
+    return { success: false, error: error?.response?.data?.message }; // ✅ return failure
   }
 };
 
@@ -69,9 +69,9 @@ export const getOneProject = (id) => async (dispatch) => {
   } catch (error) {
     dispatch({
       type: "GET_ONE_PROJECT_FAILURE",
-      payload: error.response?.data?.message || "get one project failed",
+      payload: error?.response?.data?.message || "get one project failed",
     });
-    return { success: false, error: error.response.data.message }; // ✅ return failure
+    return { success: false, error: error?.response?.data?.message }; // ✅ return failure
   }
 };
 
@@ -87,9 +87,9 @@ export const editProject = (id, values) => async (dispatch) => {
   } catch (error) {
     dispatch({
       type: "EDIT_PROJECT_FAILURE",
-      payload: error.response?.data?.message || "edit project failed",
+      payload: error?.response?.data?.message || "edit project failed",
     });
-    return { success: false, error: error.response.data.message }; // ✅ return failure
+    return { success: false, error: error?.response?.data?.message }; // ✅ return failure
   }
 };
 
@@ -112,9 +112,9 @@ export const getAllBuProjects = (businessUnitId) => async (dispatch) => {
   } catch (error) {
     dispatch({
       type: "GET_PROJECTS_FAILURE",
-      payload: error.response?.data?.message || "Get bu projects failed",
+      payload: error?.response?.data?.message || "Get bu projects failed",
     });
-    return { success: false, error: error.response.data.message }; // ✅ return failure
+    return { success: false, error: error?.response?.data?.message }; // ✅ return failure
   }
 };
 
@@ -135,9 +135,9 @@ export const changeProjectManager =
       dispatch({
         type: "CHANGER_PROJECT_MANAGER_FAILURE",
         payload:
-          error.response?.data?.message || "change project manager failed",
+          error?.response?.data?.message || "change project manager failed",
       });
-      return { success: false, error: error.response.data.message }; // ✅ return failure
+      return { success: false, error: error?.response?.data?.message }; // ✅ return failure
     }
   };
 
@@ -153,8 +153,8 @@ export const getAllManagerProjects = (managerId) => async (dispatch) => {
   } catch (error) {
     dispatch({
       type: "GET_PROJECTS_FAILURE",
-      payload: error.response?.data?.message || "Get manager projects failed",
+      payload: error?.response?.data?.message || "Get manager projects failed",
     });
-    return { success: false, error: error.response.data.message }; // ✅ return failure
+    return { success: false, error: error?.response?.data?.message }; // ✅ return failure
   }
 };

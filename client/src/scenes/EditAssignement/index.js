@@ -243,6 +243,8 @@ const EditStaffing = () => {
     const result = await dispatch(getTasksByProjectId(params.id));
     if (result.success) {
       setTasksLoading(false);
+    } else {
+      setTasksLoading(false);
     }
   };
 
@@ -411,14 +413,14 @@ const EditStaffing = () => {
           <motion.div
             className="relative flex items-center justify-center"
             animate={{ rotate: [0, 360] }}
-            transition={{ repeat: Infinity, duration: 6, ease: "linear" }}
+            transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
             style={{ width: "48px", height: "48px" }} // 👈 réduit la zone de rotation
           >
             {/* Halo lumineux */}
             <motion.div
               className="absolute w-12 h-12 rounded-full bg-blue-400 opacity-30 blur-md"
               animate={{ scale: [1, 1.15, 1] }} // 👈 moins d’amplitude
-              transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+              transition={{ repeat: Infinity, duration: 1, ease: "easeInOut" }}
             />
             {/* Icône IA */}
             <Brain className="w-8 h-8 text-blue-600" />
@@ -521,6 +523,32 @@ const EditStaffing = () => {
       </Dialog>
     );
   };
+  // utils/getWorkingDays.js
+  function getWorkingDays(startDate, endDate) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (isNaN(start) || isNaN(end)) {
+      throw new Error("Invalid date(s) provided");
+    }
+
+    if (start > end) {
+      return 0; // no days if range is invalid
+    }
+
+    let count = 0;
+    let current = new Date(start);
+
+    while (current <= end) {
+      const day = current.getDay(); // 0 = Sunday, 6 = Saturday
+      if (day !== 0 && day !== 6) {
+        count++;
+      }
+      current.setDate(current.getDate() + 1);
+    }
+
+    return count;
+  }
 
   return (
     <Box p={3}>
@@ -844,8 +872,7 @@ const EditStaffing = () => {
               endDate: loadedRecommandedAssignment?.dates?.end
                 ? format(loadedRecommandedAssignment?.dates?.end, "yyyy-MM-dd")
                 : "",
-              assignmentType: "enduring - long period",
-              exactDays: 0,
+              exactDays: loadedRecommandedAssignment?.duration || 0,
             }}
             enableReinitialize={true}
             onSubmit={(values) => {
@@ -855,7 +882,6 @@ const EditStaffing = () => {
                 taskId: values?.task._id,
                 startDate: values?.startDate,
                 endDate: values?.endDate,
-                assignmentType: values?.assignmentType,
                 totalDays: values?.exactDays,
                 dayDetails: halfDayAssignments,
               };
@@ -944,6 +970,7 @@ const EditStaffing = () => {
                         setFieldValue("project", newValue);
                         setSelectedProject(newValue);
                         if (newValue !== null) {
+                          setTasks([]);
                           getTasksOfSelectedProject(newValue);
                         }
                       }}
@@ -1023,30 +1050,24 @@ const EditStaffing = () => {
 
                   <Box flex="1" minWidth="200px">
                     <Typography fontSize="14px" mb={0.5}>
-                      Assignment Type *
-                    </Typography>
-                    <select
-                      name="assignmentType"
-                      value={values.assignmentType}
-                      onChange={handleChange}
-                      style={{ width: "100%", padding: 6, borderRadius: 4 }}
-                    >
-                      <option value="enduring - long period">
-                        enduring - long period
-                      </option>
-                    </select>
-                  </Box>
-
-                  <Box flex="1" minWidth="200px">
-                    <Typography fontSize="14px" mb={0.5}>
-                      Nombre exact des jours *
+                      Number of days *
                     </Typography>
                     <input
                       type="number"
                       name="exactDays"
-                      value={values.exactDays}
+                      value={
+                        values.startDate && values.endDate
+                          ? values.exactDays !==
+                            getWorkingDays(values.startDate, values.endDate)
+                            ? getWorkingDays(values.startDate, values.endDate)
+                            : values.exactDays
+                          : !values.startDate && !values.endDate
+                          ? values.exactDays
+                          : ""
+                      }
                       onChange={handleChange}
                       style={{ width: "100%", padding: 6, borderRadius: 4 }}
+                      disabled
                     />
                   </Box>
 
@@ -1202,7 +1223,6 @@ const EditStaffing = () => {
               endDate: currentEditedAssignement?.endDate
                 ? format(currentEditedAssignement?.endDate, "yyyy-MM-dd")
                 : "",
-              assignmentType: currentEditedAssignement?.assignmentType || "",
               exactDays: currentEditedAssignement?.totalDays,
               dayDetails:
                 currentEditedAssignement?.dayDetails
@@ -1224,7 +1244,6 @@ const EditStaffing = () => {
                 taskId: values?.task._id,
                 startDate: values?.startDate,
                 endDate: values?.endDate,
-                assignmentType: values?.assignmentType,
                 totalDays: values?.exactDays,
                 dayDetails: currentEditedAssignement?.dayDetails,
               };
@@ -1282,6 +1301,7 @@ const EditStaffing = () => {
                         setFieldValue("project", newValue);
                         setSelectedProject(newValue);
                         if (newValue !== null) {
+                          setTasks([]);
                           getTasksOfSelectedProject(newValue);
                         }
                       }}
@@ -1361,22 +1381,6 @@ const EditStaffing = () => {
 
                   <Box flex="1" minWidth="200px">
                     <Typography fontSize="14px" mb={0.5}>
-                      Assignment Type *
-                    </Typography>
-                    <select
-                      name="assignmentType"
-                      value={values.assignmentType}
-                      onChange={handleChange}
-                      style={{ width: "100%", padding: 6, borderRadius: 4 }}
-                    >
-                      <option value="enduring - long period">
-                        enduring - long period
-                      </option>
-                    </select>
-                  </Box>
-
-                  <Box flex="1" minWidth="200px">
-                    <Typography fontSize="14px" mb={0.5}>
                       Number of days *
                     </Typography>
                     <input
@@ -1385,6 +1389,7 @@ const EditStaffing = () => {
                       value={values.exactDays}
                       onChange={handleChange}
                       style={{ width: "100%", padding: 6, borderRadius: 4 }}
+                      disabled
                     />
                   </Box>
 
