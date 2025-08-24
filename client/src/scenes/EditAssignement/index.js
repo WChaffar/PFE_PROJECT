@@ -190,6 +190,8 @@ const EditStaffing = () => {
 
   const [openRecommendationModal, setOpenRecommendationModal] = useState(false);
   const [loadingRecommendations, setLoadingRecommendations] = useState(false);
+  const [loadingLoadRecommendations, setLoadingLoadRecommendations] =
+    useState(null);
   const [assignementRecommendation, setAssignementRecommendation] =
     useState(null);
 
@@ -353,11 +355,13 @@ const EditStaffing = () => {
       setAssignementLoading(false);
       setSuccess("Assignement deleted with success.");
       setTimeout(() => {
+        dispatch(resetAssignementState());
         dispatch(getEmployeeAssignement(id));
         setSuccess(null);
         setShowAssignmentEditForm(false);
+        window.location.reload();
         navigate(`/assignements/${id}/edit`); // ✅ Only navigate on success
-      }, 2000);
+      }, 1500);
     } else {
       setAssignementLoading(false);
     }
@@ -492,7 +496,12 @@ const EditStaffing = () => {
                               fontSize: "0.7rem",
                             }}
                           >
-                            Load
+                            {loadingLoadRecommendations != null &&
+                            loadingLoadRecommendations === rec?.task_id ? (
+                              <CircularProgress size={14} color="inherit" />
+                            ) : (
+                              "Load"
+                            )}
                           </Button>
                         </Box>
                       </Box>
@@ -1560,13 +1569,20 @@ const EditStaffing = () => {
         onClose={() => setOpenRecommendationModal(false)}
         loading={loadingRecommendations}
         data={assignementRecommendation}
-        onAssign={(rec) => {
-          setLoadedRecommandedAssignment(rec);
-          setShowAssignmentForm(false);
-          setTimeout(() => {
-            setShowAssignmentForm(true);
-            setOpenRecommendationModal(false);
-          }, 1000);
+        onAssign={async (rec) => {
+          setLoadingLoadRecommendations(rec?.task_id);
+          const result = await dispatch(getTasksByProjectId(rec?.project_id));
+          if (result.success) {
+            setLoadedRecommandedAssignment(rec);
+            setShowAssignmentForm(false);
+            setTimeout(() => {
+              setLoadingLoadRecommendations(null);
+              setShowAssignmentForm(true);
+              setOpenRecommendationModal(false);
+            }, 2000);
+          } else {
+            setLoadingLoadRecommendations(null);
+          }
         }}
       />
     </Box>
