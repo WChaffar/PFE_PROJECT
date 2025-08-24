@@ -28,7 +28,7 @@ import {
   getAllTeamMembers,
   getAllTeamMembersForManager,
 } from "../../actions/teamAction";
-import { getAllEmployeeAssignements } from "../../actions/assignementsAction";
+import { getAllEmployeeAssignements, resetAssignementState } from "../../actions/assignementsAction";
 import { format, startOfWeek } from "date-fns";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
@@ -532,8 +532,10 @@ const StaffingCalendar = () => {
                 <TableCell>
                   <Box display="flex" alignItems="center">
                     <IconButton
-                      onClick={() =>
+                      onClick={() =>{
                         navigate(`/assignements/${member._id}/edit`)
+                        dispatch(resetAssignementState());
+                      }
                       } // Navigate to the edit assignments page
                       sx={{
                         mr: 1,

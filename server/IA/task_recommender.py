@@ -6,6 +6,17 @@ from config.mongodb_connection import get_db_connection
 import json
 import sys
 import argparse
+from rapidfuzz import fuzz
+
+# --- Helper : fuzzy matching --- #
+def fuzzy_match_count(user_list, task_list, threshold=80):
+    count = 0
+    for t in task_list:
+        for u in user_list:
+            if fuzz.ratio(t, u) >= threshold:
+                count += 1
+                break  # éviter de compter plusieurs fois le même skill utilisateur
+    return count
 
 # --- Connexion MongoDB --- #
 db = get_db_connection()
@@ -82,7 +93,7 @@ def extract_features(user, task, workload):
                        for i in range(12) if f"requiredSkills[{i}]" in task.index]
     task_skills = [s for s in task_skills if s not in ("", "nan")]
 
-    skill_match = len(set(user_skills) & set(task_skills))
+    skill_match = fuzzy_match_count(user_skills, task_skills)
 
     # --- Certifications utilisateur --- #
     if "certifications" in user and isinstance(user["certifications"], list):
@@ -100,7 +111,7 @@ def extract_features(user, task, workload):
                       for i in range(6) if f"requiredCertifications[{i}]" in task.index]
     task_certs = [s for s in task_certs if s not in ("", "nan")]
 
-    cert_match = len(set(user_certs) & set(task_certs))
+    cert_match = fuzzy_match_count(user_certs, task_certs)
 
     # --- Durée (jours) --- #
     duration = 0

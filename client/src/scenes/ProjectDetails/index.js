@@ -117,7 +117,7 @@ const ProjectDetails = () => {
             <strong>Type:</strong> {project.projectType} <br />
             <strong>Category:</strong> {project.projectCategory} <br />
             <strong>Priority:</strong> {project.projectPriority} <br />
-            <strong>Budget:</strong> ${project.budget.toLocaleString()} <br />
+            <strong>Budget:</strong> {project.budget.toLocaleString()} days <br />
             <strong>Start Date:</strong> {project.startDate} <br />
             <strong>End Date:</strong> {project.endDate} <br />
             <strong>Delivery Date:</strong> {project.deliveryDate}

@@ -29,8 +29,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { getOneTeamMember } from "../../actions/teamAction";
 import { BACKEND_URL } from "../../config/ServerConfig";
 import { Autocomplete, TextField } from "@mui/material";
-import { getAllProjects } from "../../actions/projectAction";
-import { getTasksByProjectId } from "../../actions/taskAction";
+import { getAllProjects, resetProjectState } from "../../actions/projectAction";
+import { getTasksByProjectId, ResetTaskState } from "../../actions/taskAction";
 import { Formik } from "formik";
 import {
   createAssignement,
@@ -54,7 +54,6 @@ import { Brain } from "lucide-react"; // Icône IA
 
 const transformAssignmentsToMissions = (assignments) => {
   const grouped = {};
-
   assignments.forEach((assignment) => {
     const projectId = assignment.project?._id;
     const taskId = assignment.taskId?._id;
@@ -213,10 +212,12 @@ const EditStaffing = () => {
   }, [selectedAbsences]);
 
   useEffect(() => {
+    dispatch(resetProjectState());
     dispatch(getAllProjects());
   }, [dispatch]);
 
   useEffect(() => {
+    dispatch(ResetTaskState());
     dispatch(resetAssignementState());
     dispatch(getEmployeeAbsenceById(id));
     dispatch(getEmployeeAssignement(id));

@@ -580,11 +580,11 @@ export default function TimeTracking() {
       flex: 1.2,
       renderCell: (params) => (
         <Box display="flex" alignItems="center" gap={1} width="100%">
-          {params.row.avatar ? (
+          {params.row.assignedTo ? (
             <Box sx={{ width: "100%" }}>
               <Box sx={{ display: "flex", alignItems: "center" }}>
-                <Avatar src={params.row.avatar} sx={{ marginRight: "10px" }} />
-                <Box>{params.row.assignedTo || "Unassigned"}</Box>
+                <Avatar src={params?.row?.avatar} sx={{ marginRight: "10px" }} />
+                <Box>{params?.row?.assignedTo || "Unassigned"}</Box>
               </Box>
             </Box>
           ) : (
