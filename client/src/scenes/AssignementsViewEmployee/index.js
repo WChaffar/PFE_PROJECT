@@ -27,6 +27,7 @@ import {
 } from "../../actions/assignementsAction";
 import WarningIcon from "@mui/icons-material/Warning";
 import { getMyAbsences } from "../../actions/absenceAction";
+import { startOfWeek } from "date-fns";
 
 const transformAssignmentsToMissions = (assignments) => {
   const grouped = {};
@@ -114,7 +115,9 @@ const mapAbsencesToDays = (absences) => {
 };
 
 const AssignementsViewEmployee = () => {
-  const [startDate, setStartDate] = useState(dayjs("2025-01-01"));
+  const [startDate, setStartDate] = useState(
+    dayjs(dayjs(startOfWeek(new Date(), { weekStartsOn: 1 })))
+  );
   const [showAssignmentForm, setShowAssignmentForm] = useState(false);
   const daysToShow = 14;
   const theme = useTheme();

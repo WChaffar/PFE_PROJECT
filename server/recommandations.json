@@ -1,0 +1,41 @@
+{
+    "employee": "68a33df95f83cbbed05d02e4",
+    "recommendations": [
+        {
+            "task_id": "68a3970970f8e23184d86660",
+            "project_id": "68a34d925f83cbbed05d0506",
+            "task": "Planification projet",
+            "project": "Payroll Automation System",
+            "probabilite_succes": 0.255,
+            "dates": {
+                "start": "2025-01-15 00:00:00",
+                "end": "2025-03-31 00:00:00"
+            },
+            "justification": "0 matched skills, 2 matched certifications, duration 75 days, workload 0 task(s)"
+        },
+        {
+            "task_id": "68a3909670f8e23184d8583b",
+            "project_id": "68a34d925f83cbbed05d0506",
+            "task": "Développement API REST",
+            "project": "Payroll Automation System",
+            "probabilite_succes": 0.05,
+            "dates": {
+                "start": "2025-03-01 00:00:00",
+                "end": "2025-05-31 00:00:00"
+            },
+            "justification": "1 matched skills, 0 matched certifications, duration 91 days, workload 0 task(s)"
+        },
+        {
+            "task_id": "68a38c9f70f8e23184d8561a",
+            "project_id": "68a34d925f83cbbed05d0506",
+            "task": "Créer la maquette UI",
+            "project": "Payroll Automation System",
+            "probabilite_succes": 0.02,
+            "dates": {
+                "start": "2025-02-01 00:00:00",
+                "end": "2025-03-31 00:00:00"
+            },
+            "justification": "0 matched skills, 0 matched certifications, duration 58 days, workload 0 task(s)"
+        }
+    ]
+}

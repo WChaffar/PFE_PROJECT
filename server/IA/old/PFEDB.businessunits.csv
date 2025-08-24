@@ -1,0 +1,11 @@
+_id,name,code,description,isActive,createdAt,__v
+68a3455a5f83cbbed05d0358,R&D International,RD_INT,Research & Development activities for international projects.,true,2025-08-18T15:23:06.242Z,0
+68a345835f83cbbed05d035f,R&D Private France,RD_PRIV_FR,Private R&D operations based in France.,true,2025-08-18T15:23:47.546Z,0
+68a345a95f83cbbed05d0366,R&D Public France,RD_PUB_FR,Public R&D projects and collaborations in France.,true,2025-08-18T15:24:25.208Z,0
+68a345d75f83cbbed05d036d,R&D Espagne,RD_ES,R&D operations based in Spain.,false,2025-08-18T15:25:11.734Z,0
+68a345f95f83cbbed05d0374,Client Support Tunisia,CS_TN,Customer support team located in Tunisia.,true,2025-08-18T15:25:45.299Z,0
+68a346235f83cbbed05d037b,Client Support France,CS_FR,Customer support team located in France.,true,2025-08-18T15:26:27.260Z,0
+68a3464b5f83cbbed05d0382,Client Support Luxembourg,CS_LU,Customer support team located in Luxembourg.,true,2025-08-18T15:27:07.972Z,0
+68a346735f83cbbed05d0389,DevOps Client Support,DEV_CS,DevOps team supporting client infrastructure and operations.,true,2025-08-18T15:27:47.024Z,0
+68a346955f83cbbed05d0390,DevOps R&D,DEV_RD,DevOps team supporting R&D projects and deployments.,true,2025-08-18T15:28:21.131Z,0
+68a346ba5f83cbbed05d0397,HR & Talent Acquisition Europe,HR_TA_EU,HR and recruitment operations across European offices.,false,2025-08-18T15:28:58.349Z,0

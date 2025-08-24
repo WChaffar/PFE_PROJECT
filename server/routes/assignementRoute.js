@@ -10,6 +10,7 @@ const {
   updateAssignmentTimeEntries,
   updateAssignement,
 } = require("../controller/assignementCtrl");
+const {getRecommandations} = require("../controller/autoAssignementCtrl");
 const { authMiddleware } = require("../middlewares/authMiddleware");
 
 const router = express.Router();
@@ -43,6 +44,11 @@ router.put(
   authMiddleware,
   updateAssignmentTimeEntries
 );
+
 router.put("/update/:id", authMiddleware, updateAssignement);
+
+
+router.get('/getRecommendation/:userId',authMiddleware, getRecommandations);
+
 
 module.exports = router;

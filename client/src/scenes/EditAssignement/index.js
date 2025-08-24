@@ -10,6 +10,13 @@ import {
   useTheme,
   CircularProgress,
   Tooltip,
+  DialogActions,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  Chip,
+  Card,
+  CardContent,
 } from "@mui/material";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
@@ -28,6 +35,7 @@ import { Formik } from "formik";
 import {
   createAssignement,
   deleteAssignement,
+  getAssignementRecommendation,
   getEmployeeAssignement,
   resetAssignementErros,
   resetAssignementState,
@@ -39,6 +47,10 @@ import { format, isValid, parseISO, startOfWeek } from "date-fns";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { motion } from "framer-motion";
+import AssignmentIcon from "@mui/icons-material/Assignment";
+import PriorityHighIcon from "@mui/icons-material/PriorityHigh";
+import { Brain } from "lucide-react"; // Icône IA
 
 const transformAssignmentsToMissions = (assignments) => {
   const grouped = {};
@@ -169,10 +181,18 @@ const EditStaffing = () => {
   const selectedAssignements = useSelector(
     (state) => state.assignements.assignements
   );
+
   // Add to your existing state
   const [assignments, setAssignments] = useState([]);
   const [absences, setAbsences] = useState([]);
   const [absenceDayMap, setAbsenceDayMap] = useState({});
+  const [loadedRecommandedAssignment, setLoadedRecommandedAssignment] =
+    useState(null);
+
+  const [openRecommendationModal, setOpenRecommendationModal] = useState(false);
+  const [loadingRecommendations, setLoadingRecommendations] = useState(false);
+  const [assignementRecommendation, setAssignementRecommendation] =
+    useState(null);
 
   useEffect(() => {
     if (selectedProjects.length !== 0) {
@@ -341,6 +361,166 @@ const EditStaffing = () => {
   };
 
   const weekendColor = "#f0f0f0"; // Light gray
+
+  const handleGenerateRecommendations = async () => {
+    setOpenRecommendationModal(true);
+    setLoadingRecommendations(true);
+
+    try {
+      const res = await dispatch(getAssignementRecommendation(id));
+      if (res.success === true) {
+        setAssignementRecommendation(res?.data);
+      } else {
+        console.error(res.error);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingRecommendations(false);
+    }
+  };
+
+  // --- Modal Component ---
+
+  const RecommendationModal = ({ open, onClose, loading, data, onAssign }) => {
+    // Déterminer les priorités selon le classement des probabilités
+    const getPriorities = (recommendations) => {
+      if (!recommendations || recommendations.length === 0) return [];
+      const sorted = [...recommendations].sort(
+        (a, b) => b.probabilite_succes - a.probabilite_succes
+      );
+      const priorities = ["High", "Medium", "Low"];
+      return sorted.map((rec, index) => ({
+        ...rec,
+        priority: priorities[index] || "Low", // si plus de 3 recommandations, le reste sera Low
+      }));
+    };
+
+    const recommendationsWithPriority = getPriorities(data?.recommendations);
+
+    // Définir la couleur selon la priorité
+    const getColor = (priority) => {
+      if (priority === "High") return "error";
+      if (priority === "Medium") return "warning";
+      return "success";
+    };
+    const AiAdvancedLoader = () => {
+      return (
+        <div className="flex flex-col items-center space-y-3">
+          {/* Icône IA avec halo animé */}
+          <motion.div
+            className="relative flex items-center justify-center"
+            animate={{ rotate: [0, 360] }}
+            transition={{ repeat: Infinity, duration: 6, ease: "linear" }}
+            style={{ width: "48px", height: "48px" }} // 👈 réduit la zone de rotation
+          >
+            {/* Halo lumineux */}
+            <motion.div
+              className="absolute w-12 h-12 rounded-full bg-blue-400 opacity-30 blur-md"
+              animate={{ scale: [1, 1.15, 1] }} // 👈 moins d’amplitude
+              transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+            />
+            {/* Icône IA */}
+            <Brain className="w-8 h-8 text-blue-600" />
+          </motion.div>
+        </div>
+      );
+    };
+    return (
+      <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+        <DialogTitle>Assignment Recommendation</DialogTitle>
+        <DialogContent dividers>
+          {loading ? (
+            <Box
+              display="flex"
+              flexDirection="column"
+              alignItems="center"
+              p={4}
+            >
+              <AiAdvancedLoader />
+              <Typography variant="body2" color="text.secondary" mt={2}>
+                Generating recommendations...
+              </Typography>
+            </Box>
+          ) : (
+            <>
+              {recommendationsWithPriority.length > 0 ? (
+                recommendationsWithPriority.map((rec, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.1 }}
+                  >
+                    <Box
+                      mb={2}
+                      p={2}
+                      border="1px solid #ddd"
+                      borderRadius="8px"
+                      display="flex"
+                      flexDirection="column"
+                      gap={1}
+                    >
+                      <Box
+                        display="flex"
+                        justifyContent="space-between"
+                        alignItems="center"
+                      >
+                        <Box display="flex" alignItems="center" gap={1}>
+                          <AssignmentIcon color={getColor(rec.priority)} />
+                          <Typography variant="h6">{rec.task}</Typography>
+                        </Box>
+
+                        <Box display="flex" alignItems="center" gap={1} mt={1}>
+                          <Chip
+                            label={rec.priority}
+                            color={getColor(rec.priority)}
+                            variant="outlined"
+                            size="small"
+                          />
+                          <Button
+                            variant="contained"
+                            size="small"
+                            color="warning"
+                            onClick={() => onAssign(rec)}
+                            sx={{
+                              minWidth: 60,
+                              padding: "2px 6px",
+                              fontSize: "0.7rem",
+                            }}
+                          >
+                            Load
+                          </Button>
+                        </Box>
+                      </Box>
+
+                      <Typography variant="subtitle2" color="text.secondary">
+                        Project: {rec.project}
+                      </Typography>
+                      <Typography>
+                        📅 {dayjs(rec.dates.start).format("DD MMM YYYY")} →{" "}
+                        {dayjs(rec.dates.end).format("DD MMM YYYY")}
+                      </Typography>
+                      <Typography variant="body2" mt={1}>
+                        {rec.justification}
+                      </Typography>
+                    </Box>
+                  </motion.div>
+                ))
+              ) : (
+                <Typography>No recommendations found.</Typography>
+              )}
+            </>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={onClose} variant="contained">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+    );
+  };
 
   return (
     <Box p={3}>
@@ -649,13 +829,25 @@ const EditStaffing = () => {
         {showAssignmentForm && (
           <Formik
             initialValues={{
-              project: null,
-              task: null,
-              startDate: "",
-              endDate: "",
+              project: projects?.find(
+                (p) => p.id === loadedRecommandedAssignment?.project_id
+              ),
+              task: tasks?.find(
+                (t) => t._id === loadedRecommandedAssignment?.task_id
+              ),
+              startDate: loadedRecommandedAssignment?.dates?.start
+                ? format(
+                    loadedRecommandedAssignment?.dates?.start,
+                    "yyyy-MM-dd"
+                  )
+                : "",
+              endDate: loadedRecommandedAssignment?.dates?.end
+                ? format(loadedRecommandedAssignment?.dates?.end, "yyyy-MM-dd")
+                : "",
               assignmentType: "enduring - long period",
               exactDays: 0,
             }}
+            enableReinitialize={true}
             onSubmit={(values) => {
               const newAssignementData = {
                 employee: id,
@@ -943,21 +1135,6 @@ const EditStaffing = () => {
 
                 <Box mt={2} display="flex" flexDirection="column" gap={1}>
                   <Button
-                    variant="outlined"
-                    size="small"
-                    startIcon={<CompareArrowsIcon />}
-                    sx={{
-                      width: "400px",
-                      fontSize: "10px",
-                      borderColor: colors.grey[100],
-                      backgroundColor: "#fff",
-                      color: "#000",
-                      alignSelf: "start",
-                    }}
-                  >
-                    Compare salary skills with assigned task skill requirements
-                  </Button>
-                  <Button
                     variant="contained"
                     size="small"
                     startIcon={<AutoAwesomeIcon />}
@@ -969,6 +1146,7 @@ const EditStaffing = () => {
                       backgroundColor: colors.primary[100],
                       color: colors.grey[900],
                     }}
+                    onClick={handleGenerateRecommendations}
                   >
                     Generate assignment recommendations
                   </Button>
@@ -1316,39 +1494,6 @@ const EditStaffing = () => {
                     </Button>
                   </Box>
                 </Box>
-
-                <Box mt={2} display="flex" flexDirection="column" gap={1}>
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    startIcon={<CompareArrowsIcon />}
-                    sx={{
-                      width: "400px",
-                      fontSize: "10px",
-                      borderColor: colors.grey[100],
-                      backgroundColor: "#fff",
-                      color: "#000",
-                      alignSelf: "start",
-                    }}
-                  >
-                    Compare salary skills with assigned task skill requirements
-                  </Button>
-                  <Button
-                    variant="contained"
-                    size="small"
-                    startIcon={<AutoAwesomeIcon />}
-                    sx={{
-                      width: "250px",
-                      fontSize: "10px",
-                      px: 1,
-                      borderRadius: "5px",
-                      backgroundColor: colors.primary[100],
-                      color: colors.grey[900],
-                    }}
-                  >
-                    Generate assignment recommendations
-                  </Button>
-                </Box>
                 <Box mt={2} display="flex" alignItems="center" gap={2}>
                   <Button
                     variant="outlined"
@@ -1404,6 +1549,20 @@ const EditStaffing = () => {
           </Formik>
         )}
       </Paper>
+      <RecommendationModal
+        open={openRecommendationModal}
+        onClose={() => setOpenRecommendationModal(false)}
+        loading={loadingRecommendations}
+        data={assignementRecommendation}
+        onAssign={(rec) => {
+          setLoadedRecommandedAssignment(rec);
+          setShowAssignmentForm(false);
+          setTimeout(() => {
+            setShowAssignmentForm(true);
+            setOpenRecommendationModal(false);
+          }, 1000);
+        }}
+      />
     </Box>
   );
 };

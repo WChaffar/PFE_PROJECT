@@ -3,6 +3,7 @@
 const initialState = {
   activeAssignement: {},
   assignements: [],
+  assignementRecommendation: {},
   error: null, // NEW: to store project-related errors
 };
 
@@ -71,6 +72,7 @@ const assignementReducer = (state = initialState, action) => {
         ...state,
         activeAssignement: {},
         assignements: [],
+        assignementRecommendation: {},
         error: null, // NEW: to store project-related errors
       };
     case "RESET_ASSIGNEMENT_ERROR":
@@ -105,6 +107,17 @@ const assignementReducer = (state = initialState, action) => {
         error: null, // NEW: to store assignement-related errors
       };
     case "DELETE_ASSIGNEMENT_FAILURE":
+      return {
+        ...state,
+        error: action.payload, // store error message
+      };
+    case "GET_ASSIGNEMENT_RECOMMENDATION_SUCCESS":
+      return {
+        ...state,
+        assignementRecommendation: action.payload,
+        error: null, // NEW: to store assignement-related errors
+      };
+    case "GET_ASSIGNEMENT_RECOMMENDATION_FAILURE":
       return {
         ...state,
         error: action.payload, // store error message

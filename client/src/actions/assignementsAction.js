@@ -126,9 +126,9 @@ export const updateAssignementTimeEntries =
   };
 
 // create Assignement
-export const updateAssignement = (id,values) => async (dispatch) => {
+export const updateAssignement = (id, values) => async (dispatch) => {
   try {
-    const data = await AssignementService.updateAssignement(id,values);
+    const data = await AssignementService.updateAssignement(id, values);
     dispatch({
       type: "UPDATE_ASSIGNEMENT_SUCCESS",
       payload: { data },
@@ -143,7 +143,6 @@ export const updateAssignement = (id,values) => async (dispatch) => {
   }
 };
 
-
 // create Assignement
 export const resetAssignementErros = () => async (dispatch) => {
   dispatch({
@@ -157,7 +156,6 @@ export const resetAssignementState = () => async (dispatch) => {
     type: "RESET_ASSIGNEMENT",
   });
 };
-
 
 // delete Assignement
 export const deleteAssignement = (assignementId) => async (dispatch) => {
@@ -174,5 +172,24 @@ export const deleteAssignement = (assignementId) => async (dispatch) => {
       payload: error.response?.data?.message || "Delete assignement failed",
     });
     return { success: false }; // ✅ return failure
+  }
+};
+
+// get Assignement recommendation
+export const getAssignementRecommendation = (empId) => async (dispatch) => {
+  try {
+    const data = await AssignementService.getAssignementRecommendation(empId);
+    dispatch({
+      type: "GET_ASSIGNEMENT_RECOMMENDATION_SUCCESS",
+      payload: data,
+    });
+    return { success: true , data }; // ✅ return success
+  } catch (error) {
+    dispatch({
+      type: "GET_ASSIGNEMENT_RECOMMENDATION_FAILURE",
+      payload:
+        error.response?.data?.message || "Get assignement recommendation failed",
+    });
+    return { success: false ,error : error.response?.data?.message || "Get assignement recommendation failed" }; // ✅ return failure
   }
 };

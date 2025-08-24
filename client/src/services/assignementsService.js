@@ -46,7 +46,7 @@ const updateAssignementTimeEntry = (assignementId, date, timeType) => {
 };
 
 const updateAssignementTimeEntries = (assignementId, entries) => {
-  console.log(entries)
+  console.log(entries);
   return axios
     .put(
       base_url + `assignement/updateAssignementTimeEntries/${assignementId}`,
@@ -60,23 +60,23 @@ const updateAssignementTimeEntries = (assignementId, entries) => {
 
 const updateAssignement = (assignementId, data) => {
   return axios
-    .put(
-      base_url + `assignement/update/${assignementId}`,
-      data,
-      getConfig()
-    )
+    .put(base_url + `assignement/update/${assignementId}`, data, getConfig())
     .then((response) => {
       return response.data;
     });
 };
 
-
 const deleteAssignement = (assignementId) => {
   return axios
-    .delete(
-      base_url + `assignement/deleteOne/${assignementId}`,
-      getConfig()
-    )
+    .delete(base_url + `assignement/deleteOne/${assignementId}`, getConfig())
+    .then((response) => {
+      return response.data;
+    });
+};
+
+const getAssignementRecommendation = (empId) => {
+  return axios
+    .get(base_url + `assignement/getRecommendation/${empId}`, getConfig())
     .then((response) => {
       return response.data;
     });
@@ -90,7 +90,8 @@ const AssignementService = {
   updateAssignementTimeEntry,
   updateAssignementTimeEntries,
   updateAssignement,
-  deleteAssignement
+  deleteAssignement,
+  getAssignementRecommendation
 };
 
 export default AssignementService;
