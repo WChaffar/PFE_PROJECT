@@ -886,6 +886,7 @@ const EditStaffing = () => {
             }}
             enableReinitialize={true}
             onSubmit={(values) => {
+              console.log(values?.exactDays);
               const newAssignementData = {
                 employee: id,
                 project: values?.project?.id,
@@ -1040,7 +1041,15 @@ const EditStaffing = () => {
                       type="date"
                       name="startDate"
                       value={values.startDate}
-                      onChange={handleChange}
+                      onChange={(e) => {
+                        handleChange(e); // update startDate
+                        if (values.endDate) {
+                          setFieldValue(
+                            "exactDays",
+                            getWorkingDays(e.target.value, values.endDate)
+                          );
+                        }
+                      }}
                       style={{ width: "100%", padding: 6, borderRadius: 4 }}
                     />
                   </Box>
@@ -1053,7 +1062,15 @@ const EditStaffing = () => {
                       type="date"
                       name="endDate"
                       value={values.endDate}
-                      onChange={handleChange}
+                      onChange={(e) => {
+                        handleChange(e); // update endDate
+                        if (values.startDate) {
+                          setFieldValue(
+                            "exactDays",
+                            getWorkingDays(values.startDate, e.target.value)
+                          );
+                        }
+                      }}
                       style={{ width: "100%", padding: 6, borderRadius: 4 }}
                     />
                   </Box>
@@ -1065,19 +1082,14 @@ const EditStaffing = () => {
                     <input
                       type="number"
                       name="exactDays"
-                      value={
-                        values.startDate && values.endDate
-                          ? values.exactDays !==
-                            getWorkingDays(values.startDate, values.endDate)
-                            ? getWorkingDays(values.startDate, values.endDate)
-                            : values.exactDays
-                          : !values.startDate && !values.endDate
-                          ? values.exactDays
-                          : ""
-                      }
-                      onChange={handleChange}
-                      style={{ width: "100%", padding: 6, borderRadius: 4 }}
-                      disabled
+                      value={values.exactDays}
+                      readOnly
+                      style={{
+                        width: "100%",
+                        padding: 6,
+                        borderRadius: 4,
+                        backgroundColor: "#f5f5f5",
+                      }}
                     />
                   </Box>
 

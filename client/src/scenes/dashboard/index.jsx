@@ -53,6 +53,7 @@ const Dashboard = () => {
           progress: Math.round(entry.totalWorkload / entry.taskCount),
         })
       );
+      console.log(projectWorkloadData);
       setProjectWorkload(projectWorkloadData);
       setTasksLoading(false);
     }
