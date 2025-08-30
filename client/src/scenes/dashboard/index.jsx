@@ -16,6 +16,15 @@ import TeamMembersEvolLineChart from "../../components/TeamMembersEvolLineChart"
 import { projectRisks, projectRiskcolors } from "../../data/ProjectRisksData";
 import { useEffect, useState } from "react";
 import { getTasksByManagerId } from "../../actions/taskAction";
+import { getAllTeamMembersForManager } from "../../actions/teamAction";
+import { getAllEmployeeAssignements } from "../../actions/assignementsAction";
+import {
+  addMonths,
+  endOfQuarter,
+  format,
+  startOfQuarter,
+  startOfYear,
+} from "date-fns";
 
 const Dashboard = () => {
   const theme = useTheme();
@@ -28,7 +37,15 @@ const Dashboard = () => {
   const [projectWorkload, setProjectWorkload] = useState([]);
   const [activeProjectsCount, setActiveProjectsCount] = useState(null);
   const [completedProjectsCount, setCompletedProjectsCount] = useState(null);
+  const [completedTasksCount, setCompletedTasksCount] = useState(null);
   const [totalProjectsCount, setTotalProjectsCount] = useState(null);
+  const [assignedMembersCount, setAssignedMembersCount] = useState(null);
+  const [teamMembers, setTeamMembers] = useState([]);
+  const selectedTeamMembers = useSelector((state) => state.team.team);
+  const [assignments, setAssignements] = useState([]);
+  const selectedAssignements = useSelector(
+    (state) => state.assignements.assignements
+  );
 
   useEffect(() => {
     if (selectedTasks?.length !== 0) {
@@ -62,11 +79,15 @@ const Dashboard = () => {
       const completedProjects = projectWorkloadData?.filter(
         (p) => p.progress === 100
       );
+      const countCompletedTasks = selectedTasks?.filter(
+        (t) => t.workload === 100
+      )?.length;
       setActiveProjectsCount(activeProjects?.length);
       setCompletedProjectsCount(completedProjects?.length);
       setTotalProjectsCount(projectWorkloadData?.length);
       setProjectWorkload(projectWorkloadData);
       setTasksLoading(false);
+      setCompletedTasksCount(countCompletedTasks);
     }
   }, [selectedTasks]);
 
@@ -74,6 +95,114 @@ const Dashboard = () => {
     setTasksLoading(true);
     dispatch(getTasksByManagerId());
   }, [dispatch]);
+
+  useEffect(() => {
+    dispatch(getAllTeamMembersForManager());
+  }, [dispatch]); // <== Appelle une seule fois le fetch
+
+  useEffect(() => {
+    if (selectedTeamMembers.length !== 0) {
+      console.log(selectedTeamMembers);
+      setTeamMembers(selectedTeamMembers);
+    }
+  }, [selectedTeamMembers]); // <== Écoute les changements de selectedProjects
+
+  useEffect(() => {
+    if (selectedAssignements.length !== 0) {
+      setAssignements(selectedAssignements);
+    }
+  }, [selectedAssignements]); // <== Écoute les changements de selectedProjects
+
+  useEffect(() => {
+    if (selectedTeamMembers.length !== 0 && selectedAssignements.length !== 0) {
+      const count = selectedTeamMembers.filter((t) =>
+        selectedAssignements.some((a) => a.employee._id === t._id)
+      ).length;
+      setAssignedMembersCount(count);
+    } else {
+      setAssignedMembersCount(0);
+    }
+  }, [selectedTeamMembers, selectedAssignements]);
+
+  useEffect(() => {
+    dispatch(getAllEmployeeAssignements());
+  }, [dispatch]); // <== Appelle une seule fois le fetch
+
+  // Générer les trimestres de l'année en cours
+  function generateQuarters(year = new Date().getFullYear()) {
+    const quarters = [];
+    for (let i = 0; i < 12; i += 3) {
+      const date = addMonths(startOfYear(new Date(year, 0, 1)), i);
+      quarters.push(date); // garder Date
+    }
+    return quarters;
+  }
+
+  function generateQuarters(rangeInYears = 2) {
+  const periods = [];
+  const currentYear = new Date().getFullYear();
+
+  // from (currentYear - rangeInYears) to (currentYear + rangeInYears)
+  const startYear = currentYear - rangeInYears;
+  const endYear = currentYear + rangeInYears;
+
+  for (let year = startYear; year <= endYear; year++) {
+    for (let q = 0; q < 4; q++) {
+      const date = new Date(year, q * 3, 1); // Jan, Apr, Jul, Oct
+      periods.push(date);
+    }
+  }
+  return periods;
+}
+
+  function buildTeamCompositionByJobTitle(selectedTeamMembers) {
+    const colors = [
+      "hsl(211, 70%, 50%)",
+      "hsl(32, 90%, 55%)",
+      "hsl(145, 63%, 45%)",
+      "hsl(270, 60%, 60%)",
+      "hsl(0, 80%, 60%)",
+    ];
+
+    if (selectedTeamMembers.length === 0) return [];
+
+    // 1. Generate quarters for the current year
+    const periods = generateQuarters(2);
+
+    // 2. Get unique job titles
+    const jobTitles = [
+      ...new Set(selectedTeamMembers.map((m) => m.jobTitle).filter(Boolean)),
+    ];
+
+    // 3. Build the data series
+    const result = jobTitles.map((title, i) => ({
+      id: title,
+      color: colors[i % colors.length],
+      data: periods.map((period) => {
+        const quarterStart = startOfQuarter(period);
+        const quarterEnd = endOfQuarter(period);
+
+        // Count unique employees with this job title active during this quarter
+        const employeesInQuarter = new Set(
+          selectedTeamMembers
+            .filter(
+              (member) =>
+                member.jobTitle === title &&
+                member.dateOfJoining &&
+                new Date(member.dateOfJoining) <= quarterEnd // joined before quarter ends
+            )
+            .map((member) => member._id)
+        );
+
+        return {
+          x: format(quarterStart, "MMM yyyy"),
+          y: employeesInQuarter.size,
+        };
+      }),
+    }));
+
+    return result;
+  }
 
   return (
     <Box m="20px">
@@ -120,7 +249,10 @@ const Dashboard = () => {
             title={activeProjectsCount}
             subtitle="Active Projects"
             progress={(activeProjectsCount / totalProjectsCount).toFixed(2)}
-            increase={`${((activeProjectsCount / totalProjectsCount) * 100).toFixed(2)}%`}
+            increase={`${(
+              (activeProjectsCount / totalProjectsCount) *
+              100
+            ).toFixed(2)}%`}
             icon={
               <FolderSpecialIcon
                 sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
@@ -138,8 +270,11 @@ const Dashboard = () => {
           <StatBox
             title={completedProjectsCount}
             subtitle="Completed Projects"
-            progress={(completedProjectsCount/totalProjectsCount).toFixed(2)}
-            increase={((completedProjectsCount/totalProjectsCount)*100).toFixed(2)+"%"}
+            progress={(completedProjectsCount / totalProjectsCount).toFixed(2)}
+            increase={
+              ((completedProjectsCount / totalProjectsCount) * 100).toFixed(2) +
+              "%"
+            }
             icon={
               <RuleFolderIcon
                 sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
@@ -155,9 +290,14 @@ const Dashboard = () => {
           justifyContent="center"
         >
           <StatBox
-            title="+40"
+            title={selectedTeamMembers?.length}
             subtitle="Team members"
-            increase="80% assigned"
+            increase={
+              (
+                (assignedMembersCount / selectedTeamMembers?.length) *
+                100
+              ).toFixed(2) + "% assigned"
+            }
             icon={
               <PersonAddIcon
                 sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
@@ -173,10 +313,12 @@ const Dashboard = () => {
           justifyContent="center"
         >
           <StatBox
-            title="123"
-            subtitle="Tasks created"
-            progress="0.80"
-            increase="80% completed"
+            subtitle="Tasks"
+            progress={(completedTasksCount / selectedTasks?.length).toFixed(2)}
+            increase={
+              ((completedTasksCount / selectedTasks?.length) * 100).toFixed(2) +
+              " % completed"
+            }
             icon={
               <AddTaskIcon
                 sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
@@ -304,7 +446,10 @@ const Dashboard = () => {
             Team Composition Growth Over Time
           </Typography>
           <Box height="250px" mt="-40px">
-            {/* <TeamMembersEvolLineChart isDashboard={true} /> */}
+            <TeamMembersEvolLineChart
+              isDashboard={true}
+              data={buildTeamCompositionByJobTitle(selectedTeamMembers)}
+            />
           </Box>
         </Box>
         {/* Project Risks */}

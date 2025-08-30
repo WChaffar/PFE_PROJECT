@@ -689,15 +689,23 @@ const RessourcesAllocation = () => {
     setOpenSnackbar(false); // Close the Snackbar
   };
 
-  // Générer les trimestres de l'année en cours
-  function generateQuarters(year = new Date().getFullYear()) {
-    const quarters = [];
-    for (let i = 0; i < 12; i += 3) {
-      const date = addMonths(startOfYear(new Date(year, 0, 1)), i);
-      quarters.push(date); // garder Date
+    function generateQuarters(rangeInYears = 2) {
+  const periods = [];
+  const currentYear = new Date().getFullYear();
+
+  // from (currentYear - rangeInYears) to (currentYear + rangeInYears)
+  const startYear = currentYear - rangeInYears;
+  const endYear = currentYear + rangeInYears;
+
+  for (let year = startYear; year <= endYear; year++) {
+    for (let q = 0; q < 4; q++) {
+      const date = new Date(year, q * 3, 1); // Jan, Apr, Jul, Oct
+      periods.push(date);
     }
-    return quarters;
   }
+  return periods;
+}
+
   function buildTeamCompositionByJobTitle(assignments, projectId) {
     const colors = [
       "hsl(211, 70%, 50%)",
@@ -715,7 +723,7 @@ const RessourcesAllocation = () => {
     if (projectAssignments.length === 0) return [];
 
     // 2. Generate quarters for the current year
-    const periods = generateQuarters();
+    const periods = generateQuarters(1);
 
     // 3. Get unique job titles
     const jobTitles = [
@@ -969,7 +977,7 @@ const RessourcesAllocation = () => {
                   fontWeight="600"
                   sx={{ padding: "2px 2px 0 30px" }}
                 >
-                  Team Composition Growth Over Time
+                  Project Team Composition Growth Over Time
                 </Typography>
                 <Box height="250px" mt="-40px">
                   <TeamMembersEvolLineChart

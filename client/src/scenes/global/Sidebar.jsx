@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ProSidebar, Menu, MenuItem } from "react-pro-sidebar";
-import { Box, IconButton, Typography, useTheme } from "@mui/material";
+import { Avatar, Box, IconButton, Typography, useTheme } from "@mui/material";
 import { Link, useNavigate } from "react-router-dom"; // Added useNavigate
 import "react-pro-sidebar/dist/css/styles.css";
 import { tokens } from "../../theme";
@@ -71,6 +71,30 @@ const Sidebar = () => {
     window.location.reload();
   };
 
+  const showAvatar = (user) => {
+    const getInitials = (fullName) => {
+      if (!fullName) return "";
+      return fullName
+        .split(" ")
+        .map((word) => word[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase();
+    };
+    const initials = getInitials(user?.fullName);
+    return (
+      <Avatar
+        key={user.id}
+        src={user?.profilePicture || undefined}
+        alt={user?.fullName}
+        sx={{ width: 70, height: 70, fontWeight: 700, border:"5px solid white" }}
+      >
+        {!user?.profilePicture && initials}
+      </Avatar>
+    );
+  };
+
+
   return (
     <Box
       sx={{
@@ -125,12 +149,13 @@ const Sidebar = () => {
                   style={{ cursor: "pointer", borderRadius: "50%" }}
                 />
               </Box> */}
-              <Box textAlign="center">
+              <Box display="flex" flexDirection="column" alignItems="center" textAlign="center">
+                <Box> {showAvatar(user)}</Box>
                 <Typography
                   variant="h2"
                   color={colors.grey[100]}
                   fontWeight="bold"
-                  sx={{ m: "10px 0 0 0" }}
+                  sx={{ m: "0 0 0 0" }}
                 >
                   {user?.fullName}
                 </Typography>
@@ -377,7 +402,7 @@ const Sidebar = () => {
                 icon={<PeopleOutlinedIcon />}
                 selected={selected}
                 setSelected={setSelected}
-              /> 
+              />
               <Item
                 title="Resource allocation"
                 to="/team-allocation-bu"
@@ -385,7 +410,7 @@ const Sidebar = () => {
                 selected={selected}
                 setSelected={setSelected}
               />
-              
+
               {/* Logout */}
               <MenuItem
                 onClick={logOut}

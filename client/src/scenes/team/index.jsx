@@ -69,7 +69,6 @@ const TeamManagement = () => {
   const [onProjectTeamMemebers, setOnProjectTeamMembers] = useState([]);
 
   useEffect(() => {
-    console.log(onProjectTeamMemebers)
     if (selectedTeamMembers.length !== 0) {
       const teamMembersMap = selectedTeamMembers.map((member) => ({
         id: member?._id,
