@@ -9,7 +9,7 @@ import argparse
 from rapidfuzz import fuzz
 
 # --- Helper : fuzzy matching --- #
-def fuzzy_match_count(user_list, task_list, threshold=80):
+def fuzzy_match_count(user_list, task_list, threshold=60):
     count = 0
     for t in task_list:
         for u in user_list:
@@ -240,6 +240,14 @@ def recommander_taches(employee_id, top_k=3):
         X_new = pd.DataFrame([features], columns=["skill_match", "cert_match", "duration", "workload"])
         # S'assurer que predict_proba a 2 classes
         proba = model.predict_proba(X_new)[0][1] if len(model.classes_) == 2 else float(model.predict_proba(X_new)[0].max())
+        # Boost si skill/cert match > 0
+        boost = 1.0
+        if features[0] > 0:  # skills
+            boost *= 1.2
+        if features[1] > 0:  # certifs
+            boost *= 1.3
+        
+        proba = proba * boost
 
         # Pénaliser la surcharge de travail
         if wl > 0:

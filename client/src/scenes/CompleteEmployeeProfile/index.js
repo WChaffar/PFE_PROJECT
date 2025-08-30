@@ -203,15 +203,13 @@ const CompleteEmployeeProfile = () => {
                 <MenuItem value="Fullstack Developer">
                   Fullstack Developer
                 </MenuItem>
-                <MenuItem value="Product Manager">
-                  Product Manager
-                </MenuItem>
+                <MenuItem value="Product Manager">Product Manager</MenuItem>
                 <MenuItem value="Frontend Developer">
                   Frontend Developer
                 </MenuItem>
-                  <MenuItem value="QA Engineer">
-                  QA Engineer
-                </MenuItem>
+                <MenuItem value="QA Engineer">QA Engineer</MenuItem>
+                <MenuItem value="UX Designer">UX Designer</MenuItem>
+                <MenuItem value="UX Designer">Backend Developer</MenuItem>
                 
               </TextField>
 

@@ -336,6 +336,9 @@ const EditTeamMemberForm = () => {
                   Frontend Developer
                 </MenuItem>
                 <MenuItem value="QA Engineer">QA Engineer</MenuItem>
+                <MenuItem value="UX Designer">UX Designer</MenuItem>
+                <MenuItem value="Backend Developer">Backend Developer</MenuItem>
+                
               </TextField>
 
               <TextField
