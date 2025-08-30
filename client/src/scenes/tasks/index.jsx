@@ -15,7 +15,7 @@ import {
   DialogContentText,
   DialogActions,
   Alert,
-  Stack
+  Stack,
 } from "@mui/material";
 import {
   DataGrid,
@@ -69,21 +69,58 @@ const TasksManagement = () => {
   const selectedAssignements = useSelector(
     (state) => state.assignements.assignements
   );
-
+  const [openedProject, setOpenedProject] = useState(null);
   useEffect(() => {
     if (selectedProjects.length !== 0) {
       const projectsMap = selectedProjects.map((project) => ({
         id: project._id,
         name: project.projectName,
-        taskCount: 6,
-        completed: 1,
-        active: 3,
-        overdue: 2,
+        taskCount: null,
+        completed: null,
+        active: null,
       }));
       setProjects(projectsMap);
       setProjectLoading(false);
     }
   }, [selectedProjects]); // <== Écoute les changements de selectedProjects
+
+  useEffect(() => {
+    if (selectedTasks?.length > 0 && projects?.length > 0) {
+      const projectMap = projects.map((project) => {
+        let totalTasksCount = 0;
+        let activeTasksCount = 0;
+        let completedTasksCount = 0;
+
+        selectedTasks.forEach((task) => {
+          if (task.project?._id === project.id) {
+            if (task.workload < 100) {
+              activeTasksCount += 1;
+            }
+            if (task.workload === 100) {
+              completedTasksCount += 1;
+            }
+            totalTasksCount += 1;
+          }
+        });
+        if (project.id === openedProject) {
+          return {
+            ...project,
+            taskCount: totalTasksCount,
+            completed: completedTasksCount,
+            active: activeTasksCount,
+          };
+        } else {
+          return {
+            ...project,
+            taskCount: null,
+            completed: null,
+            active: null,
+          };
+        }
+      });
+      setProjects(projectMap);
+    }
+  }, [selectedTasks, selectedProject]);
 
   useEffect(() => {
     dispatch(getAllEmployeeAssignements());
@@ -109,8 +146,6 @@ const TasksManagement = () => {
         id: task._id,
         name: task.taskName,
         skills: task.requiredSkills,
-        assignedTo: "Sarah Wilson",
-        avatar: "https://i.pravatar.cc/150?img=10",
         experience: task.RequiredyearsOfExper,
         phase: task.projectPhase,
         projectId: task.projectId,
@@ -146,7 +181,6 @@ const TasksManagement = () => {
     { field: "taskCount", headerName: "Taks Number", flex: 1 },
     { field: "completed", headerName: "Completed", flex: 1 },
     { field: "active", headerName: "Active Taks", flex: 1 },
-    { field: "overdue", headerName: "Overdue Tasks", flex: 1 },
   ];
   const AccountsAvatars = ({ accounts }) => {
     const [openDialog, setOpenDialog] = React.useState(false);
@@ -496,7 +530,10 @@ const TasksManagement = () => {
         <DataGrid
           rows={projects}
           columns={projectColumns}
-          onRowClick={(params) => getTasksOfSelectedProject(params)}
+          onRowClick={(params) => {
+            getTasksOfSelectedProject(params);
+            setOpenedProject(params.row.id);
+          }}
           components={{ Toolbar: CustomToolbar }}
           pageSize={5}
           rowsPerPageOptions={[5, 10, 25, 50, 100]}

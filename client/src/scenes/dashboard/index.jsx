@@ -26,6 +26,9 @@ const Dashboard = () => {
   const [tasksLoading, setTasksLoading] = useState(false);
   const dispatch = useDispatch();
   const [projectWorkload, setProjectWorkload] = useState([]);
+  const [activeProjectsCount, setActiveProjectsCount] = useState(null);
+  const [completedProjectsCount, setCompletedProjectsCount] = useState(null);
+  const [totalProjectsCount, setTotalProjectsCount] = useState(null);
 
   useEffect(() => {
     if (selectedTasks?.length !== 0) {
@@ -53,7 +56,15 @@ const Dashboard = () => {
           progress: Math.round(entry.totalWorkload / entry.taskCount),
         })
       );
-      console.log(projectWorkloadData);
+      const activeProjects = projectWorkloadData?.filter(
+        (p) => p.progress < 100
+      );
+      const completedProjects = projectWorkloadData?.filter(
+        (p) => p.progress === 100
+      );
+      setActiveProjectsCount(activeProjects?.length);
+      setCompletedProjectsCount(completedProjects?.length);
+      setTotalProjectsCount(projectWorkloadData?.length);
       setProjectWorkload(projectWorkloadData);
       setTasksLoading(false);
     }
@@ -106,10 +117,10 @@ const Dashboard = () => {
           justifyContent="center"
         >
           <StatBox
-            title="+8"
+            title={activeProjectsCount}
             subtitle="Active Projects"
-            progress="0.75"
-            increase="14%"
+            progress={(activeProjectsCount / totalProjectsCount).toFixed(2)}
+            increase={`${((activeProjectsCount / totalProjectsCount) * 100).toFixed(2)}%`}
             icon={
               <FolderSpecialIcon
                 sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
@@ -125,10 +136,10 @@ const Dashboard = () => {
           justifyContent="center"
         >
           <StatBox
-            title="+33"
+            title={completedProjectsCount}
             subtitle="Completed Projects"
-            progress="0.76"
-            increase="86%"
+            progress={(completedProjectsCount/totalProjectsCount).toFixed(2)}
+            increase={((completedProjectsCount/totalProjectsCount)*100).toFixed(2)+"%"}
             icon={
               <RuleFolderIcon
                 sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
