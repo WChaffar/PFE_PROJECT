@@ -4,6 +4,7 @@ const validateMongoDbId = require("../utils/validateMongodbId");
 const jwt = require("jsonwebtoken");
 const { validationResult, check } = require("express-validator");
 const mongoose = require("mongoose"); // Erase if already required
+const Notification = require("../models/NotificationsModel");
 
 // Middleware de validation
 const validateAbsence = [
@@ -50,10 +51,22 @@ const createAbsence = [
      * TODO:With the help of task name find the task exists or not
      */
     const newAbsence = await Absence.create({
-      employee: req.user?._id,
+      employee: req?.user?._id,
       type,
       startDate,
       endDate,
+    });
+    const newNotif = await Notification.create({
+      type: "Employee Absence",
+      message:
+        req?.user?.fullName +
+        " will be absent from " +
+        startDate +
+        " to " +
+        endDate +
+        ".",
+      dateTime: new Date(), // current date and time
+      responsibleId: req?.user?.manager,
     });
     res.json(newAbsence);
   }),
@@ -93,6 +106,15 @@ const getMyAbsenceById = asyncHandler(async (req, res) => {
   }
 });
 
+// Helper function to format a date as yyyy-MM-dd
+function formatDate(date) {
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0"); // months are 0-indexed
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 const editAbsenceById = asyncHandler(async (req, res) => {
   try {
     const { absentId } = req.params; // On récupère l'ID du projet dans les paramètres de la requête
@@ -112,7 +134,15 @@ const editAbsenceById = asyncHandler(async (req, res) => {
         "Absence not found or you do not have permission to edit it."
       );
     }
+    const startFormatted = formatDate(absence.startDate);
+    const endFormatted = formatDate(absence.endDate);
 
+    const newNotif = await Notification.create({
+      type: "Employee Absence Update",
+      message: `${req?.user?.fullName} has updated their absence. New dates: from ${startFormatted} to ${endFormatted}.`,
+      dateTime: new Date(),
+      responsibleId: req?.user?.manager, // manager who should receive the notification
+    });
     // Réponse réussie avec le projet mis à jour
     res.status(200).json({
       message: "Absence updated successfully.",
@@ -139,6 +169,16 @@ const deleteAbsenceByID = asyncHandler(async (req, res) => {
         "Absence not found or you do not have permission to delete it."
       );
     }
+
+    const startFormatted = formatDate(absence.startDate);
+    const endFormatted = formatDate(absence.endDate);
+
+    const newNotif = await Notification.create({
+      type: "Employee Absence Cancellation",
+      message: `${req?.user?.fullName} has canceled their absence from ${startFormatted} to ${endFormatted}.`,
+      dateTime: new Date(),
+      responsibleId: req?.user?.manager,
+    });
 
     // Send success response
     res.status(200).json({

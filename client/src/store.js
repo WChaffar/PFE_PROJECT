@@ -8,6 +8,7 @@ import teamReducer from './reducers/teamReducer';
 import assignementReducer from './reducers/assignementReducer';
 import businessUnitReducer from './reducers/businessUnitReducer';
 import absenceReducer from './reducers/absenceReducer';
+import notificationsReducer from './reducers/notificationsReducer';
 
 function saveToLocalStorage(state) {
   try {
@@ -41,7 +42,8 @@ const store = configureStore({
     team:teamReducer,
     assignements: assignementReducer,
     businessUnit: businessUnitReducer,
-    absence: absenceReducer
+    absence: absenceReducer,
+    notifications: notificationsReducer
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(thunk),
   devTools: process.env.NODE_ENV !== 'production',

@@ -127,47 +127,46 @@ const ReviewAccounts = () => {
   const [totalConfirmed, setTotalConfirmed] = useState("...");
   const [businessUnits, setBusinessUnits] = useState([]);
   const [teamManagers, setTeamManagers] = useState([]);
-  const [confirmedAccounts,setConfirmedAccounts ] = useState([]);
-  const [pendingAccounts,setPendingAccounts ] = useState([]);
+  const [confirmedAccounts, setConfirmedAccounts] = useState([]);
+  const [pendingAccounts, setPendingAccounts] = useState([]);
 
   const selectedBusinessUnits = useSelector(
     (state) => state.businessUnit.businessUnit
   );
 
- const AccountsAvatars = ({ accounts }) => {
-  const visibleAccounts = accounts?.slice(0, 3) || [];
+  const AccountsAvatars = ({ accounts }) => {
+    const visibleAccounts = accounts?.slice(0, 3) || [];
 
-  const getInitials = (fullName) => {
-    if (!fullName) return '';
-    return fullName
-      .split(' ')
-      .map((word) => word[0])
-      .join('')
-      .slice(0, 2)
-      .toUpperCase();
+    const getInitials = (fullName) => {
+      if (!fullName) return "";
+      return fullName
+        .split(" ")
+        .map((word) => word[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase();
+    };
+
+    return (
+      <Stack direction="row" spacing={-1}>
+        {visibleAccounts.map((member, index) => {
+          const hasPicture = member?.profilePicture?.trim();
+          const initials = getInitials(member?.fullName);
+
+          return (
+            <Avatar
+              key={index}
+              src={hasPicture || undefined}
+              alt={member?.fullName}
+              sx={{ width: 40, height: 40, fontWeight: 600 }}
+            >
+              {!hasPicture && initials}
+            </Avatar>
+          );
+        })}
+      </Stack>
+    );
   };
-
-  return (
-    <Stack direction="row" spacing={-1}>
-      {visibleAccounts.map((member, index) => {
-        const hasPicture = member?.profilePicture?.trim();
-        const initials = getInitials(member?.fullName);
-
-        return (
-          <Avatar
-            key={index}
-            src={hasPicture || undefined}
-            alt={member?.fullName}
-            sx={{ width: 40, height: 40, fontWeight: 600 }}
-          >
-            {!hasPicture && initials}
-          </Avatar>
-        );
-      })}
-    </Stack>
-  );
-};
-
 
   useEffect(() => {
     if (selectedBusinessUnits.length !== 0) {
@@ -206,7 +205,7 @@ const ReviewAccounts = () => {
         (member) => member.role === "Manager"
       );
       setTeamManagers(teamManagersMap);
-        // activated and deactivated members
+      // activated and deactivated members
       const confirmedC = selectedTeamMembers?.filter(
         (member) => member?.Activated === true
       );
@@ -375,6 +374,12 @@ const ReviewAccounts = () => {
           );
           if (result.success) {
             setselectedManager(null);
+            setSnackbarMessage(
+              "The user's manager has been updated successfully!"
+            ); // Set success message
+            setOpenSnackbar(true); // Show Snackbarss
+            setOpenConfirm(false);
+            handleCloseMenu();
           }
         }
       }
@@ -469,8 +474,6 @@ const ReviewAccounts = () => {
       //   setOpenSnackbar(true); // Show Snackbar
       //   console.log("delete with success");
       // }
-      // setOpenConfirm(false);
-      // handleCloseMenu();
     };
     return (
       <>
@@ -610,7 +613,9 @@ const ReviewAccounts = () => {
                   />
                   <Autocomplete
                     fullWidth
-                    options={teamManagers}
+                    options={teamManagers.filter(
+                      (m) => m?.businessUnit?._id === selectedBU?._id && m.businessUnit
+                    )}
                     getOptionLabel={(option) =>
                       typeof option === "string"
                         ? option
@@ -821,7 +826,7 @@ const ReviewAccounts = () => {
             {totalConfirmed}
           </Typography>
           <Typography>Confirmed accounts</Typography>
-          <Box >
+          <Box>
             <AccountsAvatars accounts={confirmedAccounts} />
           </Box>
         </Box>

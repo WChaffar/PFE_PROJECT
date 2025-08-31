@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Box, IconButton, Stack, useTheme } from "@mui/material";
+import { Box, IconButton, Stack, useTheme, TextField } from "@mui/material";
 import { tokens } from "../theme";
 import { ResponsiveBar } from "@nivo/bar";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
@@ -20,17 +20,21 @@ const data = [
   { project: "Lambda", progress: 65 },
 ];
 
-const ProjectBarChart = ({ isDashboard = false, projectWorkload }) => {
+const ProjectBarChart = ({ isDashboard = false, projectWorkload = data }) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const containerRef = useRef(null);
   const [scrollPos, setScrollPos] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const scrollAmount = 200;
 
   const scrollLeft = () => {
     if (containerRef.current) {
-      containerRef.current.scrollBy({ left: -scrollAmount, behavior: "smooth" });
+      containerRef.current.scrollBy({
+        left: -scrollAmount,
+        behavior: "smooth",
+      });
       setScrollPos((pos) => Math.max(0, pos - scrollAmount));
     }
   };
@@ -42,6 +46,11 @@ const ProjectBarChart = ({ isDashboard = false, projectWorkload }) => {
     }
   };
 
+  // Filter projects based on search query
+  const filteredData = projectWorkload.filter((p) =>
+    p.project.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   // Color logic based on progress
   const getBarColor = (bar) => {
     const progress = bar.data.progress;
@@ -51,9 +60,22 @@ const ProjectBarChart = ({ isDashboard = false, projectWorkload }) => {
   };
 
   return (
-    <Box>
-       {/* Arrows for navigation */}
-       <Stack direction="row" justifyContent="center" spacing={2} >
+    <Box style={{ width: "100%", height: "250px", position: "relative" }}>
+      {/* Search input */}
+      <Box sx={{ position: "absolute", right: 10, top: 0, zIndex: 2 }}>
+        <TextField
+          size="small"
+          placeholder="Search project..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          sx={{
+            backgroundColor:"white"
+          }}
+        />
+      </Box>
+
+      {/* Arrows for navigation */}
+      <Stack direction="row" justifyContent="center" spacing={2}>
         <IconButton
           onClick={scrollLeft}
           sx={{
@@ -79,6 +101,7 @@ const ProjectBarChart = ({ isDashboard = false, projectWorkload }) => {
           <ChevronRightIcon sx={{ fontSize: "20px" }} />
         </IconButton>
       </Stack>
+
       {/* Chart container with horizontal scroll */}
       <Box
         ref={containerRef}
@@ -89,7 +112,7 @@ const ProjectBarChart = ({ isDashboard = false, projectWorkload }) => {
       >
         <Box sx={{ width: `${data.length * 90}px`, height: "200px" }}>
           <ResponsiveBar
-            data={projectWorkload}
+            data={filteredData}
             keys={["progress"]}
             indexBy="project"
             margin={{ top: 20, right: 20, bottom: 60, left: 50 }}

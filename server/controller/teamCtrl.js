@@ -5,6 +5,7 @@ const validateMongoDbId = require("../utils/validateMongodbId");
 const jwt = require("jsonwebtoken");
 const { validationResult, check } = require("express-validator");
 const mongoose = require("mongoose"); // Erase if already required
+const Notification = require("../models/NotificationsModel");
 
 // Middleware de validation de l'email
 const validateTeamMember = [];
@@ -233,6 +234,14 @@ const updateUserManager = asyncHandler(async (req, res) => {
         "Team member not found or you do not have permission to edit it."
       );
     }
+    console.log("Hey");
+    const newNotif = await Notification.create({
+      type: "New Team Member",
+      message: `${teamMember?.fullName} (ID: ${teamMember?._id}) has been assigned to your team.`,
+      dateTime: new Date(), // current date and time
+      responsibleId: teamMember?.manager, // the manager who should receive the notification
+    });
+    console.log(newNotif);
 
     res.status(200).json({
       message: "The team member's manager has been updated successfully.",
@@ -292,10 +301,9 @@ const getAllBuManagers = asyncHandler(async (req, res) => {
   res.status(200).json(users);
 });
 
-
 // Get all users whose role is not "RH"
 const getTeamForManagerInBu = asyncHandler(async (req, res) => {
-  const {managerId} = req.params;
+  const { managerId } = req.params;
   const users = await User.find({
     role: { $nin: ["RH", "BUDirector", "Manager"] },
     manager: managerId, // assuming req.user is populated via authentication middleware
@@ -327,5 +335,5 @@ module.exports = {
   getAllTeamForManager,
   completeMyProfile,
   getAllBuManagers,
-  getTeamForManagerInBu
+  getTeamForManagerInBu,
 };

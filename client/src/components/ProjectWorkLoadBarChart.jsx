@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Box, IconButton, Stack, useTheme } from "@mui/material";
+import { Box, IconButton, Stack, TextField, useTheme } from "@mui/material";
 import { tokens } from "../theme";
 import { ResponsiveBar } from "@nivo/bar";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
@@ -13,6 +13,12 @@ const ProjectWorkLoadBarChart = ({
   const colors = tokens(theme.palette.mode);
   const containerRef = useRef(null);
   const [scrollPos, setScrollPos] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
+
+    // Filter projects based on search query
+  const filteredData = TasksWorkloadData.filter((t) =>
+    t.Task?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const scrollAmount = 200;
 
@@ -42,7 +48,19 @@ const ProjectWorkLoadBarChart = ({
   };
 
   return (
-    <Box>
+    <Box style={{ width: "100%", height: "250px", position: "relative" }}>
+      {/* Search input */}
+      <Box sx={{ position: "absolute", right: 10, top: 0, zIndex: 2 }}>
+        <TextField
+          size="small"
+          placeholder="Search task..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          sx={{
+            backgroundColor:"white"
+          }}
+        />
+      </Box>
       {/* Arrows for navigation */}
       <Stack direction="row" justifyContent="center" spacing={2}>
         <IconButton
@@ -79,10 +97,13 @@ const ProjectWorkLoadBarChart = ({
         }}
       >
         <Box
-          sx={{ width: `${TasksWorkloadData?.length * 200}px`, height: "200px" }}
+          sx={{
+            width: `${TasksWorkloadData?.length * 200}px`,
+            height: "200px",
+          }}
         >
           <ResponsiveBar
-            data={TasksWorkloadData}
+            data={filteredData}
             keys={["workload"]}
             indexBy="Task"
             margin={{ top: 20, right: 20, bottom: 60, left: 50 }}
@@ -114,7 +135,8 @@ const ProjectWorkLoadBarChart = ({
               legend: "Tasks",
               legendPosition: "middle",
               legendOffset: 40,
-              format: (value) => value.length > 25 ? `${value.slice(0, 25)}…` : value, // truncate at 8 chars
+              format: (value) =>
+                value.length > 25 ? `${value.slice(0, 25)}…` : value, // truncate at 8 chars
             }}
             axisLeft={{
               tickSize: 5,

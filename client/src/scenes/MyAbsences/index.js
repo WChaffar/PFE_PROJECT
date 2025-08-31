@@ -177,6 +177,7 @@ const MyAbsences = () => {
             }
             setOpenConfirm(false);
             handleCloseMenu();
+            window.location.reload();
     };
 
   

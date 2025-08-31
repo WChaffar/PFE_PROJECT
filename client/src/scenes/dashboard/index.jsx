@@ -25,12 +25,16 @@ import {
   startOfQuarter,
   startOfYear,
 } from "date-fns";
+import { getAllNotifications } from "../../actions/notificationsAction";
 
 const Dashboard = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const user = useSelector((store) => store.auth.user);
   const selectedTasks = useSelector((state) => state.tasks.tasks);
+  const selectedNotifications = useSelector(
+    (state) => state.notifications.notifications
+  );
   const [tasks, setTasks] = useState([]);
   const [tasksLoading, setTasksLoading] = useState(false);
   const dispatch = useDispatch();
@@ -43,6 +47,7 @@ const Dashboard = () => {
   const [teamMembers, setTeamMembers] = useState([]);
   const selectedTeamMembers = useSelector((state) => state.team.team);
   const [assignments, setAssignements] = useState([]);
+  const [notifications, setNotifications] = useState([]);
   const selectedAssignements = useSelector(
     (state) => state.assignements.assignements
   );
@@ -101,6 +106,16 @@ const Dashboard = () => {
   }, [dispatch]); // <== Appelle une seule fois le fetch
 
   useEffect(() => {
+    dispatch(getAllNotifications());
+  }, [dispatch]); // <== Appelle une seule fois le fetch
+
+  useEffect(() => {
+    if (selectedNotifications.length !== 0) {
+      setNotifications(selectedNotifications);
+    }
+  }, [selectedNotifications]);
+
+  useEffect(() => {
     if (selectedTeamMembers.length !== 0) {
       console.log(selectedTeamMembers);
       setTeamMembers(selectedTeamMembers);
@@ -139,21 +154,21 @@ const Dashboard = () => {
   }
 
   function generateQuarters(rangeInYears = 2) {
-  const periods = [];
-  const currentYear = new Date().getFullYear();
+    const periods = [];
+    const currentYear = new Date().getFullYear();
 
-  // from (currentYear - rangeInYears) to (currentYear + rangeInYears)
-  const startYear = currentYear - rangeInYears;
-  const endYear = currentYear + rangeInYears;
+    // from (currentYear - rangeInYears) to (currentYear + rangeInYears)
+    const startYear = currentYear - rangeInYears;
+    const endYear = currentYear + rangeInYears;
 
-  for (let year = startYear; year <= endYear; year++) {
-    for (let q = 0; q < 4; q++) {
-      const date = new Date(year, q * 3, 1); // Jan, Apr, Jul, Oct
-      periods.push(date);
+    for (let year = startYear; year <= endYear; year++) {
+      for (let q = 0; q < 4; q++) {
+        const date = new Date(year, q * 3, 1); // Jan, Apr, Jul, Oct
+        periods.push(date);
+      }
     }
+    return periods;
   }
-  return periods;
-}
 
   function buildTeamCompositionByJobTitle(selectedTeamMembers) {
     const colors = [
@@ -380,41 +395,35 @@ const Dashboard = () => {
               Recent Notifications
             </Typography>
           </Box>
-          {projectNotifications.map((notification, i) => (
-            <Box
-              key={`${notification.notifId}-${i}`}
-              display="flex"
-              justifyContent="space-between"
-              alignItems="center"
-              borderBottom={`4px solid ${colors.primary[500]}`}
-              p="15px"
-            >
-              <Box>
-                <Typography
-                  color={colors.greenAccent[500]}
-                  variant="h5"
-                  fontWeight="600"
-                >
-                  {notification.title}
-                </Typography>
-                <Typography color={colors.grey[100]}>
-                  {notification.message}
-                </Typography>
-              </Box>
-              <Box color={colors.grey[100]}>{notification.date}</Box>
+          {[...notifications]
+            .sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime))
+            .map((notification, i) => (
               <Box
-                backgroundColor={colors.greenAccent[500]}
-                p="5px 10px"
-                borderRadius="4px"
+                key={`${notification._id}-${i}`}
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+                borderBottom={`4px solid ${colors.primary[500]}`}
+                p="15px"
               >
-                {notification.type === "deadline_overdue" && (
-                  <Typography variant="body2" color={colors.grey[100]}>
-                    Overdue by {notification.daysOverdue} days
+                <Box>
+                  <Typography
+                    color={colors.greenAccent[500]}
+                    variant="h5"
+                    fontWeight="600"
+                  >
+                    {notification.type}
                   </Typography>
-                )}
+                  <Typography color={colors.grey[100]}>
+                    {notification.message}
+                  </Typography>
+                </Box>
+
+                <Box color={colors.grey[100]}>
+                  {new Date(notification.dateTime).toLocaleString()}
+                </Box>
               </Box>
-            </Box>
-          ))}
+            ))}
         </Box>
 
         {/* ROW 3 */}
