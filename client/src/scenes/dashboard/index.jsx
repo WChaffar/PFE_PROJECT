@@ -27,8 +27,13 @@ import {
 } from "date-fns";
 import { getAllNotifications } from "../../actions/notificationsAction";
 import { getRisks } from "../../actions/riskActions";
+import { useRef } from "react";
+
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 const Dashboard = () => {
+  const dashboardRef = useRef(); // <--- Ref for the entire dashboard
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const user = useSelector((store) => store.auth.user);
@@ -54,6 +59,141 @@ const Dashboard = () => {
   const selectedAssignements = useSelector(
     (state) => state.assignements.assignements
   );
+
+  const handleDownloadReport = async () => {
+    if (!dashboardRef.current) return;
+
+    const canvas = await html2canvas(dashboardRef.current, { scale: 2 });
+    const imgData = canvas.toDataURL("image/png");
+
+    const pdf = new jsPDF("p", "mm", "a4");
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+    // === Cover page with dashboard screenshot ===
+    pdf.setFillColor(41, 128, 185); // blue bar
+    pdf.rect(0, 0, pdfWidth, 20, "F");
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(16);
+    pdf.text("Dashboard Report", 10, 14);
+
+    pdf.addImage(imgData, "PNG", 0, 25, pdfWidth, pdfHeight - 30);
+
+    // Add footer
+    pdf.setFontSize(10);
+    pdf.setTextColor(150);
+    pdf.text(`Generated on ${new Date().toLocaleString()}`, 10, pdfHeight + 15);
+
+    // === Team Composition Progress Overview ===
+    pdf.addPage();
+    pdf.setTextColor(41, 128, 185);
+    pdf.setFontSize(16);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("Project Progress Overview", 10, 20);
+
+    pdf.setFont("helvetica", "normal");
+    pdf.setTextColor(50);
+    let y = 30;
+    projectWorkload.forEach((p) => {
+      pdf.setFont("helvetica", "bold");
+      const projectText = `• ${p.project}`;
+      pdf.text(projectText, 10, y);
+
+      // Mesurer la largeur du texte projet
+      const textWidth = pdf.getTextWidth(projectText);
+      
+      pdf.setFont("helvetica", "normal");
+      pdf.text(` - ${p.progress}% average workload`, 10 + textWidth + 2, y);
+
+      y += 8;
+    });
+
+    // === Team Growth ===
+    pdf.addPage();
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(16);
+    pdf.setTextColor(41, 128, 185);
+    pdf.text("Team Composition Growth Over Time", 10, 20);
+
+    pdf.setFontSize(12);
+    pdf.setFont("helvetica", "normal");
+    pdf.setTextColor(50);
+    y = 30;
+    const teamGrowth = buildTeamCompositionByJobTitle(selectedTeamMembers);
+    teamGrowth.forEach((series) => {
+      pdf.setFont("helvetica", "bold");
+      pdf.text(`Role: ${series.id}`, 10, y);
+      pdf.setFont("helvetica", "normal");
+      y += 8;
+      series.data.forEach((d) => {
+        pdf.text(`   - ${d.x}: ${d.y} members`, 10, y);
+        y += 6;
+      });
+      y += 4;
+    });
+
+    // === Risks ===
+    pdf.addPage();
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(16);
+    pdf.setTextColor(192, 57, 43);
+    pdf.text("Project Risks", 10, 20);
+
+    y = 30;
+    risks.forEach((r, i) => {
+      const severityColor =
+        r.severity === "High"
+          ? [192, 57, 43] // red
+          : r.severity === "Medium"
+          ? [243, 156, 18] // orange
+          : [39, 174, 96]; // green
+
+      pdf.setTextColor(...severityColor);
+      pdf.setFont("helvetica", "bold");
+      pdf.text(`${i + 1}. ${r.name} (${r.severity})`, 10, y);
+
+      y += 6;
+      pdf.setFont("helvetica", "normal");
+      pdf.setTextColor(50);
+      pdf.text(`   - ${r.description}`, 10, y);
+      y += 6;
+      pdf.text(
+        `   - Identified on: ${new Date(
+          r.identificationDate
+        ).toLocaleDateString()}`,
+        10,
+        y
+      );
+      y += 10;
+    });
+
+    // === Notifications ===
+    pdf.addPage();
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(16);
+    pdf.setTextColor(41, 128, 185);
+    pdf.text("Notifications", 10, 20);
+
+    y = 30;
+    notifications.forEach((n, i) => {
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor(41, 128, 185);
+      pdf.text(`${i + 1}. ${n.type}`, 10, y);
+
+      y += 6;
+      pdf.setFont("helvetica", "normal");
+      pdf.setTextColor(50);
+      pdf.text(`   - ${n.message}`, 10, y);
+
+      y += 6;
+      pdf.setTextColor(100);
+      pdf.text(`   - At: ${new Date(n.dateTime).toLocaleString()}`, 10, y);
+
+      y += 10;
+    });
+
+    pdf.save("dashboard-report.pdf");
+  };
 
   useEffect(() => {
     if (selectedTasks?.length !== 0) {
@@ -232,7 +372,7 @@ const Dashboard = () => {
   }
 
   return (
-    <Box m="20px">
+    <Box m="20px" ref={dashboardRef}>
       {/* HEADER */}
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Header
@@ -243,6 +383,7 @@ const Dashboard = () => {
         />
         <Box>
           <Button
+            onClick={handleDownloadReport}
             sx={{
               backgroundColor: colors.blueAccent[700],
               color: colors.grey[100],
@@ -493,7 +634,10 @@ const Dashboard = () => {
           </Box>
 
           {[...risks]
-            .sort((a, b) => new Date(b.identificationDate) - new Date(a.identificationDate))
+            .sort(
+              (a, b) =>
+                new Date(b.identificationDate) - new Date(a.identificationDate)
+            )
             .map((risk, i) => (
               <Box
                 key={`${risk._id}-${i}`}
