@@ -26,6 +26,7 @@ import {
   startOfYear,
 } from "date-fns";
 import { getAllNotifications } from "../../actions/notificationsAction";
+import { getRisks } from "../../actions/riskActions";
 
 const Dashboard = () => {
   const theme = useTheme();
@@ -46,7 +47,9 @@ const Dashboard = () => {
   const [assignedMembersCount, setAssignedMembersCount] = useState(null);
   const [teamMembers, setTeamMembers] = useState([]);
   const selectedTeamMembers = useSelector((state) => state.team.team);
+  const selectedRisks = useSelector((state) => state.risks.risks);
   const [assignments, setAssignements] = useState([]);
+  const [risks, setRisks] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const selectedAssignements = useSelector(
     (state) => state.assignements.assignements
@@ -117,7 +120,6 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (selectedTeamMembers.length !== 0) {
-      console.log(selectedTeamMembers);
       setTeamMembers(selectedTeamMembers);
     }
   }, [selectedTeamMembers]); // <== Écoute les changements de selectedProjects
@@ -142,6 +144,16 @@ const Dashboard = () => {
   useEffect(() => {
     dispatch(getAllEmployeeAssignements());
   }, [dispatch]); // <== Appelle une seule fois le fetch
+
+  useEffect(() => {
+    dispatch(getRisks());
+  }, [dispatch]); // <== Appelle une seule fois le fetch
+
+  useEffect(() => {
+    if (selectedRisks.length !== 0 && selectedRisks.length !== 0) {
+      setRisks(selectedRisks);
+    }
+  }, [selectedRisks]); // <== Appelle une seule fois le fetch
 
   // Générer les trimestres de l'année en cours
   function generateQuarters(year = new Date().getFullYear()) {
@@ -461,7 +473,7 @@ const Dashboard = () => {
             />
           </Box>
         </Box>
-        {/* Project Risks */}
+        {/* Projects Risks */}
         <Box
           gridColumn="span 4"
           gridRow="span 2"
@@ -476,58 +488,61 @@ const Dashboard = () => {
             p="15px"
           >
             <Typography color={colors.grey[100]} variant="h5" fontWeight="600">
-              Project Risks
+              Projects Risks
             </Typography>
           </Box>
 
-          {projectRisks.map((risk, i) => (
-            <Box
-              key={`${risk.riskId}-${i}`}
-              display="flex"
-              justifyContent="space-between"
-              alignItems="center"
-              borderBottom={`4px solid ${colors.primary[500]}`}
-              p="15px"
-            >
-              <Box>
-                <Typography
-                  color={colors.greenAccent[500]}
-                  variant="h5"
-                  fontWeight="600"
-                >
-                  {risk.title}
-                </Typography>
-                <Typography color={colors.grey[1]}>
-                  {risk.description}
-                </Typography>
-                <Typography color={colors.grey[2]} fontSize="12px">
-                  Identified on: {risk.dateIdentified}
-                </Typography>
-              </Box>
-
-              <Box textAlign="right">
-                <Typography color={colors.greenAccent[500]} fontWeight="500">
-                  Impact: {risk.impact}
-                </Typography>
-                <Box
-                  mt="5px"
-                  backgroundColor={
-                    risk.status === "Open"
-                      ? colors.greenAccent[500]
-                      : risk.status === "Mitigated"
-                      ? colors.greenAccent[2]
-                      : colors.greenAccent[2]
-                  }
-                  p="5px 10px"
-                  borderRadius="4px"
-                >
-                  <Typography variant="body2" color={colors.grey[0]}>
-                    {risk.status}
+          {[...risks]
+            .sort((a, b) => new Date(b.identificationDate) - new Date(a.identificationDate))
+            .map((risk, i) => (
+              <Box
+                key={`${risk._id}-${i}`}
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+                borderBottom={`4px solid ${colors.primary[500]}`}
+                p="15px"
+              >
+                <Box>
+                  <Typography
+                    color={colors.greenAccent[500]}
+                    variant="h5"
+                    fontWeight="600"
+                  >
+                    {risk.name}
+                  </Typography>
+                  <Typography color={colors.grey[100]}>
+                    {risk.description}
+                  </Typography>
+                  <Typography color={colors.grey[200]} fontSize="12px">
+                    Identified on:{" "}
+                    {new Date(risk.identificationDate).toLocaleString()}
                   </Typography>
                 </Box>
+
+                <Box textAlign="right">
+                  <Typography color={colors.greenAccent[500]} fontWeight="500">
+                    Severity: {risk.severity}
+                  </Typography>
+                  <Box
+                    mt="5px"
+                    backgroundColor={
+                      risk.severity === "High"
+                        ? colors.redAccent[500]
+                        : risk.severity === "Medium"
+                        ? colors.yellowAccent[500]
+                        : colors.greenAccent[500]
+                    }
+                    p="5px 10px"
+                    borderRadius="4px"
+                  >
+                    <Typography variant="body2" color={colors.grey[0]}>
+                      {risk.severity}
+                    </Typography>
+                  </Box>
+                </Box>
               </Box>
-            </Box>
-          ))}
+            ))}
         </Box>
 
         {/*------------------------------*/}

@@ -16,6 +16,7 @@ const assignementRouter = require("./routes/assignementRoute");
 const BusinessUnitRouter = require("./routes/BusinessUnitRoute");
 const AbsenceRouter = require("./routes/absenceRoute");
 const notificationsRouter = require("./routes/notificationsRoute");
+const riskRouter = require("./routes/riskRoute");
 
 const path = require("path");
 
@@ -34,6 +35,7 @@ app.use("/api/assignement", assignementRouter);
 app.use("/api/BusinessUnit", BusinessUnitRouter);
 app.use("/api/Absence", AbsenceRouter);
 app.use("/api/Notifications", notificationsRouter);
+app.use("/api/Risks", riskRouter);
 
 app.use(notFound);
 app.use(errorHandler);

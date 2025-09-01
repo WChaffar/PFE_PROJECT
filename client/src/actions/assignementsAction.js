@@ -2,6 +2,7 @@
 
 import AssignementService from "../services/assignementsService";
 import { useNavigate } from "react-router-dom";
+import { detectOverchargeRisks } from "./riskActions";
 
 // create Assignement
 export const createAssignement = (values) => async (dispatch) => {
@@ -11,6 +12,7 @@ export const createAssignement = (values) => async (dispatch) => {
       type: "CREATE_ASSIGNEMENT_SUCCESS",
       payload: { data },
     });
+    dispatch(detectOverchargeRisks());
     return { success: true }; // ✅ return success
   } catch (error) {
     dispatch({
@@ -133,6 +135,7 @@ export const updateAssignement = (id, values) => async (dispatch) => {
       type: "UPDATE_ASSIGNEMENT_SUCCESS",
       payload: { data },
     });
+    dispatch(detectOverchargeRisks());
     return { success: true }; // ✅ return success
   } catch (error) {
     dispatch({
@@ -183,13 +186,19 @@ export const getAssignementRecommendation = (empId) => async (dispatch) => {
       type: "GET_ASSIGNEMENT_RECOMMENDATION_SUCCESS",
       payload: data,
     });
-    return { success: true , data }; // ✅ return success
+    return { success: true, data }; // ✅ return success
   } catch (error) {
     dispatch({
       type: "GET_ASSIGNEMENT_RECOMMENDATION_FAILURE",
       payload:
-        error.response?.data?.message || "Get assignement recommendation failed",
+        error.response?.data?.message ||
+        "Get assignement recommendation failed",
     });
-    return { success: false ,error : error.response?.data?.message || "Get assignement recommendation failed" }; // ✅ return failure
+    return {
+      success: false,
+      error:
+        error.response?.data?.message ||
+        "Get assignement recommendation failed",
+    }; // ✅ return failure
   }
 };
