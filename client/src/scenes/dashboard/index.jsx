@@ -63,7 +63,14 @@ const Dashboard = () => {
   const handleDownloadReport = async () => {
     if (!dashboardRef.current) return;
 
-    const canvas = await html2canvas(dashboardRef.current, { scale: 2 });
+    const canvas = await html2canvas(dashboardRef.current, {
+      scale: 2, // améliore la résolution
+      useCORS: true,
+      allowTaint: true,
+      scrollY: -window.scrollY, // pour capturer sans être limité par le scroll
+      windowWidth: dashboardRef.current.scrollWidth,
+      windowHeight: dashboardRef.current.scrollHeight, // 🔥 force la hauteur totale du dashboard
+    });
     const imgData = canvas.toDataURL("image/png");
 
     const pdf = new jsPDF("p", "mm", "a4");
@@ -101,7 +108,7 @@ const Dashboard = () => {
 
       // Mesurer la largeur du texte projet
       const textWidth = pdf.getTextWidth(projectText);
-      
+
       pdf.setFont("helvetica", "normal");
       pdf.text(` - ${p.progress}% average workload`, 10 + textWidth + 2, y);
 
