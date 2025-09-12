@@ -262,10 +262,10 @@ const CompleteEmployeeProfile = () => {
                 helperText={touched.seniorityLevel && errors.seniorityLevel}
                 sx={{ gridColumn: "span 2" }}
               >
-                <MenuItem value="Full-time">Beginner</MenuItem>
-                <MenuItem value="Part-time">Competent</MenuItem>
-                <MenuItem value="Contract">Proficient</MenuItem>
-                <MenuItem value="Contract">Expert</MenuItem>
+                <MenuItem value="Beginner">Beginner</MenuItem>
+                <MenuItem value="Competent">Competent</MenuItem>
+                <MenuItem value="Proficient">Proficient</MenuItem>
+                <MenuItem value="Expert">Expert</MenuItem>
               </TextField>
 
               {/* Remote Work Allowed */}

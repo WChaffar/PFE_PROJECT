@@ -4,6 +4,7 @@ const validateMongoDbId = require("../utils/validateMongodbId");
 const jwt = require("jsonwebtoken");
 const { validationResult, check } = require("express-validator");
 const mongoose = require("mongoose"); // Erase if already required
+const User = require("../models/userModel");
 
 // Middleware de validation de l'email
 const validateBU = [];
@@ -49,28 +50,35 @@ const getAllBu = asyncHandler(async (req, res) => {
   }
 });
 
-const updateBusinessUnit = asyncHandler(async (req, res) => {
+const updateBusinessUnit = asyncHandler(async (req, res) => { 
   try {
-    const { id } = req.params; // On récupère l'ID du projet dans les paramètres de la requête
+    const { id } = req.params;
 
     // Validation de l'ID MongoDB
     validateMongoDbId(id);
 
-    // Chercher et mettre à jour le projet si l'utilisateur est le propriétaire
+    // Chercher et mettre à jour la BU
     const findBu = await BusinessUnit.findOneAndUpdate(
-      { _id: id }, // On s'assure que l'utilisateur est bien le propriétaire du projet
-      { ...req.body }, // Données à mettre à jour
-      { new: true } // Retourner le projet mis à jour
+      { _id: id },
+      { ...req.body },
+      { new: true }
     );
 
-    // Si le projet n'est pas trouvé
     if (!findBu) {
       throw new Error(
         "Business unit not found or you do not have permission to edit it."
       );
     }
 
-    // Réponse réussie avec le projet mis à jour
+    // Vérifier si le champ 'Activated' est présent dans le body et s'il est false
+    if (req.body.hasOwnProperty('isActive') && req.body.isActive === false) {
+      // Désactiver tous les utilisateurs liés à cette BU
+      await User.updateMany(
+        { businessUnit: id },
+        { $set: { Activated: false } }
+      );
+    }
+
     res.status(200).json({
       message: "Business unit updated successfully.",
       data: findBu,
@@ -99,31 +107,34 @@ const getBusinessUnitById = asyncHandler(async (req, res) => {
 
 const deleteBuByID = asyncHandler(async (req, res) => {
   try {
-    const { id } = req.params;  // Get the task ID from request parameters
+    const { id } = req.params;
 
-    // Validate MongoDB ID
+    // Vérification de l'ID MongoDB
     validateMongoDbId(id);
 
-    // Attempt to find and delete the task that belongs to the logged-in user
-    const bu = await BusinessUnit.findOneAndDelete({ _id: id  });
-
-    // If no task is found, throw an error
+    // Vérifier si la BU existe
+    const bu = await BusinessUnit.findById(id);
     if (!bu) {
       throw new Error("Business unit not found or you do not have permission to delete it.");
     }
 
-    // Send success response
+    // Désactiver tous les utilisateurs liés à cette BU
+    await User.updateMany(
+      { businessUnit: id },
+      { $set: { Activated: false } }
+    );
+
+    // Supprimer la BU
+    await BusinessUnit.findByIdAndDelete(id);
+
     res.status(200).json({
-      message: "Business unit deleted successfully.",
-      _id:id
+      message: "Business unit deleted successfully. All related users have been deactivated.",
+      _id: id,
     });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
 });
-
-
-
 
 module.exports = {
   createBU,
