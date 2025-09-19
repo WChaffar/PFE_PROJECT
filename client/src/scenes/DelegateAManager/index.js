@@ -222,7 +222,7 @@ const DelegateAManager = () => {
       );
       if (result.success) {
         dispatch(getAllBuManagers());
-        setSnackbarMessage("The manager of this project updated successfully!"); // Set success message
+        setSnackbarMessage("The projects and team members have been successfully delegated to another manager!"); // Set success message
         setOpenSnackbar(true); // Show Snackbar
         // Using window.location.reload()
         setTimeout(() => {
