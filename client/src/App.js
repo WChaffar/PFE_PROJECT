@@ -9,6 +9,7 @@ import Topbar from "./scenes/global/Topbar";
 import Sidebar from "./scenes/global/Sidebar";
 
 import Dashboard from "./scenes/dashboard";
+import DashboardBU from "./scenes/dashboard-bu";
 
 import Login from "./components/Login";
 import Register from "./components/Register";
@@ -70,6 +71,8 @@ function AuthRedirect({ children }) {
         ) : (
           <Navigate to="/complete-my-profile" replace />
         )
+      ) : role === "BUDirector" ? (
+        <Navigate to="/dashboard-bu" replace />
       ) : (
         <Navigate to="/dashboard" replace />
       )
@@ -147,6 +150,10 @@ function AppContent() {
                     <Dashboard />
                   </PrivateRoute>
                 }
+              />
+              <Route
+                path="/dashboard-bu"
+                element={<DashboardBU />}
               />
               <Route
                 path="/projects"

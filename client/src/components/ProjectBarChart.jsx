@@ -27,6 +27,9 @@ const ProjectBarChart = ({ isDashboard = false, projectWorkload = data }) => {
   const [scrollPos, setScrollPos] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Ensure projectWorkload is always an array
+  const safeProjectWorkload = Array.isArray(projectWorkload) ? projectWorkload : data;
+
   const scrollAmount = 200;
 
   const scrollLeft = () => {
@@ -47,8 +50,8 @@ const ProjectBarChart = ({ isDashboard = false, projectWorkload = data }) => {
   };
 
   // Filter projects based on search query
-  const filteredData = projectWorkload.filter((p) =>
-    p.project.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredData = safeProjectWorkload.filter((p) =>
+    p && p.project && p.project.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // Color logic based on progress
@@ -115,7 +118,7 @@ const ProjectBarChart = ({ isDashboard = false, projectWorkload = data }) => {
             data={filteredData}
             keys={["progress"]}
             indexBy="project"
-            margin={{ top: 20, right: 20, bottom: 60, left: 50 }}
+                      margin={{ top: 50, right: 130, bottom: 80, left: 60 }} // Increase bottom margin for rotated text
             padding={0.3}
             valueScale={{ type: "linear" }}
             indexScale={{ type: "band", round: true }}
@@ -139,11 +142,15 @@ const ProjectBarChart = ({ isDashboard = false, projectWorkload = data }) => {
             axisRight={null}
             axisBottom={{
               tickSize: 5,
-              tickPadding: 5,
-              tickRotation: 0,
+              tickPadding: 8,
+              tickRotation: -45, // Rotate labels to prevent overlap
               legend: "Project",
               legendPosition: "middle",
-              legendOffset: 40,
+              legendOffset: 50, // Increase offset for rotated text
+              format: (value) => {
+                // Truncate long project names
+                return value.length > 12 ? value.substring(0, 12) + '...' : value;
+              }
             }}
             axisLeft={{
               tickSize: 5,
