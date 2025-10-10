@@ -179,9 +179,9 @@ export const deleteAssignement = (assignementId) => async (dispatch) => {
 };
 
 // get Assignement recommendation
-export const getAssignementRecommendation = (empId) => async (dispatch) => {
+export const getAssignementRecommendation = (empId, managerProjectIds = []) => async (dispatch) => {
   try {
-    const data = await AssignementService.getAssignementRecommendation(empId);
+    const data = await AssignementService.getAssignementRecommendation(empId, managerProjectIds);
     dispatch({
       type: "GET_ASSIGNEMENT_RECOMMENDATION_SUCCESS",
       payload: data,

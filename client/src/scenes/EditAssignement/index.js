@@ -194,6 +194,9 @@ const EditStaffing = () => {
     useState(null);
   const [assignementRecommendation, setAssignementRecommendation] =
     useState(null);
+  const [formKey, setFormKey] = useState(0); // Pour forcer le re-render du formulaire
+  const [isLoadingRecommendation, setIsLoadingRecommendation] = useState(false);
+  const [recommendationFormData, setRecommendationFormData] = useState(null);
 
   useEffect(() => {
     if (selectedProjects.length !== 0) {
@@ -213,17 +216,48 @@ const EditStaffing = () => {
     }
   }, [selectedAbsences]);
 
+  // Synchroniser les tâches du Redux store avec l'état local
+  useEffect(() => {
+    console.log("📋 Selected tasks changed:", selectedTasks.length, selectedTasks);
+    if (selectedTasks.length !== 0) {
+      const tasksMap = selectedTasks.map((task) => ({
+        _id: task._id,
+        taskName: task.taskName,
+        project: task.project,
+        RequiredyearsOfExper: task.RequiredyearsOfExper,
+        projectPhase: task.projectPhase,
+        startDate: task.startDate,
+        endDate: task.endDate,
+      }));
+      setTasks(tasksMap);
+      console.log("✅ Tasks updated locally:", tasksMap);
+    }
+  }, [selectedTasks]);
+
   useEffect(() => {
     dispatch(resetProjectState());
     dispatch(getAllProjects());
-  }, [dispatch]);
+  }, [dispatch, id]);
+
+  // Temporairement désactivé pour diagnostiquer le problème de chargement des recommandations
+  /*
+  useEffect(() => {
+    if (!showAssignmentForm && (loadedRecommandedAssignment || recommendationFormData)) {
+      setLoadedRecommandedAssignment(null);
+      setRecommendationFormData(null);
+      setFormKey(prev => prev + 1);
+    }
+  }, [showAssignmentForm, loadedRecommandedAssignment, recommendationFormData]);
+  */
+
+
 
   useEffect(() => {
     dispatch(ResetTaskState());
     dispatch(resetAssignementState());
     dispatch(getEmployeeAbsenceById(id));
     dispatch(getEmployeeAssignement(id));
-  }, [dispatch]);
+  }, [dispatch, id]);
 
   useEffect(() => {
     if (Object.keys(selectedAssignements).length > 0) {
@@ -262,6 +296,16 @@ const EditStaffing = () => {
     // Reset inputs
     setHalfDayDate("");
     setHalfDayPeriod("");
+  };
+
+  // Fonction pour réinitialiser complètement le formulaire
+  const resetAssignmentForm = () => {
+    setLoadedRecommandedAssignment(null);
+    setRecommendationFormData(null);
+    setHalfDayAssignments([]);
+    setHalfDayDate("");
+    setHalfDayPeriod("");
+    setFormKey(prev => prev + 1);
   };
 
   useEffect(() => {
@@ -374,14 +418,29 @@ const EditStaffing = () => {
     setLoadingRecommendations(true);
 
     try {
-      const res = await dispatch(getAssignementRecommendation(id));
+      // Récupérer les IDs des projets du manager connecté
+      const availableProjectIds = selectedProjects.map(p => p._id);
+      console.log("📁 Manager's available projects for IA:", availableProjectIds);
+      
+      if (availableProjectIds.length === 0) {
+        console.warn("⚠️ No projects available for current manager");
+        setAssignementRecommendation({ recommendations: [] });
+        setLoadingRecommendations(false);
+        return;
+      }
+
+      // Passer les projets du manager à l'IA
+      const res = await dispatch(getAssignementRecommendation(id, availableProjectIds));
       if (res.success === true) {
+        console.log("🤖 IA recommendations (pre-filtered by manager projects):", res?.data);
         setAssignementRecommendation(res?.data);
       } else {
         console.error(res.error);
+        setAssignementRecommendation({ recommendations: [] });
       }
     } catch (err) {
       console.error(err);
+      setAssignementRecommendation({ recommendations: [] });
     } finally {
       setLoadingRecommendations(false);
     }
@@ -520,7 +579,19 @@ const EditStaffing = () => {
                   </motion.div>
                 ))
               ) : (
-                <Typography>No recommendations found.</Typography>
+                <Box textAlign="center" p={3}>
+                  <Typography variant="h6" color="text.secondary" mb={2}>
+                    🤖 No recommendations available
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    The AI couldn't find suitable task recommendations for this employee based on your available projects.
+                    <br /><br />
+                    This might happen if:
+                    <br />• No tasks match the employee's skills in your projects
+                    <br />• All matching tasks have scheduling conflicts
+                    <br />• The employee is absent during recommended periods
+                  </Typography>
+                </Box>
               )}
             </>
           )}
@@ -866,24 +937,27 @@ const EditStaffing = () => {
 
         {showAssignmentForm && (
           <Formik
-            initialValues={{
-              project: projects?.find(
-                (p) => p.id === loadedRecommandedAssignment?.project_id
-              ),
-              task: tasks?.find(
-                (t) => t._id === loadedRecommandedAssignment?.task_id
-              ),
-              startDate: loadedRecommandedAssignment?.dates?.start
-                ? format(
-                    loadedRecommandedAssignment?.dates?.start,
-                    "yyyy-MM-dd"
-                  )
-                : "",
-              endDate: loadedRecommandedAssignment?.dates?.end
-                ? format(loadedRecommandedAssignment?.dates?.end, "yyyy-MM-dd")
-                : "",
-              exactDays: loadedRecommandedAssignment?.duration || 0,
-            }}
+            key={`form-${formKey}-${recommendationFormData ? 'loaded' : 'empty'}`}
+            initialValues={(() => {
+              console.log("📋 Building form initial values...");
+              console.log("🎯 Recommendation form data:", recommendationFormData);
+              console.log("🔍 Form key:", formKey);
+              console.log("📅 Current timestamp:", new Date().toISOString());
+              
+              if (recommendationFormData) {
+                console.log("✅ Using recommendation form data:", recommendationFormData);
+                return recommendationFormData;
+              }
+              
+              console.log("⚪ Using empty form values");
+              return {
+                project: null,
+                task: null,
+                startDate: "",
+                endDate: "",
+                exactDays: 0
+              };
+            })()}
             enableReinitialize={true}
             onSubmit={(values) => {
               console.log(values?.exactDays);
@@ -1198,7 +1272,10 @@ const EditStaffing = () => {
                   <Button
                     variant="outlined"
                     size="small"
-                    onClick={() => setShowAssignmentForm(false)}
+                    onClick={() => {
+                      resetAssignmentForm();
+                      setShowAssignmentForm(false);
+                    }}
                     sx={{
                       width: "130px",
                       fontSize: "10px",
@@ -1582,18 +1659,97 @@ const EditStaffing = () => {
         loading={loadingRecommendations}
         data={assignementRecommendation}
         onAssign={async (rec) => {
+          console.log("🔄 Loading recommendation:", rec);
           setLoadingLoadRecommendations(rec?.task_id);
-          const result = await dispatch(getTasksByProjectId(rec?.project_id));
-          if (result.success) {
-            setLoadedRecommandedAssignment(rec);
+          setIsLoadingRecommendation(true);
+          
+          try {
+            // Fermer la modal immédiatement
+            setOpenRecommendationModal(false);
+            
+            // Trouver le projet dans les projets disponibles
+            const currentProjects = selectedProjects.length > 0 ? selectedProjects : projects;
+            const foundProject = currentProjects.find((p) => p._id === rec?.project_id);
+            
+            console.log("� Available projects:", currentProjects);
+            console.log("🔍 Found project:", foundProject);
+            
+            if (!foundProject) {
+              console.error("❌ Project not found:", rec?.project_id);
+              console.error("❌ Available project IDs:", currentProjects.map(p => p._id));
+              alert(`Projet non trouvé dans la liste des projets disponibles.\n\nProjet demandé: ${rec?.project_id}\nCe projet n'appartient probablement pas à votre équipe.\n\nLes recommandations ont été filtrées, mais celle-ci a échappé au filtre.`);
+              return;
+            }
+            
+            // Créer un objet tâche basé sur les données de recommandation
+            const taskFromRecommendation = {
+              _id: rec?.task_id,
+              taskName: rec?.task || "Task from recommendation",
+              project: foundProject,
+              RequiredyearsOfExper: 0,
+              projectPhase: "Unknown",
+              startDate: rec?.dates?.start,
+              endDate: rec?.dates?.end,
+            };
+            
+            console.log("🎯 Task created from recommendation:", taskFromRecommendation);
+            
+            // Préparer les données du formulaire directement avec la structure exacte attendue
+            const formData = {
+              project: foundProject, // Utiliser l'objet projet complet pour l'Autocomplete
+              task: taskFromRecommendation,
+              startDate: rec?.dates?.start ? new Date(rec.dates.start).toISOString().split('T')[0] : "",
+              endDate: rec?.dates?.end ? new Date(rec.dates.end).toISOString().split('T')[0] : "",
+              exactDays: rec?.duration || 0
+            };
+            
+            console.log("✅ Prepared form data:", formData);
+            
+            // Charger les tâches pour le projet et mettre à jour l'état local
+            try {
+              console.log("📋 Loading tasks for project:", rec?.project_id);
+              const tasksResult = await dispatch(getTasksByProjectId(rec?.project_id));
+              
+              if (tasksResult.success) {
+                console.log("✅ Tasks loaded successfully");
+                // Mettre à jour selectedProject pour déclencher le chargement des tâches
+                setSelectedProject(foundProject);
+              } else {
+                console.warn("⚠️ Failed to load tasks, using recommendation task data");
+                // Si le chargement des tâches échoue, au moins ajouter la tâche de la recommandation
+                setTasks([taskFromRecommendation]);
+              }
+            } catch (taskError) {
+              console.warn("⚠️ Error loading tasks, using recommendation task data:", taskError);
+              // En cas d'erreur, utiliser au moins les données de la recommandation
+              setTasks([taskFromRecommendation]);
+            }
+            
+            // Sauvegarder les données pour le formulaire
+            console.log("💾 Setting recommendation form data:", formData);
+            setRecommendationFormData(formData);
+            
+            // Attendre un moment pour s'assurer que l'état est mis à jour
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            // Vérifier si les données ont été sauvegardées
+            console.log("🔍 Form data set, current state should be:", formData);
+            
+            // Réinitialiser et rouvrir le formulaire
             setShowAssignmentForm(false);
-            setTimeout(() => {
-              setLoadingLoadRecommendations(null);
-              setShowAssignmentForm(true);
-              setOpenRecommendationModal(false);
-            }, 2000);
-          } else {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            setFormKey(prev => prev + 1);
+            setShowAssignmentForm(true);
+            
+            console.log("✅ Form opened with recommendation data");
+            
+          } catch (error) {
+            console.error("❌ Error loading recommendation:", error);
+            alert("Erreur lors du chargement de la recommandation: " + error.message);
+          } finally {
             setLoadingLoadRecommendations(null);
+            setIsLoadingRecommendation(false);
           }
         }}
       />

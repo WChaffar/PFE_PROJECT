@@ -282,9 +282,23 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Recommandateur de tâches pour employés")
     parser.add_argument("employee_id", help="ID de l'employé à analyser")
     parser.add_argument("--no-file", action="store_true", help="N'écrit pas le fichier recommandations.json")
+    parser.add_argument("--project-ids", help="Liste d'IDs de projets séparés par virgule pour filtrer les recommandations")
     args = parser.parse_args()
 
     employee_id = args.employee_id
+    
+    # Filtrer les projets si des IDs sont fournis
+    if args.project_ids:
+        allowed_project_ids = [pid.strip() for pid in args.project_ids.split(',')]
+        print(f"🎯 Filtering IA recommendations to projects: {allowed_project_ids}", file=sys.stderr)
+        # Filtrer les tâches selon les projets autorisés
+        original_task_count = len(tasks)
+        tasks = tasks[tasks["project"].isin(allowed_project_ids)]
+        filtered_task_count = len(tasks)
+        print(f"📊 Tasks filtered: {original_task_count} -> {filtered_task_count}", file=sys.stderr)
+    else:
+        print("⚠️ No project filtering applied - generating recommendations for all projects", file=sys.stderr)
+
     reco = recommander_taches(employee_id)
 
     result_json = {"employee": employee_id, "recommendations": reco}

@@ -76,9 +76,10 @@ const deleteAssignement = (assignementId) => {
     });
 };
 
-const getAssignementRecommendation = (empId) => {
+const getAssignementRecommendation = (empId, managerProjectIds = []) => {
+  const params = managerProjectIds.length > 0 ? { projectIds: managerProjectIds.join(',') } : {};
   return axios
-    .get(base_url + `assignement/getRecommendation/${empId}`, getConfig())
+    .get(base_url + `assignement/getRecommendation/${empId}`, { ...getConfig(), params })
     .then((response) => {
       return response.data;
     });
