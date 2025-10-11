@@ -12,11 +12,13 @@ import ProgressCircle from "../../components/ProgressCircle";
 import PieChart from "../../components/PieChart";
 import { useDispatch, useSelector } from "react-redux";
 import TeamMembersEvolLineChart from "../../components/TeamMembersEvolLineChart";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { getAllTeamMembers } from "../../actions/teamAction";
 import { getAllBuProjects } from "../../actions/projectAction";
 import { getAllEmployeeAssignements } from "../../actions/assignementsAction";
 import { getRisks } from "../../actions/riskActions";
+import { getBU } from "../../actions/businessUnitAction";
+import TaskService from "../../services/taskService";
 import { useRef } from "react";
 
 import html2canvas from "html2canvas";
@@ -37,6 +39,11 @@ const DashboardBU = () => {
   const [totalTeamMembersCount, setTotalTeamMembersCount] = useState(null);
   const [buTeamMembers, setBuTeamMembers] = useState([]);
   const [buAssignments, setBuAssignments] = useState([]);
+  const [allBuTasks, setAllBuTasks] = useState([]);
+  const [averageBuProgress, setAverageBuProgress] = useState(0);
+  const [managersProgress, setManagersProgress] = useState(0);
+  const [teamMembersProgress, setTeamMembersProgress] = useState(0);
+  const [assignmentsProgress, setAssignmentsProgress] = useState(0);
   
   // Chart data states
   const [managersDistributionData, setManagersDistributionData] = useState([]);
@@ -50,6 +57,7 @@ const DashboardBU = () => {
   const selectedTeamMembers = useSelector((state) => state.team.team);
   const selectedAssignments = useSelector((state) => state.assignements.assignements);
   const selectedRisks = useSelector((state) => state.risks.risks);
+  const selectedBusinessUnits = useSelector((state) => state.businessUnit.businessUnit);
 
   // DEBUG: Log Redux state
   console.log("Redux state - projects:", selectedProjects?.length);
@@ -169,19 +177,47 @@ const DashboardBU = () => {
     }));
   };
 
+  // Function to fetch all tasks for BU projects (similar to Reports approach)
+  const fetchAllBuTasks = useCallback(async () => {
+    if (!selectedProjects || selectedProjects.length === 0) return [];
+    
+    try {
+      console.log("🔍 Fetching tasks for all BU projects using getBuTaskByProjectID (BusinessUnit filter)...");
+      
+      // Get all tasks for all BU projects using BU-specific API
+      const allTasks = [];
+      for (const project of selectedProjects) {
+        try {
+          // Use BU-specific API to get tasks for all managers in the BU
+          const projectTasks = await TaskService.getBuTaskByProjectID(project._id);
+          if (projectTasks && projectTasks.length > 0) {
+            allTasks.push(...projectTasks);
+            console.log(`✅ Found ${projectTasks.length} tasks for project ${project.name || project.projectName}`);
+          }
+        } catch (error) {
+          console.log(`⚠ No tasks found for project ${project.name || project.projectName}:`, error.message);
+        }
+      }
+      
+      console.log(`📦 Total BU tasks fetched: ${allTasks.length}`);
+      setAllBuTasks(allTasks);
+      return allTasks;
+    } catch (error) {
+      console.error("❌ Error fetching BU tasks:", error);
+      return [];
+    }
+  }, [selectedProjects, setAllBuTasks]);
+
   // Function to check if a project is truly complete (all tasks at 100% workload)
-  const isProjectTrulyComplete = (project, allAssignments) => {
-    if (!allAssignments || allAssignments.length === 0) return false;
+  const isProjectTrulyComplete = (project, allTasks) => {
+    if (!allTasks || allTasks.length === 0) return false;
     
-    // Get all assignments for this project
-    const projectAssignments = allAssignments.filter(assignment => {
-      const assignmentProjectId = assignment.project?._id || assignment.project;
+    // Get all tasks for this project (EXACTLY like Reports)
+    const projectTasks = allTasks.filter(task => {
+      const taskProjectId = task.project?._id || task.project;
       const projectId = project._id || project.id;
-      return assignmentProjectId?.toString() === projectId?.toString();
+      return taskProjectId?.toString() === projectId?.toString();
     });
-    
-    // Convert assignments to tasks
-    const projectTasks = projectAssignments.map(assignment => assignment.taskId).filter(task => task != null);
     
     // If no tasks found, project is not complete
     if (projectTasks.length === 0) return false;
@@ -192,12 +228,12 @@ const DashboardBU = () => {
       return workload === 100;
     });
     
-    console.log(`Project "${project.name}" tasks:`, {
-      totalAssignments: projectAssignments.length,
+    console.log(`[Dashboard BU] Project "${project.name || project.projectName}" completion check:`, {
       totalTasks: projectTasks.length,
       workloads: projectTasks.map(t => ({
         taskName: t.taskName || 'Unknown Task',
         taskId: t._id,
+        phase: t.projectPhase,
         workload: t.workload || 0
       })),
       allComplete: allTasksComplete
@@ -206,25 +242,96 @@ const DashboardBU = () => {
     return allTasksComplete;
   };
 
-  // Effect to handle projects data
+  // Effect to fetch BU tasks when projects are loaded
   useEffect(() => {
     if (selectedProjects && selectedProjects.length > 0) {
-      console.log("=== PROJECT COMPLETION ANALYSIS ===");
-      console.log("Total projects:", selectedProjects.length);
+      console.log("🚀 Triggering fetchAllBuTasks for", selectedProjects.length, "projects");
+      fetchAllBuTasks();
+    } else {
+      console.log("⏳ Waiting for selectedProjects...", { 
+        hasSelectedProjects: !!selectedProjects, 
+        projectsCount: selectedProjects?.length || 0 
+      });
+    }
+  }, [selectedProjects, fetchAllBuTasks]);
+
+  // Effect to handle projects data  
+  useEffect(() => {
+    console.log("🔄 Projects data effect triggered", {
+      hasSelectedProjects: !!selectedProjects,
+      projectsCount: selectedProjects?.length || 0,
+      hasAllBuTasks: !!allBuTasks,
+      buTasksCount: allBuTasks?.length || 0,
+      hasAssignments: !!selectedAssignments,
+      assignmentsCount: selectedAssignments?.length || 0
+    });
+
+    if (selectedProjects && selectedProjects.length > 0) {
+      console.log("=== PROJECT COMPLETION ANALYSIS (Dashboard BU) ===");
+      console.log("Total BU projects:", selectedProjects.length);
       console.log("Total assignments available:", selectedAssignments?.length || 0);
+      console.log("Total BU tasks available:", allBuTasks?.length || 0);
+      
+      // DEBUG: Compare data sources
+      console.log("\n🔍 DATA SOURCE COMPARISON:");
+      console.log("Dashboard BU gets projects from: getAllBuProjects(businessUnit)");
+      console.log("Reports gets projects from: getAllProjects() + getTasksByManagerId()");
+      console.log("Current user businessUnit:", user?.businessUnit);
+      console.log("Current user role:", user?.role);
+      
+      // Show which projects we have
+      console.log("\n📋 BU PROJECTS LIST:");
+      selectedProjects.forEach((project, index) => {
+        console.log(`${index + 1}. ${project.name || project.projectName} (ID: ${project._id})`);
+        console.log(`   Owner: ${project.owner?.fullName || project.owner}`);
+        console.log(`   Stored Progress: ${project.progress || 0}%`);
+      });
+      
+      // Debug: Show project names
+      console.log("BU Projects:", selectedProjects.map(p => ({ id: p._id, name: p.name || p.projectName })));
+      
+      // Debug: Show which projects have assignments
+      if (selectedAssignments && selectedAssignments.length > 0) {
+        const projectsWithAssignments = [...new Set(selectedAssignments.map(a => a.project?._id || a.project).filter(Boolean))];
+        console.log("Projects with assignments:", projectsWithAssignments.length);
+        
+        // Check if assignments contain populated task data
+        const sampleAssignment = selectedAssignments[0];
+        console.log("Sample assignment structure:", {
+          hasProject: !!sampleAssignment.project,
+          hasTaskId: !!sampleAssignment.taskId,
+          taskIdStructure: sampleAssignment.taskId ? Object.keys(sampleAssignment.taskId) : 'null',
+          hasWorkload: !!sampleAssignment.taskId?.workload,
+          workloadValue: sampleAssignment.taskId?.workload
+        });
+      }
       
       const projectWorkloadData = selectedProjects.map((project) => {
-        const isTrulyComplete = isProjectTrulyComplete(project, selectedAssignments);
+        // Use allBuTasks if available, otherwise fallback to assignments
+        let projectTasks = [];
         
-        // Calculate real progress based on phase completion (EXACTLY like Reports)
-        // Extract tasks from assignments (since assignments contain populated task data)
-        const projectAssignments = selectedAssignments?.filter(assignment => {
-          const assignmentProjectId = assignment.project?._id || assignment.project;
-          return assignmentProjectId?.toString() === project._id?.toString();
-        }) || [];
+        if (allBuTasks && allBuTasks.length > 0) {
+          // Primary approach: Use actual tasks (same as Reports)
+          projectTasks = allBuTasks.filter(task => {
+            const taskProjectId = task.project?._id || task.project;
+            return taskProjectId?.toString() === project._id?.toString();
+          });
+        } else if (selectedAssignments && selectedAssignments.length > 0) {
+          // Fallback approach: Extract tasks from assignments  
+          const projectAssignments = selectedAssignments.filter(assignment => {
+            const assignmentProjectId = assignment.project?._id || assignment.project;
+            return assignmentProjectId?.toString() === project._id?.toString();
+          });
+          
+          projectTasks = projectAssignments.map(assignment => assignment.taskId).filter(task => task != null);
+        } else {
+          // Last fallback: Use project's own progress if no tasks/assignments available
+          console.log(`⚠ No tasks or assignments found for project ${project.name || project.projectName}, using project.progress`);
+          projectTasks = []; // Empty, will use project.progress below
+        }
         
-        // Convert assignments to tasks (same structure as selectedTasks in Reports)
-        const projectTasks = projectAssignments.map(assignment => assignment.taskId).filter(task => task != null);
+        const isTrulyComplete = isProjectTrulyComplete(project, allBuTasks.length > 0 ? allBuTasks : 
+          selectedAssignments?.map(a => a.taskId).filter(t => t != null) || []);
         
         let realProgress = 0;
         if (projectTasks.length > 0) {
@@ -250,16 +357,70 @@ const DashboardBU = () => {
           realProgress = phaseProgresses.length > 0 
             ? Math.round(phaseProgresses.reduce((sum, progress) => sum + progress, 0) / phaseProgresses.length)
             : 0;
+        } else {
+          // Use project's own progress as fallback
+          realProgress = project.progress || 0;
+          console.log(`📊 Using fallback progress for ${project.name || project.projectName}: ${realProgress}%`);
         }
         
-        console.log(`Project "${project.name}":`, {
+        // DETAILED DEBUG FOR DATA COMPARISON
+        console.log(`\n🔍 [Dashboard BU] DETAILED ANALYSIS - Project "${project.name || project.projectName}":`, {
+          projectId: project._id,
+          dataSource: allBuTasks.length > 0 ? 'Direct BU Tasks (getBuTaskByProjectID)' : 'Tasks from Assignments',
+          
+          // Old vs New Progress
           oldProgress: project.progress,
-          realProgress: realProgress,
-          trulyComplete: isTrulyComplete,
-          assignmentsCount: projectAssignments.length,
-          tasksCount: projectTasks.length,
-          taskWorkloads: projectTasks.map(t => t.workload || 0)
+          calculatedProgress: realProgress,
+          progressMatch: project.progress === realProgress,
+          
+          // Task Details
+          totalTasks: projectTasks.length,
+          tasksByPhase: {
+            Planning: projectTasks.filter(t => t.projectPhase === 'Planning').length,
+            Design: projectTasks.filter(t => t.projectPhase === 'Design').length,
+            Development: projectTasks.filter(t => t.projectPhase === 'Development').length,
+            Testing: projectTasks.filter(t => t.projectPhase === 'Testing').length,
+          },
+          
+          // Phase Progress Calculation (like Reports)
+          phaseProgresses: (() => {
+            const STEP_ORDER = ["Planning", "Design", "Development", "Testing"];
+            return STEP_ORDER.map((phase) => {
+              const tasksInPhase = projectTasks.filter(task => task.projectPhase === phase);
+              if (tasksInPhase.length === 0) return { phase, progress: 0, taskCount: 0 };
+              
+              const avgProgress = tasksInPhase.reduce((sum, task) => sum + (task.workload || 0), 0) / tasksInPhase.length;
+              return { 
+                phase, 
+                progress: Math.round(avgProgress), 
+                taskCount: tasksInPhase.length,
+                taskWorkloads: tasksInPhase.map(t => t.workload || 0)
+              };
+            });
+          })(),
+          
+          // All Task Details
+          allTaskDetails: projectTasks.map(t => ({
+            taskId: t._id,
+            taskName: t.taskName,
+            phase: t.projectPhase,
+            workload: t.workload || 0,
+            projectId: t.project?._id || t.project
+          }))
         });
+        
+        // Compare with what Reports should show
+        if (allBuTasks.length > 0) {
+          console.log(`\n📊 [Dashboard BU vs Reports] COMPARISON for "${project.name || project.projectName}":`);
+          console.log(`Dashboard BU: Uses getBuTaskByProjectID() → filters by BusinessUnit`);
+          console.log(`Reports: Uses getTasksByManagerId() → filters by Manager`);
+          console.log(`Expected result: SAME progress if project belongs to manager in same BU`);
+          console.log(`Calculated Progress: ${realProgress}%`);
+          console.log(`Task Count: ${projectTasks.length}`);
+          console.log(`Has all phases: ${['Planning', 'Design', 'Development', 'Testing'].every(phase => 
+            projectTasks.some(t => t.projectPhase === phase)
+          )}`);
+        }
         
         return {
           project: project.name || project.projectName || 'Unnamed Project', // Ensure project name is never undefined
@@ -285,8 +446,27 @@ const DashboardBU = () => {
       setCompletedProjectsCount(completedProjects?.length);
       setTotalProjectsCount(projectWorkloadData?.length);
       setProjectWorkload(projectWorkloadData || []);
+      
+      // Calculate average BU progress (mean of all project progresses)
+      const totalProgress = projectWorkloadData.reduce((sum, project) => sum + project.progress, 0);
+      const avgProgress = projectWorkloadData.length > 0 ? totalProgress / projectWorkloadData.length : 0;
+      setAverageBuProgress(Math.round(avgProgress));
+      
+      console.log("📊 ProjectWorkload data for charts:", projectWorkloadData?.map(p => ({
+        project: p.project,
+        progress: p.progress,
+        dataAvailable: p.progress > 0
+      })));
+      
+      console.log("📊 BU Progress Summary:", {
+        totalProjects: projectWorkloadData.length,
+        activeProjects: activeProjects?.length,
+        completedProjects: completedProjects?.length,
+        averageProgress: Math.round(avgProgress) + '%',
+        completionRatio: Math.round(((completedProjects?.length / projectWorkloadData.length) || 0) * 100) + '%'
+      });
     }
-  }, [selectedProjects, selectedAssignments]);
+  }, [selectedProjects, selectedAssignments, allBuTasks, user?.businessUnit, user?.role]);
 
   // Effect to handle BU data based on businessUnit attribute
   // Utilise l'attribut businessUnit du modèle User pour déterminer les membres de la BU
@@ -347,6 +527,14 @@ const DashboardBU = () => {
       setBuTeamMembers(buTeamMembersOnly);
       setTotalTeamMembersCount(buTeamMembersOnly.length);
       
+      // Calculate progress metrics for StatBoxes
+      const totalBuMembers = allBuMembers.length;
+      const managersRatio = totalBuMembers > 0 ? buManagers.length / totalBuMembers : 0;
+      const teamMembersRatio = totalBuMembers > 0 ? buTeamMembersOnly.length / totalBuMembers : 0;
+      
+      setManagersProgress(managersRatio);
+      setTeamMembersProgress(teamMembersRatio);
+      
       // Generate chart data from real data
       const managersDistData = buildManagersDistribution(allBuMembers);
       setManagersDistributionData(managersDistData);
@@ -383,6 +571,12 @@ const DashboardBU = () => {
         
         setBuAssignments(buAssignmentsData);
         setActiveAssignmentsCount(buAssignmentsData.length);
+        
+        // Calculate assignments progress (active vs total possible)
+        const totalPossibleAssignments = allBuMembers.length * 2; // Assume each member could have ~2 assignments
+        const assignmentsRatio = totalPossibleAssignments > 0 ? buAssignmentsData.length / totalPossibleAssignments : 0;
+        setAssignmentsProgress(Math.min(assignmentsRatio, 1)); // Cap at 100%
+        
         console.log("Final active assignments count:", buAssignmentsData.length);
       } else {
         console.log("No assignments available to filter");
@@ -417,6 +611,7 @@ const DashboardBU = () => {
     dispatch(getAllEmployeeAssignements()); // Get all assignments to filter by BU and check project completion
     // Note: We'll use selectedAssignments which contain task data via taskId populate
     dispatch(getRisks());
+    dispatch(getBU()); // Get all business units to resolve BU names
     
     if (user?.businessUnit) {
       console.log("Fetching projects for businessUnit:", user.businessUnit);
@@ -496,20 +691,14 @@ const DashboardBU = () => {
           <StatBox
             title={managersCount || "0"}
             subtitle="Managers"
-            progress={0.75}
-            increase={`${managersCount || 0} Active Managers`}
+            progress={managersProgress}
+            increase={`${Math.round(managersProgress * 100)}% of BU`}
             icon={
               <PersonAddIcon
                 sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
               />
             }
           />
-          <Typography variant="caption" color="textSecondary">
-            Debug: team data length = {selectedTeamMembers?.length || 0}
-          </Typography>
-          <Typography variant="caption" color="textSecondary">
-            User BU: {user?.businessUnit ? "Yes" : "No"}
-          </Typography>
         </Box>
         
         <Box
@@ -522,8 +711,8 @@ const DashboardBU = () => {
           <StatBox
             title={totalTeamMembersCount || "0"}
             subtitle="Team Members (excl. Managers)"
-            progress={0.85}
-            increase={`Managed by ${managersCount || 0} managers`}
+            progress={teamMembersProgress}
+            increase={`${Math.round(teamMembersProgress * 100)}% of BU`}
             icon={
               <PeopleAltIcon
                 sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
@@ -542,8 +731,8 @@ const DashboardBU = () => {
           <StatBox
             title={activeAssignmentsCount}
             subtitle="Active Assignments"
-            progress={0.90}
-            increase={`Across ${managersCount || 0} managers`}
+            progress={assignmentsProgress}
+            increase={`${Math.round(assignmentsProgress * 100)}% utilization`}
             icon={
               <BusinessIcon
                 sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
@@ -590,8 +779,11 @@ const DashboardBU = () => {
             </Box>
           </Box>
           <Box height="250px" m="-20px 0 0 0">
+
             <ProjectBarChart 
-              projectWorkload={projectWorkload || []} 
+              projectWorkload={projectWorkload && projectWorkload.length > 0 ? projectWorkload : [
+                { project: "Loading...", progress: 0 }
+              ]} 
               isDashboard={true} 
             />
           </Box>
@@ -616,7 +808,7 @@ const DashboardBU = () => {
             mt="25px"
           >
             <ProgressCircle 
-              progress={(completedProjectsCount / totalProjectsCount) || 0} 
+              progress={averageBuProgress / 100} 
               size="125" 
             />
             <Typography
@@ -624,9 +816,14 @@ const DashboardBU = () => {
               color={colors.greenAccent[500]}
               sx={{ mt: "15px" }}
             >
-              {Math.round(((completedProjectsCount / totalProjectsCount) || 0) * 100)}% Projects Completed
+              {averageBuProgress}% Average Progress
             </Typography>
-            <Typography>Business Unit: {user?.businessUnit?.name || "N/A"}</Typography>
+            <Typography variant="body2" sx={{ textAlign: "center", color: colors.grey[300] }}>
+              {completedProjectsCount} of {totalProjectsCount} projects completed
+            </Typography>
+            <Typography>Business Unit: {selectedBusinessUnits?.find(bu => 
+              bu._id === (typeof user?.businessUnit === 'object' ? user?.businessUnit?._id : user?.businessUnit)
+            )?.name || user?.businessUnit?.name || "N/A"}</Typography>
             <Typography variant="body2" sx={{ mt: 1, textAlign: "center" }}>
               {managersCount || 0} managers • {buTeamMembers?.length || 0} team members
             </Typography>
