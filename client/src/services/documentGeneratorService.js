@@ -286,16 +286,18 @@ export const generatePDFReport = (reportData, filename) => {
           memberName = `Employé ID: ${assignment.employee.substring(0, 8)}...`;
         }
         
+        const status = assignment.status?.substring(0, 12) || 'assigned';
+        const normalizedStatus = (status === 'canceled' || status === 'cancelled') ? 'not assigned' : status;
+        
         return [
           memberName.substring(0, 25) || 'N/A',
           assignment.role?.substring(0, 15) || 'Member',
-          assignment.status?.substring(0, 12) || 'assigned',
-          `${assignment.totalDaysWorked || 0} j`
+          normalizedStatus
         ];
       });
 
       addSimpleTable(
-        ['Membre équipe', 'Rôle', 'Statut', 'Jours travaillés'],
+        ['Membre équipe', 'Rôle', 'Statut'],
         teamData,
         'ÉQUIPE DU PROJET'
       );
@@ -415,7 +417,7 @@ export const generateExcelReport = (reportData, filename) => {
     // Feuille équipe
     if (reportData.assignments && reportData.assignments.length > 0) {
       const teamData = [
-        ['Membre équipe', 'Rôle', 'Statut', 'Date début', 'Date fin'],
+        ['Membre équipe', 'Rôle', 'Statut'],
         ...reportData.assignments.map(assignment => {
           // Récupérer le nom complet de l'employé uniquement via fullName
           let memberName = 'Non assigné';
@@ -433,12 +435,13 @@ export const generateExcelReport = (reportData, filename) => {
             memberName = `Employé ID: ${assignment.employee.substring(0, 8)}...`;
           }
           
+          const status = assignment.status || 'N/A';
+          const normalizedStatus = (status === 'canceled' || status === 'cancelled') ? 'not assigned' : status;
+          
           return [
             memberName || 'N/A',
             assignment.role || 'N/A',
-            assignment.status || 'N/A',
-            new Date(assignment.startDate).toLocaleDateString(),
-            new Date(assignment.endDate).toLocaleDateString()
+            normalizedStatus
           ];
         })
       ];
@@ -647,14 +650,13 @@ export const generateWordReport = async (reportData, filename) => {
       );
 
       const teamTable = new Table({
-        columnWidths: [2500, 1500, 1500, 1500],
+        columnWidths: [3000, 2000, 2000],
         rows: [
           new TableRow({
             children: [
               new TableCell({ children: [new Paragraph({ text: 'Membre équipe' })] }),
               new TableCell({ children: [new Paragraph({ text: 'Rôle' })] }),
               new TableCell({ children: [new Paragraph({ text: 'Statut' })] }),
-              new TableCell({ children: [new Paragraph({ text: 'Jours travaillés' })] }),
             ],
           }),
           ...reportData.assignments.slice(0, 10).map(assignment => {
@@ -674,12 +676,14 @@ export const generateWordReport = async (reportData, filename) => {
               memberName = `Employé ID: ${assignment.employee.substring(0, 8)}...`;
             }
             
+            const status = assignment.status || 'N/A';
+            const normalizedStatus = (status === 'canceled' || status === 'cancelled') ? 'not assigned' : status;
+            
             return new TableRow({
               children: [
                 new TableCell({ children: [new Paragraph({ text: memberName || 'N/A' })] }),
                 new TableCell({ children: [new Paragraph({ text: assignment.role || 'N/A' })] }),
-                new TableCell({ children: [new Paragraph({ text: assignment.status || 'N/A' })] }),
-                new TableCell({ children: [new Paragraph({ text: `${assignment.totalDaysWorked || 0} j` })] }),
+                new TableCell({ children: [new Paragraph({ text: normalizedStatus })] }),
               ],
             });
           }),

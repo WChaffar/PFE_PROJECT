@@ -31,13 +31,13 @@ const generateProjectReport = asyncHandler(async (req, res) => {
       .populate('employee', 'fullName jobTitle department')
       .populate('Owner', 'fullName');
 
-    // Calculate detailed project statistics and KPIs
+    // Calculate detailed project statistics and KPIs based on workload (like frontend)
     const stats = {
       totalTasks: tasks.length,
-      completedTasks: tasks.filter(task => task.status === 'completed').length,
-      inProgressTasks: tasks.filter(task => task.status === 'in-progress').length,
-      pendingTasks: tasks.filter(task => task.status === 'pending').length,
-      overdueTasks: tasks.filter(task => new Date(task.endDate) < new Date() && task.status !== 'completed').length,
+      completedTasks: tasks.filter(task => (task.workload || 0) === 100).length, // Based on workload 100%
+      inProgressTasks: tasks.filter(task => (task.workload || 0) > 0 && (task.workload || 0) < 100).length, // Between 1-99%
+      pendingTasks: tasks.filter(task => (task.workload || 0) === 0).length, // 0% workload
+      overdueTasks: tasks.filter(task => new Date(task.endDate) < new Date() && (task.workload || 0) < 100).length, // Overdue and not 100%
       totalAssignments: assignments.length,
       activeAssignments: assignments.filter(assignment => assignment.status === 'active').length,
       completedAssignments: assignments.filter(assignment => assignment.status === 'completed').length,
@@ -83,8 +83,8 @@ const generateProjectReport = asyncHandler(async (req, res) => {
     }, { byDepartment: {}, byJobTitle: {} });
 
     // Calculate project progress
-    const progress = calculateProjectProgress(project);
-    const status = getProjectStatus(project);
+    const progress = await calculateProjectProgress(project);
+    const status = await getProjectStatus(project);
 
     // Debug - Check raw assignment data from database
     console.log('Raw assignments from DB:');
@@ -212,12 +212,12 @@ const generateBulkReport = asyncHandler(async (req, res) => {
 
 
 
-        // Calculate detailed stats
+        // Calculate detailed stats based on workload (like frontend)
         const stats = {
           totalTasks: tasks.length,
-          completedTasks: tasks.filter(task => task.status === 'completed').length,
-          inProgressTasks: tasks.filter(task => task.status === 'in-progress').length,
-          overdueTasks: tasks.filter(task => new Date(task.endDate) < new Date() && task.status !== 'completed').length,
+          completedTasks: tasks.filter(task => (task.workload || 0) === 100).length, // Based on workload 100%
+          inProgressTasks: tasks.filter(task => (task.workload || 0) > 0 && (task.workload || 0) < 100).length, // Between 1-99%
+          overdueTasks: tasks.filter(task => new Date(task.endDate) < new Date() && (task.workload || 0) < 100).length, // Overdue and not 100%
           totalAssignments: assignments.length,
           activeAssignments: assignments.filter(assignment => assignment.status === 'active').length,
         };
@@ -260,8 +260,8 @@ const generateBulkReport = asyncHandler(async (req, res) => {
           startDate: project.startDate,
           endDate: project.endDate,
           deliveryDate: project.deliveryDate,
-          progress: calculateProjectProgress(project),
-          status: getProjectStatus(project),
+          progress: await calculateProjectProgress(project),
+          status: await getProjectStatus(project),
           stats,
           kpis,
           teamComposition,
@@ -324,29 +324,67 @@ const generateBulkReport = asyncHandler(async (req, res) => {
   }
 });
 
-// Helper function to calculate project progress
-function calculateProjectProgress(project) {
-  const now = new Date();
-  const startDate = new Date(project.startDate);
-  const endDate = new Date(project.endDate);
-  
-  if (now < startDate) return 0;
-  if (now > endDate) return 100;
-  
-  const totalDuration = endDate - startDate;
-  const elapsed = now - startDate;
-  return Math.round((elapsed / totalDuration) * 100);
+// Helper function to calculate project progress based on phase progress (like ProjectPipeline)
+async function calculateProjectProgress(project) {
+  try {
+    const STEP_ORDER = ["Planning", "Design", "Development", "Testing"];
+    
+    // Get all tasks for this project
+    const tasks = await Task.find({ project: project._id });
+    
+    if (tasks.length === 0) return 0;
+    
+    // Calculate progress for each phase
+    const phaseProgresses = STEP_ORDER.map((phase) => {
+      const tasksInPhase = tasks.filter(task => task.projectPhase === phase);
+      if (tasksInPhase.length === 0) return 0;
+      
+      const avgPhaseProgress = tasksInPhase.reduce((sum, task) => sum + (task.workload || 0), 0) / tasksInPhase.length;
+      return Math.round(avgPhaseProgress);
+    });
+    
+    // Project progress = average of all phase progresses
+    const projectProgress = phaseProgresses.length > 0 
+      ? Math.round(phaseProgresses.reduce((sum, progress) => sum + progress, 0) / phaseProgresses.length)
+      : 0;
+    
+    return projectProgress;
+  } catch (error) {
+    console.error('Error calculating project progress:', error);
+    return 0;
+  }
 }
 
-// Helper function to determine project status
-function getProjectStatus(project) {
-  const now = new Date();
-  const startDate = new Date(project.startDate);
-  const endDate = new Date(project.endDate);
-  
-  if (now < startDate) return 'Not Started';
-  if (now > endDate) return 'Completed';
-  return 'In Progress';
+// Helper function to determine project status based on phase progress (like ProjectPipeline)
+async function getProjectStatus(project) {
+  try {
+    const STEP_ORDER = ["Planning", "Design", "Development", "Testing"];
+    
+    // Get all tasks for this project
+    const tasks = await Task.find({ project: project._id });
+    
+    if (tasks.length === 0) return 'Not Started';
+    
+    // Calculate phase progresses
+    const phaseProgresses = STEP_ORDER.map((phase) => {
+      const tasksInPhase = tasks.filter(task => task.projectPhase === phase);
+      if (tasksInPhase.length === 0) return 0;
+      
+      const avgProgress = tasksInPhase.reduce((sum, task) => sum + (task.workload || 0), 0) / tasksInPhase.length;
+      return Math.round(avgProgress);
+    });
+    
+    // Project status based on phase completion
+    const completedPhases = phaseProgresses.filter(progress => progress === 100).length;
+    const startedPhases = phaseProgresses.filter(progress => progress > 0).length;
+    
+    if (completedPhases === STEP_ORDER.length) return 'Completed';
+    if (startedPhases === 0) return 'Not Started';
+    return 'In Progress';
+  } catch (error) {
+    console.error('Error determining project status:', error);
+    return 'In Progress';
+  }
 }
 
 module.exports = {

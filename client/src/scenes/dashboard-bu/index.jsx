@@ -180,22 +180,25 @@ const DashboardBU = () => {
       return assignmentProjectId?.toString() === projectId?.toString();
     });
     
-    // If no assignments found, project is not complete
-    if (projectAssignments.length === 0) return false;
+    // Convert assignments to tasks
+    const projectTasks = projectAssignments.map(assignment => assignment.taskId).filter(task => task != null);
     
-    // Check if ALL assignments/tasks have 100% workload
-    const allTasksComplete = projectAssignments.every(assignment => {
-      // The task data is populated in taskId field
-      const workload = assignment.taskId?.workload || 0;
+    // If no tasks found, project is not complete
+    if (projectTasks.length === 0) return false;
+    
+    // Check if ALL tasks have 100% workload (EXACTLY like Reports)
+    const allTasksComplete = projectTasks.every(task => {
+      const workload = task.workload || 0;
       return workload === 100;
     });
     
-    console.log(`Project "${project.name}" assignments:`, {
+    console.log(`Project "${project.name}" tasks:`, {
       totalAssignments: projectAssignments.length,
-      workloads: projectAssignments.map(a => ({
-        taskName: a.taskId?.taskName || 'Unknown Task',
-        taskId: a.taskId?._id,
-        workload: a.taskId?.workload || 0
+      totalTasks: projectTasks.length,
+      workloads: projectTasks.map(t => ({
+        taskName: t.taskName || 'Unknown Task',
+        taskId: t._id,
+        workload: t.workload || 0
       })),
       allComplete: allTasksComplete
     });
@@ -213,18 +216,40 @@ const DashboardBU = () => {
       const projectWorkloadData = selectedProjects.map((project) => {
         const isTrulyComplete = isProjectTrulyComplete(project, selectedAssignments);
         
-        // Calculate real progress based on task completion
+        // Calculate real progress based on phase completion (EXACTLY like Reports)
+        // Extract tasks from assignments (since assignments contain populated task data)
         const projectAssignments = selectedAssignments?.filter(assignment => {
           const assignmentProjectId = assignment.project?._id || assignment.project;
           return assignmentProjectId?.toString() === project._id?.toString();
         }) || [];
         
+        // Convert assignments to tasks (same structure as selectedTasks in Reports)
+        const projectTasks = projectAssignments.map(assignment => assignment.taskId).filter(task => task != null);
+        
         let realProgress = 0;
-        if (projectAssignments.length > 0) {
-          const totalWorkload = projectAssignments.reduce((sum, assignment) => {
-            return sum + (assignment.taskId?.workload || 0);
-          }, 0);
-          realProgress = Math.round(totalWorkload / projectAssignments.length);
+        if (projectTasks.length > 0) {
+          // Fixed step order (same as Reports and ProjectPipeline)
+          const STEP_ORDER = ["Planning", "Design", "Development", "Testing"];
+          
+          // Calculate progress for each phase (EXACTLY like Reports)
+          const phaseProgresses = STEP_ORDER.map((phase) => {
+            const tasksInPhase = projectTasks.filter(task => 
+              task.projectPhase === phase
+            );
+            
+            if (tasksInPhase.length === 0) return 0;
+            
+            const avgPhaseProgress = tasksInPhase.reduce((sum, task) => {
+              return sum + (task.workload || 0);
+            }, 0) / tasksInPhase.length;
+            
+            return Math.round(avgPhaseProgress);
+          });
+          
+          // Project progress = average of all phase progresses (EXACTLY like Reports)
+          realProgress = phaseProgresses.length > 0 
+            ? Math.round(phaseProgresses.reduce((sum, progress) => sum + progress, 0) / phaseProgresses.length)
+            : 0;
         }
         
         console.log(`Project "${project.name}":`, {
@@ -232,7 +257,8 @@ const DashboardBU = () => {
           realProgress: realProgress,
           trulyComplete: isTrulyComplete,
           assignmentsCount: projectAssignments.length,
-          taskWorkloads: projectAssignments.map(a => a.taskId?.workload || 0)
+          tasksCount: projectTasks.length,
+          taskWorkloads: projectTasks.map(t => t.workload || 0)
         });
         
         return {
@@ -389,6 +415,7 @@ const DashboardBU = () => {
     console.log("Fetching data for dashboard BU...");
     dispatch(getAllTeamMembers()); // Get all team members to filter by businessUnit
     dispatch(getAllEmployeeAssignements()); // Get all assignments to filter by BU and check project completion
+    // Note: We'll use selectedAssignments which contain task data via taskId populate
     dispatch(getRisks());
     
     if (user?.businessUnit) {

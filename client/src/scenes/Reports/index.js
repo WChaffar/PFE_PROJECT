@@ -23,6 +23,8 @@ import { tokens } from "../../theme";
 import Header from "../../components/Header";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllProjects } from "../../actions/projectAction";
+import { getTasksByManagerId } from "../../actions/taskAction";
+import { getAllEmployeeAssignements } from "../../actions/assignementsAction";
 import { generateProjectReport, generateBulkReport } from "../../actions/reportAction";
 import { generatePDFReport, generateExcelReport, generateWordReport } from "../../services/documentGeneratorService";
 
@@ -61,26 +63,112 @@ const Reports = () => {
   
   // Redux state
   const { projects, error } = useSelector((state) => state.projects);
+  const selectedTasks = useSelector((state) => state.tasks.tasks);
+  const selectedAssignements = useSelector((state) => state.assignements.assignements);
   
   // Local state
   const [loading, setLoading] = useState(false);
   const [exportLoading, setExportLoading] = useState({});
+  const [projectWorkload, setProjectWorkload] = useState([]);
+  const [assignments, setAssignements] = useState([]);
 
-  // Load projects on component mount
+  // Load data on component mount
   useEffect(() => {
-    const loadProjects = async () => {
+    const loadData = async () => {
       setLoading(true);
       try {
         await dispatch(getAllProjects());
+        await dispatch(getTasksByManagerId());
+        await dispatch(getAllEmployeeAssignements());
       } catch (error) {
-        console.error('Error loading projects:', error);
+        console.error('Error loading data:', error);
       } finally {
         setLoading(false);
       }
     };
     
-    loadProjects();
+    loadData();
   }, [dispatch]);
+
+  // Update assignments when selected assignments change
+  useEffect(() => {
+    if (selectedAssignements.length !== 0) {
+      setAssignements(selectedAssignements);
+    }
+  }, [selectedAssignements]);
+
+  // Calculate project workload based on phase progress (like ProjectPipeline component)
+  useEffect(() => {
+    if (selectedTasks?.length !== 0) {
+      // Fixed step order (same as ProjectPipeline)
+      const STEP_ORDER = ["Planning", "Design", "Development", "Testing"];
+      
+      // Group tasks by project and calculate phase-based progress
+      const projectProgressMap = {};
+
+      selectedTasks.forEach((task) => {
+        const projectId = task.project._id;
+        const projectName = task.project?.projectName || "Unnamed Project";
+        const phase = task.projectPhase;
+        
+        if (!projectProgressMap[projectId]) {
+          projectProgressMap[projectId] = {
+            projectName,
+            phases: {}
+          };
+        }
+
+        if (!projectProgressMap[projectId].phases[phase]) {
+          projectProgressMap[projectId].phases[phase] = {
+            tasks: [],
+            totalWorkload: 0,
+            taskCount: 0
+          };
+        }
+
+        projectProgressMap[projectId].phases[phase].tasks.push(task);
+        projectProgressMap[projectId].phases[phase].totalWorkload += task.workload || 0;
+        projectProgressMap[projectId].phases[phase].taskCount += 1;
+      });
+
+      // Calculate progress for each project based on phase averages
+      const projectWorkloadData = Object.entries(projectProgressMap).map(
+        ([projectId, projectData]) => {
+          const phaseProgresses = [];
+          
+          // Calculate progress for each phase (same logic as ProjectPipeline)
+          STEP_ORDER.forEach((phase) => {
+            const phaseData = projectData.phases[phase];
+            if (phaseData && phaseData.taskCount > 0) {
+              const avgPhaseProgress = Math.round(phaseData.totalWorkload / phaseData.taskCount);
+              phaseProgresses.push(avgPhaseProgress);
+            } else {
+              // Phase has no tasks, consider it as 0% progress
+              phaseProgresses.push(0);
+            }
+          });
+          
+          // Project progress = average of all phase progresses
+          const projectProgress = phaseProgresses.length > 0 
+            ? Math.round(phaseProgresses.reduce((sum, progress) => sum + progress, 0) / phaseProgresses.length)
+            : 0;
+
+          return {
+            projectId,
+            project: projectData.projectName,
+            progress: projectProgress,
+            phaseProgresses: STEP_ORDER.map((phase, index) => ({
+              phase,
+              progress: phaseProgresses[index]
+            })),
+            taskCount: Object.values(projectData.phases).reduce((sum, phase) => sum + phase.taskCount, 0),
+          };
+        }
+      );
+
+      setProjectWorkload(projectWorkloadData);
+    }
+  }, [selectedTasks]);
 
   // Format projects data for DataGrid
   const formattedProjects = projects.map(project => ({
@@ -98,29 +186,44 @@ const Reports = () => {
     progress: calculateProjectProgress(project),
   }));
 
-  // Helper function to determine project status
+  // Helper function to determine project status based on task workload
   function getProjectStatus(project) {
-    const now = new Date();
-    const startDate = new Date(project.startDate);
-    const endDate = new Date(project.endDate);
-    
-    if (now < startDate) return 'Not Started';
-    if (now > endDate) return 'Completed';
-    return 'In Progress';
+    return getProjectStatusFromProgress(project);
   }
 
-  // Helper function to calculate project progress
+  // Helper function to calculate project progress based on tasks
   function calculateProjectProgress(project) {
-    const now = new Date();
-    const startDate = new Date(project.startDate);
-    const endDate = new Date(project.endDate);
+    const projectProgress = projectWorkload.find(
+      (p) => p.projectId === project._id
+    );
+    return projectProgress ? projectProgress.progress : 0;
+  }
+
+  // Helper function to determine project status based on phase progress (like ProjectPipeline)
+  function getProjectStatusFromProgress(project) {
+    const STEP_ORDER = ["Planning", "Design", "Development", "Testing"];
     
-    if (now < startDate) return 0;
-    if (now > endDate) return 100;
+    // Get tasks for this project grouped by phase
+    const projectTasks = selectedTasks.filter(task => task.project._id === project._id);
     
-    const totalDuration = endDate - startDate;
-    const elapsed = now - startDate;
-    return Math.round((elapsed / totalDuration) * 100);
+    if (projectTasks.length === 0) return 'Not Started';
+    
+    // Calculate phase progresses
+    const phaseProgresses = STEP_ORDER.map((phase) => {
+      const tasksInPhase = projectTasks.filter(t => t.projectPhase === phase);
+      if (tasksInPhase.length === 0) return 0;
+      
+      const avgProgress = tasksInPhase.reduce((sum, t) => sum + (t.workload || 0), 0) / tasksInPhase.length;
+      return Math.round(avgProgress);
+    });
+    
+    // Project status based on phase completion (same logic as ProjectPipeline)
+    const completedPhases = phaseProgresses.filter(progress => progress === 100).length;
+    const startedPhases = phaseProgresses.filter(progress => progress > 0).length;
+    
+    if (completedPhases === STEP_ORDER.length) return 'Completed';
+    if (startedPhases === 0) return 'Not Started';
+    return 'In Progress';
   }
 
   // Handle individual project export
@@ -279,7 +382,14 @@ const Reports = () => {
       field: "progress",
       headerName: "Progress",
       flex: 0.8,
-      renderCell: ({ row }) => `${row.progress}%`,
+      renderCell: ({ row }) => (
+        <Box display="flex" alignItems="center" gap={1}>
+          <Typography variant="body2">{row.progress}%</Typography>
+          <Typography variant="caption" color={colors.grey[400]}>
+            (task-based)
+          </Typography>
+        </Box>
+      ),
     },
     {
       field: "actions",
@@ -367,7 +477,7 @@ const Reports = () => {
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Header
           title="Reports"
-          subtitle="Generate detailed reports on projects for informed decision-making."
+          subtitle="Generate detailed reports on your projects with task-based progress tracking."
         />
         <Box display="flex" alignItems="center" gap={2}>
           <Typography variant="h6" fontWeight="300" whiteSpace="nowrap">
@@ -402,7 +512,7 @@ const Reports = () => {
 
       {/* Project Statistics */}
       <Box mt={2} mb={3}>
-        <Box display="flex" gap={2} flexWrap="wrap">
+        <Box display="flex" gap={2} flexWrap="wrap" alignItems="center">
           <Chip 
             label={`Total Projects: ${projects.length}`} 
             color="primary" 
@@ -423,6 +533,14 @@ const Reports = () => {
             color="warning" 
             variant="outlined"
           />
+          <Chip 
+            label={`Total Tasks: ${selectedTasks.length}`} 
+            color="secondary" 
+            variant="outlined"
+          />
+          <Typography variant="caption" color={colors.grey[300]} sx={{ ml: 2 }}>
+            📊 Statistics based on task completion
+          </Typography>
         </Box>
       </Box>
 
