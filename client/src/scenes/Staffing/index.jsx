@@ -36,7 +36,6 @@ import { getEmployeeAbsencesForManager } from "../../actions/absenceAction";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import AssignmentDebugger from "../../components/AssignmentDebugger";
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
 
@@ -413,14 +412,9 @@ const StaffingCalendar = () => {
 
   return (
     <Box m="20px">
-      <AssignmentDebugger />
       <Typography variant="h4" mb={2}>
         Staffing Calendar
       </Typography>
-      <Typography variant="body2" mb={2} color="green" fontWeight="bold">
-        📅 Note: Affichage des données 2025 - 152 affectations disponibles
-      </Typography>
-
       <Box display="flex" alignItems="center" mb={2} gap={2}>
         <input
           type="text"
