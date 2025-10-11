@@ -692,7 +692,6 @@ const DashboardBU = () => {
             title={managersCount || "0"}
             subtitle="Managers"
             progress={managersProgress}
-            increase={`${Math.round(managersProgress * 100)}% of BU`}
             icon={
               <PersonAddIcon
                 sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
@@ -712,7 +711,6 @@ const DashboardBU = () => {
             title={totalTeamMembersCount || "0"}
             subtitle="Team Members (excl. Managers)"
             progress={teamMembersProgress}
-            increase={`${Math.round(teamMembersProgress * 100)}% of BU`}
             icon={
               <PeopleAltIcon
                 sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
@@ -732,7 +730,6 @@ const DashboardBU = () => {
             title={activeAssignmentsCount}
             subtitle="Active Assignments"
             progress={assignmentsProgress}
-            increase={`${Math.round(assignmentsProgress * 100)}% utilization`}
             icon={
               <BusinessIcon
                 sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
@@ -843,7 +840,7 @@ const DashboardBU = () => {
             fontWeight="600"
             sx={{ padding: "30px 30px 0 30px" }}
           >
-            Managers Distribution
+            Hierarchical Distribution
           </Typography>
           <Box height="250px" mt="-20px">
             <PieChart data={managersDistributionData} />
