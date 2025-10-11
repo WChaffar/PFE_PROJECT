@@ -45,13 +45,16 @@ export const getEmployeeAssignement = (empId, values) => async (dispatch) => {
 // get Employee Assignement
 export const getAllEmployeeAssignements = () => async (dispatch) => {
   try {
+    console.log("🔥 Calling getAllEmployeesAssignements API...");
     const data = await AssignementService.getAllEmployeesAssignements();
+    console.log("📦 API Response:", data);
     dispatch({
       type: "GET_ALL_EMP_ASSIGNEMENTS_SUCCESS",
       payload: { data },
     });
     return { success: true }; // ✅ return success
   } catch (error) {
+    console.error("❌ API Error:", error);
     dispatch({
       type: "GET_ALL_EMP_ASSIGNEMENTS_FAILURE",
       payload:

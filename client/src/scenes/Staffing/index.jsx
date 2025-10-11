@@ -36,6 +36,7 @@ import { getEmployeeAbsencesForManager } from "../../actions/absenceAction";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import AssignmentDebugger from "../../components/AssignmentDebugger";
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
 
@@ -100,8 +101,9 @@ function getColor(taskName) {
 }
 
 const StaffingCalendar = () => {
+  // Utiliser une date où il y a des assignements (2025) 
   const [startDate, setStartDate] = useState(
-    dayjs(startOfWeek(new Date(), { weekStartsOn: 1 }))
+    dayjs("2025-01-15").startOf('week')
   );
   const [searchName, setSearchName] = useState("");
   const [viewMode, setViewMode] = useState("perDay");
@@ -120,6 +122,10 @@ const StaffingCalendar = () => {
   const selectedAbsences = useSelector((state) => state.absence.absences);
   const [absences, setAbsences] = useState([]);
 
+  // Debug logs (can be removed in production)
+  // console.log("🔄 Redux state - assignements:", selectedAssignements);
+  // console.log("🔄 Local state - assignments:", assignments);
+
   useEffect(() => {
     if (selectedTeamMembers.length !== 0) {
       const teamMembersMap = selectedTeamMembers.map((member) => ({
@@ -127,12 +133,15 @@ const StaffingCalendar = () => {
         fullName: member?.fullName,
         avatar: BACKEND_URL + member?.profilePicture,
       }));
+      console.log("👥 Team Members from getAllTeamMembersForManager:", teamMembersMap.map(m => ({ id: m._id, name: m.fullName })));
       setTeamMembers(teamMembersMap);
     }
   }, [selectedTeamMembers]); // <== Écoute les changements de selectedProjects
 
   useEffect(() => {
-    if (selectedAssignements.length !== 0) {
+    console.log("🔍 selectedAssignements updated:", selectedAssignements);
+    
+    if (selectedAssignements && selectedAssignements.length > 0) {
       const assignementsMap = selectedAssignements?.flatMap((assignment) => {
         const memberId = assignment?.employee?._id;
         const task = assignment?.taskId?.taskName;
@@ -155,7 +164,20 @@ const StaffingCalendar = () => {
         }
         return result;
       });
+      console.log("📅 Processed assignments:", assignementsMap);
+      console.log("📅 Assignment date range:", {
+        first: assignementsMap[0]?.date,
+        last: assignementsMap[assignementsMap.length - 1]?.date
+      });
+      
+      // 🔍 Comparer les IDs des employés
+      const assignmentEmployeeIds = [...new Set(assignementsMap.map(a => a.memberId))];
+      console.log("👤 Employee IDs in assignments:", assignmentEmployeeIds);
+      
       setAssignements(assignementsMap);
+    } else {
+      console.log("❌ No assignments found, clearing state");
+      setAssignements([]);
     }
   }, [selectedAssignements]); // <== Écoute les changements de selectedProjects
 
@@ -164,6 +186,7 @@ const StaffingCalendar = () => {
   }, [dispatch]); // <== Appelle une seule fois le fetch
 
   useEffect(() => {
+    console.log("🚀 Dispatching getAllEmployeeAssignements...");
     dispatch(getAllEmployeeAssignements());
   }, [dispatch]); // <== Appelle une seule fois le fetch
 
@@ -176,6 +199,28 @@ const StaffingCalendar = () => {
       setAbsences(selectedAbsences);
     }
   }, [selectedAbsences]); // <== Appelle une seule fois le fetch
+
+  // 🔍 Effet pour comparer les données une fois toutes chargées
+  useEffect(() => {
+    if (teamMembers.length > 0 && assignments.length > 0) {
+      const teamMemberIds = teamMembers.map(m => m._id);
+      const assignmentEmployeeIds = [...new Set(assignments.map(a => a.memberId))];
+      
+      console.log("🔍 COMPARISON:");
+      console.log("👥 Team Member IDs:", teamMemberIds);
+      console.log("📋 Assignment Employee IDs:", assignmentEmployeeIds);
+      
+      const missingInTeam = assignmentEmployeeIds.filter(id => !teamMemberIds.includes(id));
+      const missingInAssignments = teamMemberIds.filter(id => !assignmentEmployeeIds.includes(id));
+      
+      console.log("❌ Employees in assignments but NOT in team:", missingInTeam);
+      console.log("❌ Team members with NO assignments:", missingInAssignments);
+      
+      if (missingInTeam.length > 0) {
+        console.warn("⚠️ PROBLÈME DÉTECTÉ: Des employés ont des affectations mais ne sont pas dans l'équipe du manager!");
+      }
+    }
+  }, [teamMembers, assignments]);
 
   const daysToShow = 14; // 2 weeks
   const dates = Array.from({ length: daysToShow }).map((_, i) =>
@@ -368,8 +413,12 @@ const StaffingCalendar = () => {
 
   return (
     <Box m="20px">
+      <AssignmentDebugger />
       <Typography variant="h4" mb={2}>
         Staffing Calendar
+      </Typography>
+      <Typography variant="body2" mb={2} color="green" fontWeight="bold">
+        📅 Note: Affichage des données 2025 - 152 affectations disponibles
       </Typography>
 
       <Box display="flex" alignItems="center" mb={2} gap={2}>
@@ -442,6 +491,20 @@ const StaffingCalendar = () => {
             renderInput={(params) => <TextField {...params} fullWidth />}
           />
         </LocalizationProvider>
+        <button
+          onClick={() => setStartDate(dayjs().startOf('week'))}
+          style={{
+            padding: "8px 16px",
+            marginLeft: "10px",
+            backgroundColor: "#1976d2",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+            cursor: "pointer"
+          }}
+        >
+          📅 Aujourd'hui
+        </button>
       </Box>
 
       <Box mb={2}>
@@ -584,6 +647,12 @@ const StaffingCalendar = () => {
                       : assignments.filter(
                           (a) => a.memberId === member._id && a.date === date
                         );
+
+                    // Log pour debugging (can be removed in production)
+                    // if (member._id && date && !isWeekend(date)) {
+                    //   console.log(`📅 Daily assignments for ${member.fullName} on ${date}:`, dailyAssignments);
+                    //   console.log(`Total assignments in state: ${assignments.length}`);
+                    // }
 
                     // ... (le reste reste inchangé : morningAssignment, afternoonAssignment, etc.)
 

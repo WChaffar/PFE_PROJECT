@@ -265,7 +265,41 @@ const deleteAssignment = async (req, res) => {
 // Get assignments for a specific employee (like Jeff Bezos in your screenshot)
 const getAllEmployeesAssignments = async (req, res) => {
   try {
-    const assignments = await Assignment.find()
+    let query = {};
+    const currentUser = req.user;
+
+    // Si l'utilisateur est Manager, retourner seulement les affectations de SES employés
+    if (currentUser.role === "Manager") {
+      // Trouver tous les employés qui ont ce manager
+      const teamMembers = await User.find({
+        manager: currentUser._id,
+        role: { $nin: ["RH", "BUDirector", "Manager"] }
+      }).select("_id");
+      
+      const employeeIds = teamMembers.map(emp => emp._id);
+      query.employee = { $in: employeeIds };
+    }
+    // Si l'utilisateur est DirecteurBU, retourner les affectations de sa Business Unit
+    else if (currentUser.role === "BUDirector") {
+      // Trouver tous les managers qui appartiennent à la même Business Unit
+      const managersInSameBU = await User.find({
+        businessUnit: currentUser.businessUnit,
+        role: "Manager"
+      }).select("_id");
+      
+      // Trouver tous les employés de ces managers
+      const employeesInBU = await User.find({
+        manager: { $in: managersInSameBU.map(m => m._id) },
+        role: { $nin: ["RH", "BUDirector", "Manager"] }
+      }).select("_id");
+      
+      const employeeIds = employeesInBU.map(emp => emp._id);
+      query.employee = { $in: employeeIds };
+    }
+    // Pour les autres rôles (Admin, etc.), retourner toutes les affectations
+    // Si aucune condition n'est remplie, query reste vide = toutes les affectations
+
+    const assignments = await Assignment.find(query)
       .populate("project")
       .populate("employee", "fullName keySkills profilePicture jobTitle dateOfJoining yearsOfExperience")
       .populate("taskId")
