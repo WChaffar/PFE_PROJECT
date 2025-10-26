@@ -370,7 +370,7 @@ const ReviewAccounts = () => {
           setConfirmError("You should assign this user to a Manager !");
         } else {
           const result = await dispatch(
-            editTeamMemberManager(row.row.id, { manager: selectedManager._id })
+            editTeamMemberManager(row.row.id, { manager: selectedManager._id, businessUnits: selectedManager?.businessUnit?._id })
           );
           if (result.success) {
             setselectedManager(null);
@@ -390,7 +390,7 @@ const ReviewAccounts = () => {
         setConfirmError("You should assign this user to a business unit !");
       } else {
         const result = await dispatch(
-          editTeamMemberBu(row.row.id, { businessUnit: selectedBU._id })
+          editTeamMemberBu(row.row.id, { businessUnit: selectedBU._id , manager:null })
         );
         if (result.success) {
           setselectedBU(null);
@@ -675,7 +675,7 @@ const ReviewAccounts = () => {
               You're about to update the consultant manager's information
               <Autocomplete
                 fullWidth
-                options={teamManagers}
+                options={teamManagers.filter(m=> m?.businessUnit?._id === row.row.businessUnit?._id)}
                 getOptionLabel={(option) =>
                   typeof option === "string"
                     ? option
@@ -733,7 +733,7 @@ const ReviewAccounts = () => {
           <DialogContent>
             <DialogContentText>
               {" "}
-              You're about to update the consultant Business Unit's information
+              You're about to update the user Business Unit's information
               <Autocomplete
                 fullWidth
                 options={businessUnits}
